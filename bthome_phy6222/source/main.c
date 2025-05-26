@@ -374,6 +374,21 @@ int main(void)
         hal_gpio_write(GPIO_LED, LED_ON);
     }*/
 
+#define	LIGHT_LEDK		P24
+#define	LIGHT_LEDA		P25
+    LOG("OFF");
+    //hal_gpio_write(GPIO_P34, 0);
+    hal_gpio_pull_set(LIGHT_LEDK, PULL_DOWN);
+    hal_gpio_pull_set(LIGHT_LEDA, PULL_DOWN);
+    WaitMs(1000);
+
+    LOG("ON");
+    //hal_gpio_write(GPIO_P34, 1);
+    hal_gpio_pull_set(LIGHT_LEDK, PULL_DOWN);
+    hal_gpio_pull_set(LIGHT_LEDA, STRONG_PULL_UP);
+    WaitMs(1000);
+
+    LOG("OFF");
     app_main(); // No Return from here
 
     return 0;
