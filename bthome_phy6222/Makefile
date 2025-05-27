@@ -3,6 +3,7 @@ PROJECT_NAME ?= phy6222_watch
 PROJECT_DEFS ?= -DDEVICE=DEVICE_WATCH_1
 #BLE ?= 0
 FREERTOS ?= 1
+BTSTACK ?= 1
 ##############################################################################
 COM_PORT = COM32
 COM_SPEED = 250000
@@ -17,10 +18,10 @@ SRC_PRJ += battery.c
 SRC_PRJ += peripheral_main.c
 SRC_PRJ += thb2_main.c
 else
-SRC_PRJ += battery.c
-SRC_PRJ += gpio_demo.c
-SRC_PRJ += gpio_Main.c
-SRC_PRJ += OSAL_gpio.c
+# SRC_PRJ += battery.c
+# SRC_PRJ += gpio_demo.c
+# SRC_PRJ += gpio_Main.c
+# SRC_PRJ += OSAL_gpio.c
 endif
 
 INCLUDES = -I$(SRC_PATH)
@@ -136,6 +137,7 @@ INCLUDES += -I$(SDK_PATH)/components/inc
 INCLUDES += -I$(SDK_PATH)/components/osal/include
 INCLUDES += -I$(SDK_PATH)/components/common
 INCLUDES += -I$(SDK_PATH)/components/ble/controller
+ifdef BLE
 INCLUDES += -I$(SDK_PATH)/components/ble/include
 INCLUDES += -I$(SDK_PATH)/components/ble/hci
 INCLUDES += -I$(SDK_PATH)/components/ble/host
@@ -143,6 +145,7 @@ INCLUDES += -I$(SDK_PATH)/components/profiles/ota_app
 INCLUDES += -I$(SDK_PATH)/components/profiles/DevInfo
 INCLUDES += -I$(SDK_PATH)/components/profiles/SimpleProfile
 INCLUDES += -I$(SDK_PATH)/components/profiles/Roles
+endif
 INCLUDES += -I$(SDK_PATH)/components/driver/adc
 INCLUDES += -I$(SDK_PATH)/components/driver/bsp_button
 INCLUDES += -I$(SDK_PATH)/components/driver/clock
@@ -171,7 +174,9 @@ INCLUDES += -I$(SDK_PATH)/components/driver/watchdog
 ###########################################
 # LIBs
 SRCS += $(SDK_PATH)/lib/rf/patch.c
+SRCS += $(SDK_PATH)/lib/ble_controller/rf_phy_driver.c
 SRCS += $(SDK_PATH)/lib/sec/phy_sec_ext.c
+ifdef LIB
 SRCS += $(SDK_PATH)/lib/sec/aes.c
 ifdef BLE
 SRCS += $(SDK_PATH)/lib/ble_host/att_client.c
@@ -211,7 +216,7 @@ SRCS += $(SDK_PATH)/lib/ble_controller/ll_masterEndCauses.c
 SRCS += $(SDK_PATH)/lib/ble_controller/ll_slaveEndCauses.c
 SRCS += $(SDK_PATH)/lib/ble_controller/ll_sleep.c
 endif
-SRCS += $(SDK_PATH)/lib/ble_controller/rf_phy_driver.c
+endif
 
 ###########################################
 # SDK
@@ -224,8 +229,10 @@ SRCS += $(SDK_PATH)/components/driver/gpio/gpio.c
 SRCS += $(SDK_PATH)/components/driver/pwrmgr/pwrmgr.c
 SRCS += $(SDK_PATH)/components/driver/timer/timer.c
 SRCS += $(SDK_PATH)/components/driver/uart/uart.c
-SRCS += $(SDK_PATH)/components/driver/watchdog/watchdog.c
+#SRCS += $(SDK_PATH)/components/driver/watchdog/watchdog.c
 SRCS += $(SDK_PATH)/components/driver/log/my_printf.c
+
+
 
 #SRCS += $(SDK_PATH)/components/profiles/Roles/central.c
 #SRCS += $(SDK_PATH)/components/profiles/ota_app/ota_app_service.c
@@ -263,6 +270,69 @@ INCLUDES += -I$(FREERTOS_PATH)/portable/GCC/ARM_CM0
 SRCS += $(addprefix $(FREERTOS_PATH)/, $(SRCS_FREERTOS))
 endif
 
+ifdef BTSTACK
+BTSTACK_PATH = ./btstack
+
+
+SRCS_BTSTACK = 3rd-party/rijndael/rijndael.c
+SRCS_BTSTACK += 3rd-party/micro-ecc/uECC.c
+
+SRCS_BTSTACK += src/ad_parser.c \
+	src/ble/att_db.c \
+	src/ble/att_dispatch.c \
+	src/ble/att_server.c \
+	src/ble/gatt-service/ancs_client.c \
+	src/ble/gatt-service/battery_service_client.c \
+	src/ble/gatt-service/battery_service_server.c \
+	src/ble/gatt-service/device_information_service_client.c \
+	src/ble/gatt-service/device_information_service_server.c \
+	src/ble/gatt-service/hids_device.c \
+	src/ble/gatt_client.c \
+	src/ble/le_device_db_memory.c \
+	src/ble/le_device_db_tlv.c \
+	src/ble/sm.c \
+	src/btstack_audio.c \
+	src/btstack_crypto.c \
+	src/btstack_hid_parser.c \
+	src/btstack_linked_list.c \
+	src/btstack_memory.c \
+	src/btstack_memory_pool.c \
+	src/btstack_resample.c \
+	src/btstack_ring_buffer.c \
+	src/btstack_run_loop.c \
+	src/btstack_tlv.c \
+	src/btstack_util.c \
+	src/hci.c \
+	src/hci_cmd.c \
+	src/hci_dump.c \
+	src/hci_event_builder.c \
+	src/l2cap.c \
+	src/l2cap_signaling.c \
+	src/hci_transport_h4.c \
+	platform/freertos/btstack_run_loop_freertos.c
+
+INCLUDES += -I$(OBJ_DIR)/btstack/example
+
+SRCS += $(SRC_PATH)/gatt_battery_query.c
+SRCS += $(SRC_PATH)/btstack_port.c
+
+INCLUDES += -I$(BTSTACK_PATH)
+INCLUDES += -I$(BTSTACK_PATH)/src/ble
+INCLUDES += -I$(BTSTACK_PATH)/src/ble/gatt-service
+INCLUDES += -I$(BTSTACK_PATH)/src
+INCLUDES += -I$(BTSTACK_PATH)/3rd-party/micro-ecc
+INCLUDES += -I$(BTSTACK_PATH)/3rd-party/rijndael
+INCLUDES += -I$(BTSTACK_PATH)/platform/embedded
+INCLUDES += -I$(BTSTACK_PATH)/platform/freertos
+INCLUDES += -I$(BTSTACK_PATH)/example
+
+SRCS += $(addprefix $(BTSTACK_PATH)/, $(SRCS_BTSTACK))
+
+GATT_FILES = $(BTSTACK_PATH)/example/gatt_battery_query.gatt
+
+GATT_OBJ = $(addprefix $(OBJ_DIR)/,$(GATT_FILES:.gatt=.h))
+endif
+
 ##############################################################################
 
 INCLUDES += -I$(SDK_PATH)/misc/CMSIS/device/phyplus
@@ -286,7 +356,10 @@ DEPENDENCY_LIST = $(OBJS:%o=%d)
 ##############################################################################
 .PHONY: all directory clean size flash erase_and_flash
 
-all: directory $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).hex $(BIN_OTA) $(OBJ_DIR)/$(PROJECT_NAME).asm size
+all: directory $(GATT_OBJ) $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).hex $(BIN_OTA) $(OBJ_DIR)/$(PROJECT_NAME).asm size
+
+$(OBJ_DIR)/%.h: %.gatt
+	python3 ${BTSTACK_PATH}/tool/compile_gatt.py $< $@
 
 %.elf %.map: $(SRC_O) $(LDSCRIPT) Makefile
 	@echo LD: $@
@@ -336,6 +409,7 @@ reset:
 
 directory:
 	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(OBJ_DIR)/btstack/example
 
 size: $(OBJ_DIR)/$(PROJECT_NAME).elf
 	@echo size:

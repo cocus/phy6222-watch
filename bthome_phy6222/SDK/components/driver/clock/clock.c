@@ -6,11 +6,33 @@
 #include "gpio.h"
 #include "global_config.h"
 #include "error.h"
-#include "rf_phy_driver.h"
-
+//#include "rf_phy_driver.h"
+//#include "ll_sleep.h"
 
 extern uint32_t hclk,pclk;
 extern volatile uint32_t osal_sys_tick;
+
+uint32_t sysclk_get_clk(void)
+{
+    switch (g_system_clk)
+    {
+    case SYS_CLK_RC_32M:
+    case SYS_CLK_DBL_32M:
+        return 32000000;
+    case SYS_CLK_XTAL_16M:
+        return 16000000;
+    case SYS_CLK_DLL_48M:
+        return 48000000;
+    case SYS_CLK_DLL_64M:
+        return 64000000;
+    case SYS_CLK_DLL_96M:
+        return 96000000;
+    default:
+        break;
+    }
+
+    return 16000000;
+}
 
 void hal_clk_gate_enable(MODULE_e module)
 {
@@ -190,6 +212,11 @@ void WaitUs(uint32_t wtTime)
             break;
     }
 }
+
+#define AON_CLEAR_XTAL_TRACKING_AND_CALIB           AP_AON->SLEEP_R[1]=0
+#define XTAL16M_CAP_SETTING(x)                      subWriteReg(0x4000f0bc, 4, 0, (0x1f&(x)))
+
+
 extern int m_in_critical_region ;
 void hal_system_soft_reset(void)
 {
@@ -214,11 +241,12 @@ void hal_rc32k_clk_tracking_init(void)
     extern uint32 counter_tracking;
     extern uint32_t g_counter_traking_avg;
     if(g_counter_traking_avg == 0) {
-    	counter_tracking = g_counter_traking_avg = STD_RC32_16_CYCLE_16MHZ_CYCLE;
-    	AON_CLEAR_XTAL_TRACKING_AND_CALIB;
+    	counter_tracking = g_counter_traking_avg = 7812;
+    	AP_AON->SLEEP_R[1]=0;
     }
 }
 
+#if 0
 __ATTR_SECTION_XIP__  void hal_rfPhyFreqOff_Set(void)
 {
     int32_t freqPpm=0;
@@ -233,6 +261,7 @@ __ATTR_SECTION_XIP__  void hal_rfPhyFreqOff_Set(void)
         g_rfPhyFreqOffSet   =RF_PHY_FREQ_FOFF_00KHZ;
     }
 }
+#endif
 
 __ATTR_SECTION_XIP__ void hal_xtal16m_cap_Set(void)
 {

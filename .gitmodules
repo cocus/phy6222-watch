@@ -1,3 +1,6 @@
 [submodule "bthome_phy6222/freertos"]
 	path = bthome_phy6222/freertos
 	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git
+[submodule "bthome_phy6222/btstack"]
+	path = bthome_phy6222/btstack
+	url = https://github.com/bluekitchen/btstack.git

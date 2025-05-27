@@ -8,7 +8,7 @@
 #ifndef AES_H
 #define AES_H
 
-#include "bcomdef.h"
+#include "../../ble/include/bcomdef.h"
 
 #define AES_DEBUG           0
 

@@ -34,8 +34,23 @@
 /******************************************************************************/
 
 #include <stdint.h>
-extern volatile uint32_t  g_hclk;
-#define configCPU_CLOCK_HZ    ( ( unsigned long ) g_hclk )
+extern uint32_t sysclk_get_clk(void);
+#define configCPU_CLOCK_HZ    ( ( unsigned long ) sysclk_get_clk() )
+
+#include "log.h"
+#define configASSERT( x )         \
+    if( ( x ) == 0 )              \
+    {                             \
+        LOG("ASSERTION FAILED: %s, %d", __FILE__, __LINE__); \
+        taskDISABLE_INTERRUPTS(); \
+        for( ; ; )                \
+        ;                         \
+    }
+
+/* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
+standard names. */
+#define vPortSVCHandler    SVC_Handler
+#define xPortPendSVHandler PendSV_Handler
 
 /******************************************************************************/
 /* Scheduling behaviour related definitions. **********************************/
@@ -59,6 +74,8 @@ extern volatile uint32_t  g_hclk;
 #define configMESSAGE_BUFFER_LENGTH_TYPE           size_t
 #define configUSE_NEWLIB_REENTRANT                 0
 
+#define configENABLE_MPU                           0
+#define configCHECK_HANDLER_INSTALLATION           0
 /******************************************************************************/
 /* Software timer related definitions. ****************************************/
 /******************************************************************************/
@@ -131,16 +148,5 @@ extern volatile uint32_t  g_hclk;
 #define INCLUDE_xTaskAbortDelay                1
 #define INCLUDE_xTaskGetHandle                 1
 #define INCLUDE_xTaskResumeFromISR             1
-
-/* Definitions that map the FreeRTOS port interrupt handlers to their CMSIS
-standard names. */
-#define vPortSVCHandler    SVC_Handler
-#define xPortPendSVHandler PendSV_Handler
-#define xPortSysTickHandler SysTick_Handler
-
-
-
-
-#define configENABLE_MPU 0
 
 #endif /* FREERTOS_CONFIG_H */

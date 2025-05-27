@@ -13,9 +13,61 @@
     INCLUDES
 */
 #include "jump_function.h"
-//#include "global_config.h"
+#include "global_config.h"
+#include "OSAL_Tasks.h"
+#include "rf_phy_driver.h"
+#include "pwrmgr.h"
+#include "gpio.h"
+#include "timer.h"
+#include "uart.h"
+#include "log.h"
 
-extern void rf_phy_ini(void);
+/*******************************************************************************
+    MACROS
+*/
+void (*trap_c_callback)(void);
+
+extern void log_printf(const char* format, ...);
+void _hard_fault(uint32_t* arg)
+{
+#if DEBUG_INFO == 0
+	(void)arg;
+#else
+    uint32_t* stk = (uint32_t*)((uint32_t)arg);
+    log_printf("[Hard fault handler]\n");
+    log_printf("R0   = 0x%08x\n", stk[9]);
+    log_printf("R1   = 0x%08x\n", stk[10]);
+    log_printf("R2   = 0x%08x\n", stk[11]);
+    log_printf("R3   = 0x%08x\n", stk[12]);
+    log_printf("R4   = 0x%08x\n", stk[1]);
+    log_printf("R5   = 0x%08x\n", stk[2]);
+    log_printf("R6   = 0x%08x\n", stk[3]);
+    log_printf("R7   = 0x%08x\n", stk[4]);
+    log_printf("R8   = 0x%08x\n", stk[5]);
+    log_printf("R9   = 0x%08x\n", stk[6]);
+    log_printf("R10  = 0x%08x\n", stk[7]);
+    log_printf("R11  = 0x%08x\n", stk[8]);
+    log_printf("R12  = 0x%08x\n", stk[13]);
+    log_printf("SP   = 0x%08x\n", stk[0]);
+    log_printf("LR   = 0x%08x\n", stk[14]);
+    log_printf("PC   = 0x%08x\n", stk[15]);
+    log_printf("PSR  = 0x%08x\n", stk[16]);
+    log_printf("ICSR = 0x%08x\n", *(volatile uint32_t*)0xE000ED04);
+#endif
+    if (trap_c_callback)
+    {
+        trap_c_callback();
+    }
+
+    while (1);
+}
+// *INDENT-OFF*
+void hard_fault(void)
+{
+    uint32_t arg = 0;
+    _hard_fault(&arg);
+}
+// *INDENT-ON*
 
 /*******************************************************************************
     CONSTANTS
@@ -27,10 +79,10 @@ extern void rf_phy_ini(void);
 const uint32_t* jump_table_base[256] __attribute__((section("jump_table_mem_area"))) =
 {
     (const uint32_t*)0,                         // 0. write Log
-    (const uint32_t*)0,             // 1. init entry of app
-    (const uint32_t*)0,                  // 2. task list
-    (const uint32_t*)0,                // 3. task count
-    (const uint32_t*)0,             // 4. task events
+    (const uint32_t*)osalInitTasks,             // 1. init entry of app
+    (const uint32_t*)tasksArr,                  // 2. task list
+    (const uint32_t*)& tasksCnt,                // 3. task count
+    (const uint32_t*)& tasksEvents,             // 4. task events
     0, 0, 0, 0, 0,                              // 5 - 9, reserved for rom patch
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,               // 10 - 19, reserved for rom patch
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,               // 20 - 29, reserved for rom patch
@@ -47,9 +99,9 @@ const uint32_t* jump_table_base[256] __attribute__((section("jump_table_mem_area
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,               // 70 -79, reserved for rom patch
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,               // 80 - 89, reserved for rom patch
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,               // 90 - 99, reserved for rom patch
-    (const uint32_t*)0,         // <100 -
-    (const uint32_t*)0,
-    [RF_INIT](const uint32_t*)&rf_phy_ini,
+    (const uint32_t*)hal_pwrmgr_sleep_process,         // <100 -
+    (const uint32_t*)hal_pwrmgr_wakeup_process,
+    (const uint32_t*)rf_phy_ini,
     0,
     0,
     0,
@@ -64,20 +116,11 @@ const uint32_t* jump_table_base[256] __attribute__((section("jump_table_mem_area
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     // 180 -189, reserved for rom patch
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     // 190 -199, reserved for rom patch
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     // 200 - 209, reserved for rom patch
-    0, 0, 0, 0, 0, 0, 0, 0, 0,        // 210 - 218, reserved for rom patch
-    [NMI_HANDLER] = 0, // 219
-    [HARDFAULT_HANDLER] = 0,
-    [SVC_HANDLER] = 0,
-    [PENDSV_HANDLER] = 0,
-    [SYSTICK_HANDLER] = 0,
-    0,
-    0,
-    0,
-    0,           // 227
-    0,      // 228
-    0,       // 229
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0,     // 210 - 219, reserved for rom patch
+    (const uint32_t*)hard_fault, 0, 0, 0, 0, 0, 0, 0,           // 220 - 227
+    0, 0,       // 228 - 229
     0, 0, 0, 0, 0,  // 230 - 234
-    (const uint32_t*)0,      // 235 uart irq handler
+    (const uint32_t*)hal_UART0_IRQHandler,      // 235 uart irq handler
     0, 0, 0, 0, 0,    // 236 - 240
     0, 0, 0, 0, 0, 0, 0, 0, 0,     // 241 - 249, for ISR entry
     0, 0, 0, 0, 0, 0                  // 250 - 255, for ISR entry
@@ -98,4 +141,4 @@ const uint32_t* jump_table_base[256] __attribute__((section("jump_table_mem_area
 /*********************************************************************
     EXTERNAL VARIABLES
 */
-uint32_t global_config[256] __attribute__((section("global_config_area")));
+uint32 global_config[SOFT_PARAMETER_NUM] __attribute__((section("global_config_area")));

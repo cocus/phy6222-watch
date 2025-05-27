@@ -143,6 +143,7 @@ void rf_tpCal_cfg_avg(uint8 rfChn,uint8 cnt);
 */
 void rf_phy_ini(void)
 {
+    LOG("called!!!!");
     g_rfPhyClkSel  = RF_PHY_CLK_SEL_16M_XTAL;
     g_rxAdcClkSel  = RX_ADC_CLK_SEL_32M_DBL;
     rf_phy_ana_cfg();

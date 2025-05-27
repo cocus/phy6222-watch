@@ -11,13 +11,11 @@ extern "C" {
 
 #include "types.h"
 #include "bus_dev.h"
-//#include "common.h"
 
 typedef enum
 {
     CLK_32K_XTAL        = 0,
     CLK_32K_RCOSC       = 1,
-
 } CLK32K_e;
 
 typedef enum
@@ -58,7 +56,6 @@ typedef enum
 typedef struct _clk_Evt_t
 {
     uint8_t   flag;
-
 } clk_Evt_t;
 
 typedef void (*clk_Hdl_t)(clk_Evt_t* pev);
@@ -79,6 +76,8 @@ extern volatile uint32_t  g_hclk;
 #define  clk_get_hclk()   g_hclk
 uint32_t clk_get_pclk(void);
 
+uint32_t sysclk_get_clk(void);
+
 void hal_clk_gate_enable(MODULE_e module);
 void hal_clk_gate_disable(MODULE_e module);
 int hal_clk_gate_get(MODULE_e module);
@@ -98,7 +97,6 @@ extern uint32_t rtc_get_counter(void);
 void WaitMs(uint32_t msecond);
 void WaitUs(uint32_t wtTime);
 void hal_system_soft_reset(void);
-
 
 extern int clk_init(sysclk_t h_system_clk_sel);
 extern void WaitRTCCount(uint32_t rtcDelyCnt);

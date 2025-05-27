@@ -8,7 +8,7 @@
 
 #include "types.h"
 #include "comdef.h"
-#include "bcomdef.h"
+//#include "bcomdef.h"
 #include "ll_buf.h"
 
 #if (MAX_NUM_LL_CONN_ROM_LIMT > 1)
@@ -1299,6 +1299,7 @@ typedef struct
     uint8         numLLConns;                          // number of allocated connections
     uint8         numLLMasterConns;                    // number of master, to check whether we need it
     uint8         currentConn;                         // the LL connection currently in use
+#define MAX_NUM_LL_CONN_ROM_LIMT                 16          //hard code for BBB ROM define
 
     llScheduleInfo_t         scheduleInfo[MAX_NUM_LL_CONN_ROM_LIMT];     // scheduler information
 

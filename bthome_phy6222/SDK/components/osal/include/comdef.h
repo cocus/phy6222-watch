@@ -36,7 +36,7 @@ extern "C"
 #define NULL_OK
 #define INP
 #define OUTP
-#define UNUSED
+#define UNUSED(x) (void)(x)
 #define ONLY
 #define READONLY
 #define SHARED
@@ -105,7 +105,7 @@ typedef uint32  uint24;
 #define KEY_CHANGE                0xC0    // Key Events
 
 // OSAL System Message IDs/Events Reserved for applications (user applications)
-// 0xE0 – 0xFC
+// 0xE0 ï¿½ 0xFC
 
 /*********************************************************************
     MACROS

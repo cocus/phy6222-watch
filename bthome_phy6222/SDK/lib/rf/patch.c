@@ -34,12 +34,12 @@ MIN_SLEEP_TIME
 #include "osal_bufmgr.h"
 #include "OSAL_Memory.h"
 #include "log.h"
-#include "hci.h"
-#include "hci_tl.h"
+#include "../../components/ble/include/hci.h"
+#include "../../components/ble/hci/hci_tl.h"
 #include "version.h"
 #include "flash.h"
-#include "gatt.h"
-#include "att.h"
+#include "../../components/ble/include/gatt.h"
+#include "../../components/ble/include/att.h"
 #include "error.h"
 #include "clock.h"
 #include "rf_phy_driver.h"
@@ -5308,11 +5308,11 @@ static void check_16MXtal_by_rcTracking(void)
 
             if ((1 << tracking_sleep_num)*33000< TRACKING_MAX_SLEEPTIME)
             {
-                hal_pwrmgr_enter_sleep_rtc_reset((1 << tracking_sleep_num)*33000);
+                //hal_pwrmgr_enter_sleep_rtc_reset((1 << tracking_sleep_num)*33000);
             }
             else
             {
-                hal_pwrmgr_enter_sleep_rtc_reset(TRACKING_MAX_SLEEPTIME);
+                //hal_pwrmgr_enter_sleep_rtc_reset(TRACKING_MAX_SLEEPTIME);
             }
         }
     }
