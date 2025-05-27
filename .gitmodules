@@ -1,0 +1,3 @@
+[submodule "bthome_phy6222/freertos"]
+	path = bthome_phy6222/freertos
+	url = https://github.com/FreeRTOS/FreeRTOS-Kernel.git

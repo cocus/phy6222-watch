@@ -803,7 +803,7 @@
     #define ownPublicAddr _symrom_ownPublicAddr
     #define p_perStatsByChan _symrom_p_perStatsByChan
     #define peerInfo _symrom_peerInfo
-    #define PendSV_Handler _symrom_PendSV_Handler
+    // FREERTOS: #define PendSV_Handler _symrom_PendSV_Handler
     #define pHciEvtMask _symrom_pHciEvtMask
     #define phy_sec_app_key _symrom_phy_sec_app_key
     #define phy_sec_decrypt _symrom_phy_sec_decrypt

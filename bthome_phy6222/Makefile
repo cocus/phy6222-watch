@@ -1,7 +1,8 @@
 ##############################################################################
 PROJECT_NAME ?= phy6222_watch
 PROJECT_DEFS ?= -DDEVICE=DEVICE_WATCH_1
-BLE ?= 1
+#BLE ?= 0
+FREERTOS ?= 1
 ##############################################################################
 COM_PORT = COM32
 COM_SPEED = 250000
@@ -28,8 +29,8 @@ SRCS = $(addprefix $(SRC_PATH)/, $(SRC_PRJ))
 ##############################################################################
 DEFINES += -D__GCC
 DEFINES += $(PROJECT_DEFS)
-DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_SLEEP
-#DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_NO_SLEEP
+#DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_SLEEP
+DEFINES += -DCFG_SLEEP_MODE=PWR_MODE_NO_SLEEP
 DEFINES += -DDEBUG_INFO=3
 DEFINES += -DMTU_SIZE=240
 DEFINES += -DMAX_NUM_LL_CONN=1
@@ -38,7 +39,7 @@ DEFINES += -DDEF_GAPBOND_MGR_ENABLE=0
 #Debug:
 DEFINES += -DTEST_RTC_DELTA=1
 DEFINES += -DLL_DEBUG_NONE=1 
-DEFINES += -DCLK_16M_ONLY=1
+# FREERTOS: DEFINES += -DCLK_16M_ONLY=1
 DEFINES += -DSTACK_MAX_SRAM=1
 #if Flash HS
 #DEFINES += -DXFLASH_HIGH_SPEED=1
@@ -229,16 +230,38 @@ SRCS += $(SDK_PATH)/components/driver/log/my_printf.c
 #SRCS += $(SDK_PATH)/components/profiles/Roles/central.c
 #SRCS += $(SDK_PATH)/components/profiles/ota_app/ota_app_service.c
 #SRCS += $(SDK_PATH)/components/profiles/Roles/peripheral.c
+ifdef BLE
 SRCS += $(SDK_PATH)/components/profiles/Roles/gap.c
 SRCS += $(SDK_PATH)/components/profiles/Roles/gapbondmgr.c
 SRCS += $(SDK_PATH)/components/profiles/Roles/gapgattserver.c
 SRCS += $(SDK_PATH)/components/profiles/GATT/gattservapp.c
 #SRCS += $(SDK_PATH)/components/profiles/DevInfo/devinfoservice.c
-
+endif
 #SRCS += $(SDK_PATH)/components/osal/snv/osal_snv.c
 #SRCS += $(SDK_PATH)/components/libraries/fs/fs.c
 
 SRCS += $(SDK_PATH)/misc/jump_table.c
+
+ifdef FREERTOS
+FREERTOS_PATH = ./freertos
+
+SRCS_FREERTOS = portable/GCC/ARM_CM0/port.c
+SRCS_FREERTOS += portable/GCC/ARM_CM0/portasm.c
+SRCS_FREERTOS += portable/MemMang/heap_4.c
+
+SRCS_FREERTOS += queue.c
+SRCS_FREERTOS += list.c
+SRCS_FREERTOS += tasks.c
+SRCS_FREERTOS += timers.c
+SRCS_FREERTOS += event_groups.c
+SRCS_FREERTOS += croutine.c
+
+INCLUDES += -I$(FREERTOS_PATH)
+INCLUDES += -I$(FREERTOS_PATH)/include
+INCLUDES += -I$(FREERTOS_PATH)/portable/GCC/ARM_CM0
+
+SRCS += $(addprefix $(FREERTOS_PATH)/, $(SRCS_FREERTOS))
+endif
 
 ##############################################################################
 

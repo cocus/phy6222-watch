@@ -10,7 +10,7 @@
 
 
 extern uint32_t hclk,pclk;
-extern uint32_t osal_sys_tick;
+extern volatile uint32_t osal_sys_tick;
 
 void hal_clk_gate_enable(MODULE_e module)
 {

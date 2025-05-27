@@ -3,7 +3,7 @@
 */
 
 #include "bus_dev.h"
-#include "config.h"
+// FREERTOS: #include "config.h"
 #include "gpio.h"
 #include "clock.h"
 #include "global_config.h"
@@ -107,15 +107,15 @@ static void hal_low_power_io_init(void)
     //========= disable all gpio pullup/down to preserve juice
     const ioinit_cfg_t ioInit[] = {
 #if (SDK_VER_CHIP == __DEF_CHIP_QFN32__)
-        {GPIO_P00, GPIO_FLOATING}, // Green LED
+        {GPIO_P00, GPIO_FLOATING},
         {GPIO_P01, GPIO_FLOATING},
         {GPIO_P02, GPIO_FLOATING},
         {GPIO_P03, GPIO_FLOATING},
         {GPIO_P07, GPIO_FLOATING},
         {GPIO_P09, GPIO_PULL_UP},  // TX1
         {GPIO_P10, GPIO_PULL_UP},  // RX1
-        {GPIO_P11, GPIO_FLOATING}, // Capacitive Key
-        {GPIO_P14, GPIO_FLOATING}, // Maybe ADC Vbatt
+        {GPIO_P11, GPIO_FLOATING},
+        {GPIO_P14, GPIO_FLOATING},
         {GPIO_P15, GPIO_FLOATING},
         {GPIO_P16, GPIO_FLOATING},
         {GPIO_P17, GPIO_FLOATING},
@@ -150,19 +150,11 @@ static void hal_low_power_io_init(void)
     {
         hal_gpio_pull_set(ioInit[i].pin, ioInit[i].type);
     }
-#ifdef GPIO_SPWR
-    hal_gpio_write(GPIO_SPWR, 1);
-#endif
-#ifdef GPIO_LED
-    hal_gpio_write(GPIO_LED, LED_ON);
-#endif
+
     DCDC_CONFIG_SETTING(0x0a);
     DCDC_REF_CLK_SETTING(1);
     DIG_LDO_CURRENT_SETTING(1);
 #if defined(__GNUC__)
-#if 0 // test
-	hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2);
-#else
     extern uint32 g_irqstack_top;
     // Check IRQ STACK (1KB) location
 
@@ -179,7 +171,6 @@ static void hal_low_power_io_init(void)
     {
         hal_pwrmgr_RAM_retention(RET_SRAM0); // RET_SRAM0|RET_SRAM1|RET_SRAM2
     }
-#endif
 #else
 #if DEBUG_INFO || SDK_VER_RELEASE_ID != 0x03010102
     hal_pwrmgr_RAM_retention(RET_SRAM0 | RET_SRAM1); // RET_SRAM0|RET_SRAM1|RET_SRAM2
@@ -194,11 +185,6 @@ static void hal_low_power_io_init(void)
 
 static void ble_mem_init_config(void)
 {
-#if 0 // SDK_VER_RELEASE_ID >= 0x030103 ?
-	//ll linkmem setup
-	  extern void ll_osalmem_init(osalMemHdr_t* hdr, uint32 size);
-	ll_osalmem_init((osalMemHdr_t*)g_llLinkHeap, LL_LINK_HEAP_SIZE);
-#endif
     osal_mem_set_heap((osalMemHdr_t *)g_largeHeap, LARGE_HEAP_SIZE);
     LL_InitConnectContext(pConnContext, g_pConnectionBuffer,
                           BLE_MAX_ALLOW_CONNECTION,
@@ -261,10 +247,12 @@ static void hal_init(void)
     clk_init(g_system_clk); // system init
     hal_rtc_clock_config((CLK32K_e)g_clk32K_config);
     hal_pwrmgr_init();
+
     // g_system_clk, SYS_CLK_DLL_64M, SYS_CLK_RC_32M / XFRD_FCMD_READ_QUAD, XFRD_FCMD_READ_DUAL
     hal_spif_cache_init(SYS_CLK_DLL_64M, XFRD_FCMD_READ_DUAL);
     hal_gpio_init();
     LOG_INIT();
+
     hal_adc_init();
 }
 
@@ -281,77 +269,99 @@ uint8_t *str_bin2hex(uint8_t *d, uint8_t *s, int len)
 
 uint8 devInfoSerialNumber[19] = {0};
 
+// LED
+#define GPIO_LED GPIO_P00
+
+// Vibrator
+#define GPIO_VIBRATOR GPIO_P03
+
+// Display
+#define DC_PIN   GPIO_P25
+#define RST_PIN  GPIO_P24
+#define CS_PIN   GPIO_P31
+#define BKL_PIN  GPIO_P01
+
+#define SCLK_PIN GPIO_P34
+#define MOSI_PIN GPIO_P32
+
+// Button
+#define BUTTON_PIN GPIO_P11
+
+
+#include "FreeRTOS.h"
+#include "task.h"
+void genericTask(void const * argument)
+{
+    LOG("Hi from genericTask");
+    hal_gpio_write(GPIO_LED, 1);
+
+    for(;;)
+    {
+        LOG("OFF");
+        hal_gpio_write(GPIO_LED, 1);
+        vTaskDelay(pdMS_TO_TICKS(500));
+
+        LOG("ON");
+        hal_gpio_write(GPIO_LED, 0);
+        vTaskDelay(pdMS_TO_TICKS(500));
+    }
+}
+
+void genericTask2(void const * argument)
+{
+    LOG("Hi from genericTask2");
+    hal_gpio_write(BKL_PIN, 1);
+
+    for(;;)
+    {
+        LOG("OFF");
+        hal_gpio_write(BKL_PIN, 1);
+        vTaskDelay(pdMS_TO_TICKS(250));
+
+        LOG("ON");
+        hal_gpio_write(BKL_PIN, 0);
+        vTaskDelay(pdMS_TO_TICKS(250));
+    }
+}
+
+extern uint32_t osal_sys_tick;
+
+void Systick_Handler_Wrapper(void)
+{
+    osal_sys_tick += 1; // not sure?
+
+#if (INCLUDE_xTaskGetSchedulerState == 1 )
+    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+    {
+#endif
+    xPortSysTickHandler();
+#if (INCLUDE_xTaskGetSchedulerState == 1 )
+    }
+#endif
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
+
 int main(void)
 {
-    g_system_clk = SYS_CLK_XTAL_16M; // SYS_CLK_XTAL_16M, SYS_CLK_DBL_32M, SYS_CLK_DLL_64M
+    g_system_clk = SYS_CLK_DLL_96M;// SYS_CLK_XTAL_16M; // SYS_CLK_XTAL_16M, SYS_CLK_DBL_32M, SYS_CLK_DLL_64M
     g_clk32K_config = CLK_32K_RCOSC; // CLK_32K_XTAL, CLK_32K_RCOSC
 
-#if 0 // defined ( __GNUC__ ) // -> *.ld
-	extern const uint32_t *const jump_table_base[];
-	memcpy((void*) 0x1fff0000, (void*) jump_table_base, 1024);
-#endif
-    // wrk.boot_flg = (uint8_t)read_reg(OTA_MODE_SELECT_REG);
-#if defined(OTA_TYPE) && (OTA_TYPE != 0)
-#error asdfasd
-#if (DEV_SERVICES & SERVICE_KEY)
-    hal_gpio_pin_init(GPIO_KEY, GPIO_INPUT);
-    if (hal_gpio_read(GPIO_KEY) == 0 || wrk.boot_flg == BOOT_FLG_OTA || wrk.boot_flg == BOOT_FLG_FW0)
-    {
-#else
-    if (wrk.boot_flg == BOOT_FLG_OTA || wrk.boot_flg == BOOT_FLG_FW0)
-    {
-#endif
-        write_reg(OTA_MODE_SELECT_REG, 0);
-    }
-    else
-    { // boot FW OTA
-        spif_config(SYS_CLK_DLL_64M, 1, XFRD_FCMD_READ_DUAL, 0, 0);
-        AP_PCR->CACHE_BYPASS = 1; // just bypass cache
-        startup_app();
-    }
-#endif // OTA_TYPE == OTA_TYPE_BOOT
-
-#if CFG_SLEEP_MODE == PWR_MODE_SLEEP
-    watchdog_config(WDG_32S);
-#endif
-
-    //	spif_config(SYS_CLK_DLL_64M, 1, XFRD_FCMD_READ_DUAL, 0, 0);
-
-#if (FLASH_PROTECT_FEATURE == 1)
-#if SDK_VER_RELEASE_ID == 0x03010102
-    hal_flash_lock();
-#else
-    hal_flash_enable_lock(MAIN_INIT);
-#endif
-#endif
-    drv_irq_init();
+    // FREERTOS: drv_irq_init();
     init_config();
+
 #if (HOST_CONFIG & OBSERVER_CFG)
     extern void ll_patch_advscan(void);
-//	ll_patch_advscan();
 #else
     extern void ll_patch_slave(void);
     ll_patch_slave();
-//	extern void ll_patch_master(void);
-//	ll_patch_master();
 #endif
 
-    hal_rfphy_init();
+    // FREERTOS: hal_rfphy_init();
     hal_init();
 
-    hal_gpio_write(GPIO_LED, LED_OFF);
-    hal_gpioretention_register(GPIO_LED); // enable this pin retention
-
-    //	restore_utc_time_sec();
-
-    batt_start_measure();
-
-#if 0 // def STACK_MAX_SRAM
-        extern uint32 g_stack;
-    __set_MSP((uint32_t)(&g_stack));
-#endif
-    // load_eep_config();
+    // FREERTOS: batt_start_measure();
+    LOG("Build time: %s %s", __DATE__, __TIME__);
 
     LOG("SDK Version ID %08x ", SDK_VER_RELEASE_ID);
     LOG("rfClk %d rcClk %d sysClk %d tpCap[%02x %02x]", g_rfPhyClkSel, g_clk32K_config, g_system_clk, g_rfPhyTpCal0, g_rfPhyTpCal1);
@@ -364,32 +374,30 @@ int main(void)
     hal_get_flash_info();
     uint8_t *p = str_bin2hex(devInfoSerialNumber, (uint8_t *)&phy_flash.IdentificationID, 3);
     *p++ = '-';
-
     LOG("serialnum '%s'", devInfoSerialNumber);
 
-    /*while(1) {
-        WaitMs(250);
-        hal_gpio_write(GPIO_LED, LED_OFF);
-        WaitMs(250);
-        hal_gpio_write(GPIO_LED, LED_ON);
-    }*/
+    // Freertos stuff
+    extern void vPortSVCHandler( void );
+    JUMP_FUNCTION(SVC_HANDLER)                   =   (uint32_t)&vPortSVCHandler;
+    LOG("SVC handler at %08x", JUMP_FUNCTION(SVC_HANDLER));
 
-#define	LIGHT_LEDK		P24
-#define	LIGHT_LEDA		P25
-    LOG("OFF");
-    //hal_gpio_write(GPIO_P34, 0);
-    hal_gpio_pull_set(LIGHT_LEDK, PULL_DOWN);
-    hal_gpio_pull_set(LIGHT_LEDA, PULL_DOWN);
-    WaitMs(1000);
+    extern void xPortPendSVHandler( void );
+    JUMP_FUNCTION(PENDSV_HANDLER)                =   (uint32_t)&xPortPendSVHandler;
+    LOG("PendSV handler at %08x", JUMP_FUNCTION(PENDSV_HANDLER));
 
-    LOG("ON");
-    //hal_gpio_write(GPIO_P34, 1);
-    hal_gpio_pull_set(LIGHT_LEDK, PULL_DOWN);
-    hal_gpio_pull_set(LIGHT_LEDA, STRONG_PULL_UP);
-    WaitMs(1000);
+    JUMP_FUNCTION(SYSTICK_HANDLER)               =   (uint32_t)&Systick_Handler_Wrapper;
+    LOG("SysTick handler at %08x", JUMP_FUNCTION(SYSTICK_HANDLER));
 
-    LOG("OFF");
-    app_main(); // No Return from here
+    LOG("g_hclk %d", g_hclk);
+
+    //NVIC_SetPriority((IRQn_Type)PendSV_IRQn, 15);
+
+    xTaskCreate(genericTask, "genericTask", 256, NULL, 1, NULL);
+    xTaskCreate(genericTask2, "genericTask2", 256, NULL, 1, NULL);
+
+    LOG("starting scheduler");
+
+    vTaskStartScheduler();
 
     return 0;
 }
