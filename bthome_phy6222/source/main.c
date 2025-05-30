@@ -93,7 +93,7 @@ extern void SysTick_Handler(void);
 
 void Custom_SysTick_Handler(void)
 {
-    osal_sys_tick += 1; // not sure?
+    //osal_sys_tick += 1; // not sure?
 
 #if (INCLUDE_xTaskGetSchedulerState == 1)
     if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
@@ -108,25 +108,25 @@ void Custom_SysTick_Handler(void)
 void _hard_fault(uint32_t *arg)
 {
     uint32_t *stk = (uint32_t *)((uint32_t)arg);
-    LOG("[Hard fault handler]\n");
-    LOG("R0   = 0x%08x\n", stk[9]);
-    LOG("R1   = 0x%08x\n", stk[10]);
-    LOG("R2   = 0x%08x\n", stk[11]);
-    LOG("R3   = 0x%08x\n", stk[12]);
-    LOG("R4   = 0x%08x\n", stk[1]);
-    LOG("R5   = 0x%08x\n", stk[2]);
-    LOG("R6   = 0x%08x\n", stk[3]);
-    LOG("R7   = 0x%08x\n", stk[4]);
-    LOG("R8   = 0x%08x\n", stk[5]);
-    LOG("R9   = 0x%08x\n", stk[6]);
-    LOG("R10  = 0x%08x\n", stk[7]);
-    LOG("R11  = 0x%08x\n", stk[8]);
-    LOG("R12  = 0x%08x\n", stk[13]);
-    LOG("SP   = 0x%08x\n", stk[0]);
-    LOG("LR   = 0x%08x\n", stk[14]);
-    LOG("PC   = 0x%08x\n", stk[15]);
-    LOG("PSR  = 0x%08x\n", stk[16]);
-    LOG("ICSR = 0x%08x\n", *(volatile uint32_t *)0xE000ED04);
+    LOG("\n[Hard fault handler]");
+    LOG("R0   = 0x%08x", stk[9]);
+    LOG("R1   = 0x%08x", stk[10]);
+    LOG("R2   = 0x%08x", stk[11]);
+    LOG("R3   = 0x%08x", stk[12]);
+    LOG("R4   = 0x%08x", stk[1]);
+    LOG("R5   = 0x%08x", stk[2]);
+    LOG("R6   = 0x%08x", stk[3]);
+    LOG("R7   = 0x%08x", stk[4]);
+    LOG("R8   = 0x%08x", stk[5]);
+    LOG("R9   = 0x%08x", stk[6]);
+    LOG("R10  = 0x%08x", stk[7]);
+    LOG("R11  = 0x%08x", stk[8]);
+    LOG("R12  = 0x%08x", stk[13]);
+    LOG("SP   = 0x%08x", stk[0]);
+    LOG("LR   = 0x%08x", stk[14]);
+    LOG("PC   = 0x%08x", stk[15]);
+    LOG("PSR  = 0x%08x", stk[16]);
+    LOG("ICSR = 0x%08x", *(volatile uint32_t *)0xE000ED04);
 
     while (1)
         ;
@@ -237,7 +237,7 @@ int main(void)
 
 
     extern void port_thread(void* args);
-    xTaskCreate(port_thread, "btstack_thread", 512, NULL, 1, NULL);
+    xTaskCreate(port_thread, "btstack_thread", 4096, NULL, 1, NULL);
 
     LOG("starting scheduler");
 

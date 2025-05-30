@@ -301,11 +301,13 @@ SRCS_BTSTACK += src/ad_parser.c \
 	src/btstack_ring_buffer.c \
 	src/btstack_run_loop.c \
 	src/btstack_tlv.c \
+	src/btstack_tlv_none.c \
 	src/btstack_util.c \
 	src/hci.c \
 	src/hci_cmd.c \
 	src/hci_dump.c \
 	src/hci_event_builder.c \
+	src/hci_event.c \
 	src/l2cap.c \
 	src/l2cap_signaling.c \
 	src/hci_transport_h4.c \
@@ -314,6 +316,7 @@ SRCS_BTSTACK += src/ad_parser.c \
 INCLUDES += -I$(OBJ_DIR)/btstack/example
 
 SRCS += $(SRC_PATH)/gatt_battery_query.c
+#SRCS += $(SRC_PATH)/gap_le_advertisements.c
 SRCS += $(SRC_PATH)/btstack_port.c
 
 INCLUDES += -I$(BTSTACK_PATH)
