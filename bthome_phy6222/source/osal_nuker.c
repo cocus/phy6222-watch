@@ -1,52 +1,96 @@
-#include "jump_function.h"
+
 #include "osal_nuker.h"
+
+#include <jump_function.h>
+#include <phy62xx.h>
+#include <log/log.h>
+#include <driver/flash/flash.h>
+#include <osal/osal_critical.h>
 
 #include "FreeRTOS.h" /* for portX functions */
 #include "task.h"     /* for taskX functions */
 
-#include "bus_dev.h"
-
-#include "rf_phy_driver.h"
-
-#include "log.h"
-
-#include "ll.h" // for LL_*
-
-#include "global_config.h" // for global config stuff
-
-#include "OSAL.h"
-
-#include "OSAL_Clock.h" // for osalTimeUpdate()
-
-#include "OSAL_Tasks.h"
-
-#include "../SDK/components/ble/hci/hci_tl.h" // for HCI_ProcessEvent
-
-/* Stuff from ROM */
-extern int m_in_critical_region;
-
-#define		LARGE_HEAP_SIZE	 (4*1024)
+#define LARGE_HEAP_SIZE (4 * 1024)
 ALIGN4_U8 g_largeHeap[LARGE_HEAP_SIZE];
 
-void osal_nuker_init(void)
+extern void vPortSVCHandler(void);
+extern void xPortPendSVHandler(void);
+extern void SysTick_Handler(void);
+
+__ATTR_SECTION_XIP__
+static void Custom_SysTick_Handler(void)
 {
-    /* first of all, set the "m_in_critical_region" to zero as what drv_irq_init() would */
-    m_in_critical_region = 0;
-
-    osal_mem_set_heap((osalMemHdr_t*) g_largeHeap, LARGE_HEAP_SIZE);
-
-    /* so the osal_allocate and deallocate functions work */
-    osal_init_system(); /* doesn't really do much */
+#if (INCLUDE_xTaskGetSchedulerState == 1)
+    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
+    {
+#endif
+        SysTick_Handler();
+#if (INCLUDE_xTaskGetSchedulerState == 1)
+    }
+#endif
 }
 
-int drv_disable_irq1(void)
+__attribute__((__used__))
+__ATTR_SECTION_XIP__
+static void _hard_fault(void* arg)
+{
+    uint32_t *stk = (uint32_t *)arg;
+    dbg_printf("\n[Hard fault handler]\n");
+    dbg_printf("R0   = 0x%08x\n", stk[9]);
+    dbg_printf("R1   = 0x%08x\n", stk[10]);
+    dbg_printf("R2   = 0x%08x\n", stk[11]);
+    dbg_printf("R3   = 0x%08x\n", stk[12]);
+    dbg_printf("R4   = 0x%08x\n", stk[1]);
+    dbg_printf("R5   = 0x%08x\n", stk[2]);
+    dbg_printf("R6   = 0x%08x\n", stk[3]);
+    dbg_printf("R7   = 0x%08x\n", stk[4]);
+    dbg_printf("R8   = 0x%08x\n", stk[5]);
+    dbg_printf("R9   = 0x%08x\n", stk[6]);
+    dbg_printf("R10  = 0x%08x\n", stk[7]);
+    dbg_printf("R11  = 0x%08x\n", stk[8]);
+    dbg_printf("R12  = 0x%08x\n", stk[13]);
+    dbg_printf("SP   = 0x%08x\n", stk[0]);
+    dbg_printf("LR   = 0x%08x\n", stk[14]);
+    dbg_printf("PC   = 0x%08x\n", stk[15]);
+    dbg_printf("PSR  = 0x%08x\n", stk[16]);
+    dbg_printf("ICSR = 0x%08x\n", *(volatile uint32_t *)0xE000ED04);
+
+    while (1)
+        ;
+}
+
+/*
+  This contraption is used so GCC doesn't complain about _hard_fault using the
+  indices of the argument "arg" beyond 1.
+ */
+__attribute__( ( naked ) )
+__ATTR_SECTION_XIP__
+static void gcc_shut_warn(void* arg)
+{
+    UNUSED(arg);
+    __asm volatile(
+        "B _hard_fault\n"
+    );
+}
+
+__attribute__( ( naked ) )
+__ATTR_SECTION_XIP__
+static void Custom_HardFault_Handler(void)
+{
+    uint32_t arg = 0;
+    gcc_shut_warn(&arg);
+}
+
+__ATTR_SECTION_XIP__
+static int drv_disable_irq1(void)
 {
     NVIC_DisableIRQs(BIT(TIM1_IRQn) | BIT(TIM2_IRQn) | BIT(TIM4_IRQn) | BIT(BB_IRQn));
     /* TODO: maybe add a mutex here */
     return m_in_critical_region++ + 1;
 }
 
-int drv_enable_irq1(void)
+__ATTR_SECTION_XIP__
+static int drv_enable_irq1(void)
 {
     /* TODO: maybe add a mutex here */
     int result = m_in_critical_region-- - 1;
@@ -57,81 +101,106 @@ int drv_enable_irq1(void)
     return result;
 }
 
-static void LL_evt_schedule1(void)
+void osal_nuker_init(sysclk_t clk)
 {
-    extern uint32_t llScanT1;
-    LOG("LL_evt_schedule1 CALLED YESSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSSS");
-    LOG("llScanT1 is %08x PREVIOUSLY", llScanT1);
-    void (*func)(void) = (void (*)(void))0x8011;
-    func();
-    LOG("llScanT1 is %08x AFTER!", llScanT1);
-}
+    g_system_clk = clk;
 
+    spif_config(SYS_CLK_DLL_64M, 1, 0x801003b, 0, 0);
 
-void osal_nuker_interrupt_init(void)
-{
-    /* Disable all interrupts */
-    //portDISABLE_INTERRUPTS();
-    NVIC->ICER[0] = 0xFFFFFFFF;
+    clk_init(g_system_clk);
+
+    hal_spif_cache_init(SYS_CLK_DLL_64M, XFRD_FCMD_READ_DUAL);
+
+    /* first of all, set the "m_in_critical_region" to zero as what drv_irq_init() would */
+    m_in_critical_region = 0;
+
+    // osal_mem_set_heap((osalMemHdr_t*) g_largeHeap, LARGE_HEAP_SIZE);
+
+    /* so the osal_allocate and deallocate functions work */
+    osal_init_system(); /* doesn't really do much */
+
+    // JUMP_FUNCTION(UART0_IRQ_HANDLER) = hal_UART0_IRQHandler;
+    LOG_INIT();
+
+    /* init interrupt stuff related to what OSAL used */
+    osal_nuker_interrupt_init();
 
     /* Patch out the disable/enable IRQ functions that OSAL used to use */
     JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE) = (uint32_t)&drv_disable_irq1;
     LOG("New HAL_DRV_IRQ_DISABLE at %08x", JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE));
     JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE) = (uint32_t)&drv_enable_irq1;
     LOG("New HAL_DRV_IRQ_ENABLE at %08x", JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE));
+}
 
-    //JUMP_FUNCTION(TIM1_IRQ_HANDLER) = (uint32_t)&TIM1_IRQHandler1;
-    //LOG("New TIM1_IRQHandler at %08x", JUMP_FUNCTION(TIM1_IRQ_HANDLER));
+void osal_nuker_interrupt_init(void)
+{
+    /* Disable all interrupts */
+    // portDISABLE_INTERRUPTS();
+    // NVIC->ICER[0] = 0xFFFFFFFF;
 
-    //JUMP_FUNCTION(LL_SCHEDULER) = (uint32_t)&LL_scheduler1;
-    //LOG("New LL_SCHEDULER at %08x", JUMP_FUNCTION(LL_SCHEDULER));
+    JUMP_FUNCTION(HARDFAULT_HANDLER) = (uint32_t)&Custom_HardFault_Handler;
+    LOG("New HardFault handler at %08x", JUMP_FUNCTION(HARDFAULT_HANDLER));
 
-    //JUMP_FUNCTION(LL_EVT_SCHEDULE) = (uint32_t)&LL_evt_schedule1;
-    //LOG("New LL_EVT_SCHEDULE at %08x", JUMP_FUNCTION(LL_EVT_SCHEDULE));
+    /* FreeRTOS requires the SVC, PendSV and SysTick handlers routed to them */
+    JUMP_FUNCTION(SVC_HANDLER) = (uint32_t)&vPortSVCHandler;
+    LOG("New SVC handler at %08x", JUMP_FUNCTION(SVC_HANDLER));
+
+    JUMP_FUNCTION(PENDSV_HANDLER) = (uint32_t)&xPortPendSVHandler;
+    LOG("New PendSV handler at %08x", JUMP_FUNCTION(PENDSV_HANDLER));
+
+    JUMP_FUNCTION(SYSTICK_HANDLER) = (uint32_t)&Custom_SysTick_Handler;
+    LOG("New SysTick handler at %08x", JUMP_FUNCTION(SYSTICK_HANDLER));
+
+    // JUMP_FUNCTION(TIM1_IRQ_HANDLER) = (uint32_t)&TIM1_IRQHandler1;
+    // LOG("New TIM1_IRQHandler at %08x", JUMP_FUNCTION(TIM1_IRQ_HANDLER));
+
+    // JUMP_FUNCTION(LL_SCHEDULER) = (uint32_t)&LL_scheduler1;
+    // LOG("New LL_SCHEDULER at %08x", JUMP_FUNCTION(LL_SCHEDULER));
+
+    // JUMP_FUNCTION(LL_EVT_SCHEDULE) = (uint32_t)&LL_evt_schedule1;
+    // LOG("New LL_EVT_SCHEDULE at %08x", JUMP_FUNCTION(LL_EVT_SCHEDULE));
 
     hal_clk_gate_enable(MOD_TIMER); /* systick */
 
-    hal_clk_gate_enable(MOD_BB);
-    hal_clk_gate_enable(MOD_BBREG);
+    // hal_clk_gate_enable(MOD_BB);
+    // hal_clk_gate_enable(MOD_BBREG);
 
     /* this seems to modify stuff inside the BB region, so they need to be clkd before */
-    extern void efuse_init(void);
-    efuse_init(); // _rom_sec_boot_init
+    // extern void efuse_init(void);
+    // efuse_init(); // _rom_sec_boot_init
 
-    //hal_clk_gate_enable(MOD_TIMER1);
-    //hal_clk_gate_enable(MOD_TIMER3);
-    //hal_clk_gate_enable(MOD_TIMER2);
-    //hal_clk_gate_enable(MOD_TIMER4);
+    // hal_clk_gate_enable(MOD_TIMER1);
+    // hal_clk_gate_enable(MOD_TIMER3);
+    // hal_clk_gate_enable(MOD_TIMER2);
+    // hal_clk_gate_enable(MOD_TIMER4);
 
-    typedef void (*my_function)(void);
-    my_function pFunc = (my_function)(0xa2e1);
+    // typedef void (*my_function)(void);
+    // my_function pFunc = (my_function)(0xa2e1);
 
     /*
       This calls boot_init(), wakeup_init(), rf_init() and rf_calibrate().
       GlobalConfig [14] needs to be set before calling it.
      */
-    //pGlobal_config[CLOCK_SETTING] = g_system_clk; //CLOCK_32MHZ;
-    extern void init_config(void);
-    init_config();
+    // pGlobal_config[CLOCK_SETTING] = g_system_clk; //CLOCK_32MHZ;
+    // extern void init_config(void);
+    // init_config();
 
     // Own Device Public Address
-    extern uint8 ownPublicAddr[ LL_DEVICE_ADDR_LEN ];     // index 0..5 is LSO..MSB
+    // extern uint8 ownPublicAddr[ LL_DEVICE_ADDR_LEN ];     // index 0..5 is LSO..MSB
+    // ownPublicAddr[3] = 0xc0; // LSO
+    // ownPublicAddr[4] = 0x00; // LSO
+    // ownPublicAddr[5] = 0x01; // MSB
+    // pFunc();
 
-    ownPublicAddr[3] = 0xc0; // LSO
-    ownPublicAddr[4] = 0x00; // LSO
-    ownPublicAddr[5] = 0x01; // MSB
-
-    pFunc();
-
-    //NVIC_SetPriority((IRQn_Type)BB_IRQn, IRQ_PRIO_REALTIME);
-    //NVIC_SetPriority((IRQn_Type)TIM1_IRQn, IRQ_PRIO_HIGH); /* ll_EVT */
-    //NVIC_SetPriority((IRQn_Type)TIM3_IRQn, IRQ_PRIO_APP);  /* OSAL_TICK */
-    //NVIC_SetPriority((IRQn_Type)TIM4_IRQn, IRQ_PRIO_HIGH); /* LL_EXA_ADV */
+    // NVIC_SetPriority((IRQn_Type)BB_IRQn, IRQ_PRIO_REALTIME);
+    // NVIC_SetPriority((IRQn_Type)TIM1_IRQn, IRQ_PRIO_HIGH); /* ll_EVT */
+    // NVIC_SetPriority((IRQn_Type)TIM3_IRQn, IRQ_PRIO_APP);  /* OSAL_TICK */
+    // NVIC_SetPriority((IRQn_Type)TIM4_IRQn, IRQ_PRIO_HIGH); /* LL_EXA_ADV */
 
     portENABLE_INTERRUPTS();
 }
 
-
+#if 0
 static void hal_rfphy_init(void)
 {
     // Watchdog_Init(NULL);
@@ -181,56 +250,9 @@ void osal_nuker_ble_init(void)
 
     HCI_Init(0xc0);
 }
-
-extern void vPortSVCHandler(void);
-extern void xPortPendSVHandler(void);
-extern void SysTick_Handler(void);
-
-static void Custom_SysTick_Handler(void)
-{
-#if (INCLUDE_xTaskGetSchedulerState == 1)
-    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-    {
 #endif
-        SysTick_Handler();
-#if (INCLUDE_xTaskGetSchedulerState == 1)
-    }
-#endif
-}
 
-static void _hard_fault(void *arg)
-{
-    uint32_t *stk = (uint32_t*)(arg);
-    LOG("\n[Hard fault handler]");
-    LOG("R0   = 0x%08x", stk[9]);
-    LOG("R1   = 0x%08x", stk[10]);
-    LOG("R2   = 0x%08x", stk[11]);
-    LOG("R3   = 0x%08x", stk[12]);
-    LOG("R4   = 0x%08x", stk[1]);
-    LOG("R5   = 0x%08x", stk[2]);
-    LOG("R6   = 0x%08x", stk[3]);
-    LOG("R7   = 0x%08x", stk[4]);
-    LOG("R8   = 0x%08x", stk[5]);
-    LOG("R9   = 0x%08x", stk[6]);
-    LOG("R10  = 0x%08x", stk[7]);
-    LOG("R11  = 0x%08x", stk[8]);
-    LOG("R12  = 0x%08x", stk[13]);
-    LOG("SP   = 0x%08x", stk[0]);
-    LOG("LR   = 0x%08x", stk[14]);
-    LOG("PC   = 0x%08x", stk[15]);
-    LOG("PSR  = 0x%08x", stk[16]);
-    LOG("ICSR = 0x%08x", *(volatile uint32_t *)0xE000ED04);
-
-    while (1)
-        ;
-}
-
-static void Custom_HardFault_Handler(void)
-{
-    uint32_t arg = 0;
-    _hard_fault(&arg);
-}
-
+#if 0
 static struct
 {
     uint8_t *task_id; // Task ID
@@ -286,38 +308,11 @@ void osal_fake_timer(void *arg)
         //LOG("tick OSAL_timeSeconds = %d", OSAL_timeSeconds);
     }
 }
+#endif
 
 void powerconserve_stub(void)
 {
     // This is a stub for OSAL_POWER_CONSERVE, which is not used in FreeRTOS.
     // It can be left empty or log a message if needed.
     LOG("OSAL_POWER_CONSERVE called, but not implemented in FreeRTOS.");
-}
-
-
-
-void osal_nuker_freertos_patch(void)
-{
-    JUMP_FUNCTION(HARDFAULT_HANDLER) = (uint32_t)&Custom_HardFault_Handler;
-    LOG("New HardFault handler at %08x", JUMP_FUNCTION(HARDFAULT_HANDLER));
-
-    /* FreeRTOS requires the SVC, PendSV and SysTick handlers routed to them */
-    JUMP_FUNCTION(SVC_HANDLER) = (uint32_t)&vPortSVCHandler;
-    LOG("New SVC handler at %08x", JUMP_FUNCTION(SVC_HANDLER));
-
-    JUMP_FUNCTION(PENDSV_HANDLER) = (uint32_t)&xPortPendSVHandler;
-    LOG("New PendSV handler at %08x", JUMP_FUNCTION(PENDSV_HANDLER));
-
-    JUMP_FUNCTION(SYSTICK_HANDLER) = (uint32_t)&Custom_SysTick_Handler;
-    LOG("New SysTick handler at %08x", JUMP_FUNCTION(SYSTICK_HANDLER));
-
-    //JUMP_FUNCTION(OSAL_POWER_CONSERVE) = (uint32_t)&powerconserve_stub;
-    //LOG("New OSAL_POWER_CONSERVE at %08x", JUMP_FUNCTION(OSAL_POWER_CONSERVE));
-
-
-    JUMP_FUNCTION(OSAL_SET_EVENT) = (uint32_t)&osal_fake_set_event;
-    LOG("New OSAL_SET_EVENT at %08x", JUMP_FUNCTION(OSAL_SET_EVENT));
-
-
-    xTaskCreate(osal_fake_timer, "osal_fake_timer", 256, NULL, 4, NULL);
 }

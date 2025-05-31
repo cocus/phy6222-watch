@@ -1,13 +1,11 @@
 #ifndef OSAL_NUKER_H
 #define OSAL_NUKER_H
 
+#include <driver/clock/clock.h>
 
-
-void osal_nuker_init(void);
+void osal_nuker_init(sysclk_t clk);
 
 void osal_nuker_interrupt_init(void);
-
-void osal_nuker_freertos_patch(void);
 
 void osal_nuker_ble_init(void);
 

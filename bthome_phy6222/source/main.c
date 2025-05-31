@@ -1,9 +1,12 @@
-#include "clock.h"
-#include "flash.h"
-#include "log.h"
 
-#include "comdef.h"
-#include "jump_function.h"
+#include <phy62xx.h>
+#include <driver/gpio/gpio.h>
+#include <driver/uart/uart.h>
+#include <driver/clock/clock.h>
+#include <driver/flash/flash.h>
+
+#include <log/log.h>
+
 #include "FreeRTOS.h"
 #include "task.h"
 
@@ -31,7 +34,32 @@ void genericTask(void *argument)
 {
     UNUSED(argument);
     LOG("Hi from genericTask");
+    hal_gpio_pin_init(GPIO_LED, GPIO_OUTPUT);
     hal_gpio_write(GPIO_LED, 1);
+//void (*p)(void) = (void(*)(void))0;
+//p();
+
+    LOG("NVIC:");
+    LOG("  ISER:       %08x ICER:   %08x",
+            NVIC->ISER[0], NVIC->ICER[0]);
+    LOG("  ISPR:       %08x ICPR:   %08x",
+            NVIC->ISPR[0], NVIC->ICPR[0]);
+    LOG("  IRQ PRIO:   %08x %08x %08x %08x",
+            NVIC->IP[0], NVIC->IP[1],
+            NVIC->IP[2], NVIC->IP[3]);
+    LOG("              %08x %08x %08x %08x",
+            NVIC->IP[4], NVIC->IP[5],
+            NVIC->IP[6], NVIC->IP[7]);
+
+    LOG("SYSCON:");
+    LOG("  CPUID:      %08x",
+            SCB->CPUID);
+    LOG("  ICSR:       %08x AIRCR:  %08x",
+            SCB->ICSR, SCB->AIRCR);
+    LOG("  SCR:        %08x CCR:    %08x",
+            SCB->SCR, SCB->CCR);
+    LOG("  SHPR2:      %08x SHPR3:  %08x",
+            SCB->SHP[0], SCB->SHP[1]);
 
     for (;;)
     {
@@ -82,10 +110,10 @@ uint8_t *str_bin2hex(uint8_t *d, uint8_t *s, int len)
     return d;
 }
 
-uint8 devInfoSerialNumber[19] = {0};
-
+uint8_t devInfoSerialNumber[19] = {0};
+#if 0
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-volatile uint8 g_clk32K_config = CLK_32K_RCOSC; // CLK_32K_XTAL, CLK_32K_RCOSC
+volatile uint8_t g_clk32K_config = CLK_32K_RCOSC; // CLK_32K_XTAL, CLK_32K_RCOSC
 
 #include "rf_phy_driver.h"
 #include "pwrmgr.h"
@@ -111,52 +139,35 @@ void hal_lowpower_init(void)
     *(volatile uint32_t *)0x40000014 = 0x01e00279; //
 #endif
 }
+#endif
 
-TaskHandle_t hbtstack_task;
 int main(void)
 {
-    g_system_clk = SYS_CLK_DLL_48M; // SYS_CLK_XTAL_16M; // SYS_CLK_XTAL_16M, SYS_CLK_DBL_32M, SYS_CLK_DLL_64M
-
-    spif_config(SYS_CLK_DLL_64M, 1, 0x801003b, 0, 0);
-
     /* init stuff as if OSAL was in charge */
-    osal_nuker_init();
+    osal_nuker_init(SYS_CLK_DLL_48M);
 
-    clk_init(g_system_clk);
-
-    hal_spif_cache_init(SYS_CLK_DLL_64M, XFRD_FCMD_READ_DUAL);
-
-    hal_lowpower_init();
-
-    /* init interrupt stuff related to what OSAL used */
-    osal_nuker_interrupt_init();
-
-    JUMP_FUNCTION(UART0_IRQ_HANDLER) = hal_UART0_IRQHandler;
-    LOG_INIT();
+    //hal_lowpower_init();
 
     LOG("Build time: %s %s", __DATE__, __TIME__);
 
-    LOG("SDK Version ID %08x ", SDK_VER_RELEASE_ID);
+    //LOG("SDK Version ID %08x ", SDK_VER_RELEASE_ID);
 
-    hal_get_flash_info();
-    uint8_t *p = str_bin2hex(devInfoSerialNumber, (uint8_t *)&phy_flash.IdentificationID, 3);
-    *p++ = '-';
-    LOG("serialnum '%s'", devInfoSerialNumber);
+    //hal_get_flash_info();
+    //uint8_t *p = str_bin2hex(devInfoSerialNumber, (uint8_t *)&phy_flash.IdentificationID, 3);
+    //*p++ = '-';
+    //LOG("serialnum '%s'", devInfoSerialNumber);
 
-    osal_nuker_freertos_patch();
+    //osal_nuker_freertos_patch();
 
     LOG("g_hclk %d", g_hclk);
-
-
-
 
     // NVIC_SetPriority((IRQn_Type)PendSV_IRQn, 15);
 
     xTaskCreate(genericTask, "genericTask", 256, NULL, 1, NULL);
     // xTaskCreate(genericTask2, "genericTask2", 256, NULL, 1, NULL);
 
-    extern void port_thread(void *args);
-    xTaskCreate(port_thread, "btstack_thread", 4096, NULL, 2, NULL);
+    //extern void port_thread(void *args);
+    //xTaskCreate(port_thread, "btstack_thread", 4096, NULL, 2, NULL);
 
     LOG("starting scheduler");
 
