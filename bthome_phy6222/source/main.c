@@ -7,6 +7,8 @@
 #include "FreeRTOS.h"
 #include "task.h"
 
+#include "osal_nuker.h"
+
 // LED
 #define GPIO_LED GPIO_P00
 
@@ -33,11 +35,11 @@ void genericTask(void *argument)
 
     for (;;)
     {
-        //LOG("OFF");
+        // LOG("OFF");
         hal_gpio_write(GPIO_LED, 1);
         vTaskDelay(pdMS_TO_TICKS(500));
 
-        //LOG("ON");
+        // LOG("ON");
         hal_gpio_write(GPIO_LED, 0);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
@@ -52,11 +54,11 @@ void genericTask2(void *argument)
 
     for (;;)
     {
-        //LOG("OFF");
+        // LOG("OFF");
         hal_gpio_write(BKL_PIN, 1);
         vTaskDelay(pdMS_TO_TICKS(250));
 
-        //LOG("ON");
+        // LOG("ON");
         hal_gpio_write(BKL_PIN, 0);
         vTaskDelay(pdMS_TO_TICKS(250));
     }
@@ -64,79 +66,9 @@ void genericTask2(void *argument)
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-extern int clear_timer_int(AP_TIM_TypeDef* TIMx);
-extern void clear_timer(AP_TIM_TypeDef* TIMx);
-extern void LL_evt_schedule(void);
-
-void TIM1_IRQHandler1(void)
-{
-  /*  HAL_ENTER_CRITICAL_SECTION() */
-
-  if (AP_TIM1->status & 0x1)
-    {
-      clear_timer_int(AP_TIM1);
-      clear_timer(AP_TIM1);
-      LL_evt_schedule();
-    }
-
-  /* HAL_EXIT_CRITICAL_SECTION(); */
-}
 
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
-
-extern uint32_t osal_sys_tick;
-
-extern void vPortSVCHandler(void);
-extern void xPortPendSVHandler(void);
-extern void SysTick_Handler(void);
-
-void Custom_SysTick_Handler(void)
-{
-    //osal_sys_tick += 1; // not sure?
-
-#if (INCLUDE_xTaskGetSchedulerState == 1)
-    if (xTaskGetSchedulerState() != taskSCHEDULER_NOT_STARTED)
-    {
-#endif
-        SysTick_Handler();
-#if (INCLUDE_xTaskGetSchedulerState == 1)
-    }
-#endif
-}
-
-void _hard_fault(uint32_t *arg)
-{
-    uint32_t *stk = (uint32_t *)((uint32_t)arg);
-    LOG("\n[Hard fault handler]");
-    LOG("R0   = 0x%08x", stk[9]);
-    LOG("R1   = 0x%08x", stk[10]);
-    LOG("R2   = 0x%08x", stk[11]);
-    LOG("R3   = 0x%08x", stk[12]);
-    LOG("R4   = 0x%08x", stk[1]);
-    LOG("R5   = 0x%08x", stk[2]);
-    LOG("R6   = 0x%08x", stk[3]);
-    LOG("R7   = 0x%08x", stk[4]);
-    LOG("R8   = 0x%08x", stk[5]);
-    LOG("R9   = 0x%08x", stk[6]);
-    LOG("R10  = 0x%08x", stk[7]);
-    LOG("R11  = 0x%08x", stk[8]);
-    LOG("R12  = 0x%08x", stk[13]);
-    LOG("SP   = 0x%08x", stk[0]);
-    LOG("LR   = 0x%08x", stk[14]);
-    LOG("PC   = 0x%08x", stk[15]);
-    LOG("PSR  = 0x%08x", stk[16]);
-    LOG("ICSR = 0x%08x", *(volatile uint32_t *)0xE000ED04);
-
-    while (1)
-        ;
-}
-
-void Custom_HardFault_Handler(void)
-{
-    uint32_t arg = 0;
-    _hard_fault(&arg);
-}
 
 
 const char *hex_ascii = {"0123456789ABCDEF"};
@@ -158,6 +90,28 @@ volatile uint8 g_clk32K_config = CLK_32K_RCOSC; // CLK_32K_XTAL, CLK_32K_RCOSC
 #include "rf_phy_driver.h"
 #include "pwrmgr.h"
 
+void hal_lowpower_init(void)
+{
+    hal_rtc_clock_config((CLK32K_e)g_clk32K_config);
+
+    DCDC_REF_CLK_SETTING(1);
+    DCDC_CONFIG_SETTING(0x0a);
+    DIG_LDO_CURRENT_SETTING(0x01);
+    // drv_pm_ram_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2);
+    // hal_pwrmgr_RAM_retention(RET_SRAM0);
+    hal_pwrmgr_RAM_retention_set();
+    hal_pwrmgr_LowCurrentLdo_enable();
+    //========= low power module clk gate
+#if (PHY_MCU_TYPE == MCU_BUMBEE_CK802)
+    *(volatile uint32_t *)0x40000008 = 0x001961f1; //
+    *(volatile uint32_t *)0x40000014 = 0x01e00278; //
+#else
+
+    *(volatile uint32_t *)0x40000008 = 0x001961f0; //
+    *(volatile uint32_t *)0x40000014 = 0x01e00279; //
+#endif
+}
+
 TaskHandle_t hbtstack_task;
 int main(void)
 {
@@ -165,31 +119,19 @@ int main(void)
 
     spif_config(SYS_CLK_DLL_64M, 1, 0x801003b, 0, 0);
 
-    drv_irq_init();
+    /* init stuff as if OSAL was in charge */
+    osal_nuker_init();
 
     clk_init(g_system_clk);
-	hal_rtc_clock_config((CLK32K_e) g_clk32K_config);
 
     hal_spif_cache_init(SYS_CLK_DLL_64M, XFRD_FCMD_READ_DUAL);
 
+    hal_lowpower_init();
 
-    DCDC_REF_CLK_SETTING(1);
-    DCDC_CONFIG_SETTING(0x0a);
-    DIG_LDO_CURRENT_SETTING(0x01);
-    //drv_pm_ram_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2);
-    //hal_pwrmgr_RAM_retention(RET_SRAM0);
-    hal_pwrmgr_RAM_retention_set();
-    hal_pwrmgr_LowCurrentLdo_enable();
-    //========= low power module clk gate
-#if(PHY_MCU_TYPE==MCU_BUMBEE_CK802)
-    *(volatile uint32_t *)0x40000008 = 0x001961f1;  //
-    *(volatile uint32_t *)0x40000014 = 0x01e00278;  //
-#else
+    /* init interrupt stuff related to what OSAL used */
+    osal_nuker_interrupt_init();
 
-    *(volatile uint32_t *)0x40000008 = 0x001961f0;  //
-    *(volatile uint32_t *)0x40000014 = 0x01e00279;  //
-#endif
-
+    JUMP_FUNCTION(UART0_IRQ_HANDLER) = hal_UART0_IRQHandler;
     LOG_INIT();
 
     LOG("Build time: %s %s", __DATE__, __TIME__);
@@ -201,43 +143,20 @@ int main(void)
     *p++ = '-';
     LOG("serialnum '%s'", devInfoSerialNumber);
 
-
-    /* Disable all interrupts */
-    NVIC->ICER[0] = 0xFFFFFFFF;
-
-    NVIC_SetPriority((IRQn_Type)BB_IRQn,    IRQ_PRIO_REALTIME);
-    NVIC_SetPriority((IRQn_Type)TIM1_IRQn,  IRQ_PRIO_HIGH);     /* ll_EVT */
-    NVIC_SetPriority((IRQn_Type)TIM3_IRQn,  IRQ_PRIO_APP);      /* OSAL_TICK */
-    NVIC_SetPriority((IRQn_Type)TIM4_IRQn,  IRQ_PRIO_HIGH);     /* LL_EXA_ADV */
-
-    NVIC_EnableIRQ((IRQn_Type)BB_IRQn);
-    NVIC_EnableIRQ((IRQn_Type)TIM1_IRQn);                   /* ll_EVT */
-    NVIC_EnableIRQ((IRQn_Type)TIM3_IRQn);
-
-    portENABLE_INTERRUPTS();
-
-    JUMP_FUNCTION(HARDFAULT_HANDLER) = (uint32_t)&Custom_HardFault_Handler;
-
-    // Freertos stuff
-    JUMP_FUNCTION(SVC_HANDLER) = (uint32_t)&vPortSVCHandler;
-    LOG("SVC handler at %08x", JUMP_FUNCTION(SVC_HANDLER));
-
-    JUMP_FUNCTION(PENDSV_HANDLER) = (uint32_t)&xPortPendSVHandler;
-    LOG("PendSV handler at %08x", JUMP_FUNCTION(PENDSV_HANDLER));
-
-    JUMP_FUNCTION(SYSTICK_HANDLER) = (uint32_t)&Custom_SysTick_Handler;
-    LOG("SysTick handler at %08x", JUMP_FUNCTION(SYSTICK_HANDLER));
+    osal_nuker_freertos_patch();
 
     LOG("g_hclk %d", g_hclk);
+
+
+
 
     // NVIC_SetPriority((IRQn_Type)PendSV_IRQn, 15);
 
     xTaskCreate(genericTask, "genericTask", 256, NULL, 1, NULL);
-    //xTaskCreate(genericTask2, "genericTask2", 256, NULL, 1, NULL);
+    // xTaskCreate(genericTask2, "genericTask2", 256, NULL, 1, NULL);
 
-
-    extern void port_thread(void* args);
-    xTaskCreate(port_thread, "btstack_thread", 4096, NULL, 1, NULL);
+    extern void port_thread(void *args);
+    xTaskCreate(port_thread, "btstack_thread", 4096, NULL, 2, NULL);
 
     LOG("starting scheduler");
 

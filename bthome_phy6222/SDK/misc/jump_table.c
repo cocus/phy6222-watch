@@ -49,7 +49,7 @@ const uint32_t* jump_table_base[256] __attribute__((section("jump_table_mem_area
     0, 0, 0, 0, 0, 0, 0, 0, 0, 0,               // 90 - 99, reserved for rom patch
     (const uint32_t*)0,         // <100 -
     (const uint32_t*)0,
-    [RF_INIT](const uint32_t*)&rf_phy_ini,
+    [RF_INIT] = (const uint32_t*)&rf_phy_ini,
     0,
     0,
     0,
@@ -77,7 +77,7 @@ const uint32_t* jump_table_base[256] __attribute__((section("jump_table_mem_area
     0,      // 228
     0,       // 229
     0, 0, 0, 0, 0,  // 230 - 234
-    (const uint32_t*)0,      // 235 uart irq handler
+    [V11_IRQ_HANDLER] = (const uint32_t*)0,      // 235 uart irq handler
     0, 0, 0, 0, 0,    // 236 - 240
     0, 0, 0, 0, 0, 0, 0, 0, 0,     // 241 - 249, for ISR entry
     0, 0, 0, 0, 0, 0                  // 250 - 255, for ISR entry

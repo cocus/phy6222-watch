@@ -245,7 +245,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
     UNUSED(channel);
     UNUSED(size);
 
-    LOG("++++++++++++++++++++ packet_handler called with packet_type 0x%02x, size %u\n", packet_type, size);
+    //LOG("++++++++++++++++++++ packet_handler called with packet_type 0x%02x, size %u\n", packet_type, size);
 
     if (packet_type != HCI_EVENT_PACKET) return;
 
@@ -256,6 +256,7 @@ static void packet_handler(uint8_t packet_type, uint16_t channel, uint8_t *packe
     uint8_t length;
     const uint8_t * data;
 
+    LOG("Evt type is = %02x, size = %u", hci_event_packet_get_type(packet), size);
     switch (hci_event_packet_get_type(packet)) {
         case GAP_EVENT_ADVERTISING_REPORT:
             gap_event_advertising_report_get_address(packet, address);

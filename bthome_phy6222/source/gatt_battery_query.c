@@ -172,11 +172,11 @@ static void hci_event_handler(uint8_t packet_type, uint16_t channel, uint8_t *pa
     UNUSED(size);
 
     /* LISTING_RESUME */
-    LOG("hci_event_handler called with packet_type 0x%02x, size %u\n", packet_type, size);
 
     if (packet_type != HCI_EVENT_PACKET){
         return;  
     } 
+    LOG("hci_event_handler called with packet_type 0x%02x, size %u, evt type %02x", packet_type, size, hci_event_packet_get_type(packet));
 
     switch (hci_event_packet_get_type(packet)) {
         /* LISTING_PAUSE */
@@ -321,31 +321,19 @@ static void gatt_client_event_handler(uint8_t packet_type, uint16_t channel, uin
 }
  /* LISTING_END */
 
-int btstack_main(int argc, const char * argv[]);
-int btstack_main(int argc, const char * argv[]){
-
+int btstack_main(void);
+int btstack_main(void)
+{
     // parse address if command line arguments are provided
-    int arg;
-    cmdline_addr_found = 0;
-    
-    for (arg = 1; arg < argc; arg++) {
-        if(!strcmp(argv[arg], "-a") || !strcmp(argv[arg], "--address")){
-            if (arg + 1 < argc) {
-                arg++;
-                cmdline_addr_found = sscanf_bd_addr(argv[arg], cmdline_addr);
-            }
-            if (!cmdline_addr_found) {
-                LOG("\nUsage: %s [-a|--address aa:bb:cc:dd:ee:ff]\n", argv[0]);
-                LOG("If no argument is provided, %s will start scanning and connect to the first found device.\n"
-                                "To connect to a specific device use argument [-a].\n\n", argv[0]);
-                return 1;
-            }
-        }
-    }
-    if (!cmdline_addr_found) {
-        LOG("No specific address specified or found; start scanning for any advertiser.\n");
-    }
-    
+    //"dd:44:00:12:1e:d9"
+    cmdline_addr[0] = 0xdd;
+    cmdline_addr[1] = 0x44;
+    cmdline_addr[2] = 0x00;
+    cmdline_addr[3] = 0x12;
+    cmdline_addr[4] = 0x1e;
+    cmdline_addr[5] = 0xd9;
+
+    cmdline_addr_found = 1;
     battery_service_client_setup();
 
     app_state = APP_STATE_IDLE;

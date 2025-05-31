@@ -180,7 +180,6 @@ static void (*transport_packet_handler)(uint8_t packet_type, uint8_t *packet, ui
 static btstack_data_source_t transport_data_source;
 
 // run from main thread
-
 static void transport_send_hardware_error(uint8_t error_code)
 {
     uint8_t event[] = {HCI_EVENT_HARDWARE_ERROR, 1, error_code};
@@ -232,13 +231,7 @@ static void transport_process(btstack_data_source_t *ds, btstack_data_source_cal
 
         uint8_t size = hci_outgoing_event[1] + 2;
         uint8_t *packet = (uint8_t *)&hci_outgoing_event[0];
-        dbg_printf("DUMP DUMP DUMP dump pkt: len %d\n", size);
-        for (int k = 0; k < size; k++)
-            dbg_printf("%02X,", packet[k]);
-        dbg_printf("\n");
-        dbg_printf("hciCtrlCmdToken %02x\n", hciCtrlCmdToken);
 
-        LOG(" -> deliver command complete event %x, size %d", hci_outgoing_event[0], hci_outgoing_event[1] + 2);
         transport_packet_handler(HCI_EVENT_PACKET, hci_outgoing_event, hci_outgoing_event[1] + 2);
     }
 
@@ -253,37 +246,11 @@ static void transport_process(btstack_data_source_t *ds, btstack_data_source_cal
     if (send_transport_sent)
     {
         send_transport_sent = false;
-        LOG(" -> notify upper stack that it might be possible to send again");
+        //LOG(" -> notify upper stack that it might be possible to send again");
         // notify upper stack that it might be possible to send again
         transport_emit_hci_event(&hci_event_transport_packet_sent);
     }
 }
-
-int drv_disable_irq1(void)
-{
-    NVIC_DisableIRQs(BIT(TIM1_IRQn) | BIT(TIM3_IRQn) | BIT(BB_IRQn));
-    return 0;
-}
-
-int drv_enable_irq1(void)
-{
-    NVIC_EnableIRQs(BIT(TIM1_IRQn) | BIT(TIM3_IRQn) | BIT(BB_IRQn));
-    return 0;
-}
-
-#define H4_HEADER_SIZE 1
-
-//
-// Minimum length for EVENT packet is 1+1+1
-// | Packet Type (1) | Event Code(1) | Length(1) |
-//
-#define HCI_EVENT_MIN_LENGTH 3
-
-//
-// Minimum length for DATA packet is 1+2+2
-// | Packet Type (1) | Handler(2) | Length(2) |
-//
-#define HCI_DATA_MIN_LENGTH 5
 
 typedef struct __attribute__((packed))
 {
@@ -306,10 +273,14 @@ typedef struct __attribute__((packed))
     uint8_t acl_data[1];
 } acldataserial_t;
 
+#define HCI_TASK_CUSTOM_ID 0xc0
+
 uint8_t pplus_ble_recv_msg(uint8_t destination_task, uint8_t *msg_ptr)
 {
-    if (destination_task != hciTaskID)
+    if (destination_task != HCI_TASK_CUSTOM_ID)
     {
+        LOG(" <<<<< pplus_ble_recv_msg: destination_task %02X != HCI_TASK_CUSTOM_ID %02X, dropping packet",
+            destination_task, HCI_TASK_CUSTOM_ID);
         return 0;
     }
 
@@ -320,13 +291,19 @@ uint8_t pplus_ble_recv_msg(uint8_t destination_task, uint8_t *msg_ptr)
     uint16_t size = 0;
     uint8_t *packet = NULL;
 
-    LOG("<<<<< pplus_ble_recv_msg: packet type %02X",
-        evp->type);
+    LOG("<<<<< pplus_ble_recv_msg: event %d, status %d, packet type %02X, ptr %p",
+        hci_msg->hdr.event, hci_msg->hdr.status, evp->type, msg_ptr);
 
     switch (evp->type)
     {
     case HCI_EVENT_PACKET:
 
+        if (hci_outgoing_event_ready)
+        {
+            //LOG(" <<<<< pplus_ble_recv_msg: hci_outgoing_event_ready is true, dropping packet");
+//            send_hardware_error = 0x01; // hardware error
+            goto cleanup;
+        }
         size = evp->evt.plen + 2;
         packet = (uint8_t *)&evp->evt;
         packet[2] = 1;
@@ -334,10 +311,6 @@ uint8_t pplus_ble_recv_msg(uint8_t destination_task, uint8_t *msg_ptr)
         /* Send buffer to upper stack */
         memcpy(&hci_outgoing_event[0], packet, size);
         hci_outgoing_event_ready = true;
-        /*transport_packet_handler(
-            evp->type,
-            packet,
-            size);*/
         break;
 
         /*case HCI_ACL_DATA_PACKET:
@@ -354,51 +327,12 @@ uint8_t pplus_ble_recv_msg(uint8_t destination_task, uint8_t *msg_ptr)
         send_hardware_error = 0x01;
         break;
     }
-#if 0
 
-    if (pdata->pkt == HCI_EVENT_PACKET)
+cleanup:
+    if (hci_msg->hdr.event == 3 || hci_msg->hdr.event == 1)
     {
-        dataLength = pdata->plen;
-        hcipkt_len = HCI_EVENT_MIN_LENGTH + dataLength;
-        //pdata[3] = 1;
-
-        dbg_printf("DUMP DUMP DUMP dump pkt: len %d\n", dataLength);
-        for (int k = 0; k < hcipkt_len; k++)
-            dbg_printf("%02X,", pdata[k]);
-        dbg_printf("\n");
-        dbg_printf("hciCtrlCmdToken %02x\n", hciCtrlCmdToken);
-
-        // Send buffer to upper stack
-        transport_packet_handler(
-            pdata->pkt,
-            &pdata[H4_HEADER_SIZE],
-            hcipkt_len - H4_HEADER_SIZE);
+        osal_bm_free(msg_ptr + 12);
     }
-    else if (pdata[0] == HCI_ACL_DATA_PACKET)
-    {
-        dataLength = pdata[3];
-        hcipkt_len = HCI_DATA_MIN_LENGTH + dataLength;
-        pdata[2] &= 0x3f;
-
-        /* logx("len %d",dataLength);
-         * for(int k = 0;k<hcipkt_len ;k++)
-         * logx("%02X,",pdata[k]);
-         * logx("");
-         */
-
-        // Send buffer to upper stack
-        transport_packet_handler(
-            pdata[0],
-            &pdata[H4_HEADER_SIZE],
-            hcipkt_len - H4_HEADER_SIZE);
-    }
-    else
-    {
-        send_hardware_error = 0x01;
-    }
-    /* gpio_write(P25, 0); */
-#endif
-    // osal_bm_free(hcievt->header.pData);
 
     uint8_t r = osal_msg_deallocate(msg_ptr);
     btstack_run_loop_poll_data_sources_from_irq();
@@ -454,8 +388,6 @@ static void transport_register_packet_handler(void (*handler)(uint8_t packet_typ
  */
 static int transport_can_send_packet_now(uint8_t packet_type)
 {
-    LOG("transport_can_send_packet_now: packet_type %02X, send_transport_sent %d, hci_outgoing_event_ready %d",
-        packet_type, send_transport_sent, hci_outgoing_event_ready);
     if (send_transport_sent)
         return 0;
     switch (packet_type)
@@ -476,8 +408,6 @@ static void controller_handle_hci_command(uint8_t *packet, uint16_t size)
     UNUSED(size);
     btstack_assert(hci_outgoing_event_ready == false);
 
-    const uint8_t local_supported_features[] = {0, 0, 0, 0, 0x40, 0, 0, 0};
-    // const uint8_t read_buffer_size_result[] = { 0x1b, 0, HCI_NUM_TX_BUFFERS_STACK };
     hciStatus_t status;
     uint16_t opcode = little_endian_read_16(packet, 0);
 
@@ -491,52 +421,17 @@ static void controller_handle_hci_command(uint8_t *packet, uint16_t size)
         {
             LOG("HCI_RESET failed with status %02x", status);
         }
-        // transport_notify_cmd_complete(opcode);
         break;
+
     case HCI_OPCODE_HCI_READ_LOCAL_SUPPORTED_FEATURES:
-        // No. 37, byte 4, bit 6 = LE Supported (Controller)
         LOG("HCI_READ_LOCAL_SUPPORTED_FEATURES command received");
-
-        /*
-        bad:
-
-        [1707] transport_send_packet: >>>>> transport_send_packet: packet_type 01, size 3
-        [1726] controller_handle_hci_command: HCI_READ_LOCAL_SUPPORTED_FEATURES command received
-        [1747] pplus_ble_recv_msg: PATCH MSG RX!!!! destination_task C0, msg_ptr 1FFF08EC
-        [1767] pplus_ble_recv_msg: <<<<< pplus_ble_recv_msg: packet type 04
-        DUMP DUMP DUMP dump pkt: len 14
-        0E,0C,54,03,10,00,00,00,00,00,60,00,00,00,
-        hciCtrlCmdToken 00
-        [1807] packet_handler: ++++++++++++++++++++ packet_handler called with packet_type 0x04, size 14
-
-        good:
-        [1757] transport_send_packet: >>>>> transport_send_packet: packet_type 01, size 3
-        [1777] controller_handle_hci_command: HCI_READ_LOCAL_SUPPORTED_FEATURES command received
-        DUMP DUMP DUMP dump pkt: len 14
-        0E,0C,01,03,10,00,00,00,00,00,40,00,00,00,
-        hciCtrlCmdToken 54
-        [1824] transport_process:  -> deliver command complete event e, size 14
-        [1842] packet_handler: ++++++++++++++++++++ packet_handler called with packet_type 0x04, size 14
-
-
-        bad2:
-        [1775] controller_handle_hci_command: HCI_READ_LOCAL_SUPPORTED_FEATURES command received
-        [1796] pplus_ble_recv_msg: PATCH MSG RX!!!! destination_task C0, msg_ptr 1FFF08EC
-        [1816] pplus_ble_recv_msg: <<<<< pplus_ble_recv_msg: packet type 04
-        DUMP DUMP DUMP dump pkt: len 14
-        0E,0C,01,03,10,00,00,00,00,00,60,00,00,00,
-        hciCtrlCmdToken 00
-        [1856] packet_handler: ++++++++++++++++++++ packet_handler called with packet_type 0x04, size 14
-        */
-
         status = HCI_ReadLocalSupportedFeaturesCmd();
         if (status != HCI_SUCCESS)
         {
             LOG("HCI_READ_LOCAL_SUPPORTED_FEATURES failed with status %02x", status);
         }
-        // send_command_complete(opcode, 0, local_supported_features, 8);
-        //  send_command_complete(opcode, 0, local_supported_features, 8);
         break;
+
     case HCI_OPCODE_HCI_LE_READ_BUFFER_SIZE:
         LOG("HCI_LE_READ_BUFFER_SIZE command received");
         status = HCI_LE_ReadBufSizeCmd();
@@ -544,8 +439,8 @@ static void controller_handle_hci_command(uint8_t *packet, uint16_t size)
         {
             LOG("HCI_LE_READ_BUFFER_SIZE failed with status %02x", status);
         }
-        // send_command_complete(opcode, 0, read_buffer_size_result, 8);
         break;
+
     case HCI_OPCODE_HCI_LE_SET_ADVERTISING_PARAMETERS:
         LOG("HCI_LE_SET_ADVERTISING_PARAMETERS command received");
         status = HCI_LE_SetAdvParamCmd(
@@ -561,8 +456,8 @@ static void controller_handle_hci_command(uint8_t *packet, uint16_t size)
         {
             LOG("HCI_LE_SET_ADVERTISING_PARAMETERS failed with status %02x", status);
         }
-        // send_command_complete(opcode, status, NULL, 0);*/
         break;
+
     case HCI_OPCODE_HCI_LE_SET_ADVERTISING_DATA:
         LOG("HCI_LE_SET_ADVERTISING_DATA command received");
         status = HCI_LE_SetAdvDataCmd(packet[3], &packet[4]);
@@ -570,8 +465,8 @@ static void controller_handle_hci_command(uint8_t *packet, uint16_t size)
         {
             LOG("HCI_LE_SET_ADVERTISING_DATA failed with status %02x", status);
         }
-        // send_command_complete(opcode, status, NULL, 0);
         break;
+
     case HCI_OPCODE_HCI_LE_SET_ADVERTISE_ENABLE:
         LOG("HCI_LE_SET_ADVERTISE_ENABLE command received");
         status = HCI_LE_SetAdvEnableCmd(packet[3]);
@@ -579,9 +474,8 @@ static void controller_handle_hci_command(uint8_t *packet, uint16_t size)
         {
             LOG("HCI_LE_SET_ADVERTISE_ENABLE failed with status %02x", status);
         }
-        // status = ll_set_advertise_enable(packet[3]);
-        // send_command_complete(opcode, status, NULL, 0);
         break;
+
     case HCI_OPCODE_HCI_LE_SET_SCAN_ENABLE:
         LOG("HCI_LE_SET_SCAN_ENABLE command received, scanEnable = %d, filterDuplicates = %d",
             packet[3], packet[4]);
@@ -590,9 +484,8 @@ static void controller_handle_hci_command(uint8_t *packet, uint16_t size)
         {
             LOG("HCI_LE_SET_SCAN_ENABLE failed with status %02x", status);
         }
-        // ll_set_scan_enable(packet[3], packet[4]);
-        // fake_command_complete(opcode);
         break;
+
     case HCI_OPCODE_HCI_LE_SET_SCAN_PARAMETERS:
         LOG("HCI_LE_SET_SCAN_PARAMETERS command received");
         status = HCI_LE_SetScanParamCmd(
@@ -705,7 +598,6 @@ static void controller_handle_hci_command(uint8_t *packet, uint16_t size)
  */
 static int transport_send_packet(uint8_t packet_type, uint8_t *packet, int size)
 {
-
     uint16_t connHandle;
     uint16_t param;
     uint8_t pbFlag;
@@ -713,20 +605,17 @@ static int transport_send_packet(uint8_t packet_type, uint8_t *packet, int size)
     uint8_t *acldata = (uint8_t *)packet;
     uint8_t *send_buf = NULL;
 
-    // TL_CmdPacket_t *ble_cmd_buff = &BleCmdBuffer;
-    LOG(">>>>> transport_send_packet: packet_type %02X, size %d", packet_type, size);
+    //LOG(">>>>> transport_send_packet: packet_type %02X, size %d", packet_type, size);
     switch (packet_type)
     {
     case HCI_COMMAND_DATA_PACKET:
-        // ble_cmd_buff->cmdserial.type = packet_type;
-        // ble_cmd_buff->cmdserial.cmd.plen = size;
-        // memcpy((void *)&ble_cmd_buff->cmdserial.cmd, packet, size);
-        // TL_BLE_SendCmd(NULL, 0);
         controller_handle_hci_command(packet, size);
         send_transport_sent = true;
         break;
 
     case HCI_ACL_DATA_PACKET:
+        LOG(">>>>> transport_send_packet: packet_type %02X, size %d", packet_type, size);
+
         param = BUILD_UINT16(acldata[0], acldata[1]);
         connHandle = param & 0xfff;
         pbFlag = (param & 0x3000) >> 12;
@@ -775,196 +664,12 @@ static const hci_transport_t *transport_get_instance(void)
     return &transport;
 }
 
-/*******************************************************************************
-    Global Var
-*/
-extern volatile uint8_t g_rfPhyTpCal0;       //** two point calibraion result0            **//
-extern volatile uint8_t g_rfPhyTpCal1;       //** two point calibraion result1            **//
-extern volatile uint8_t g_rfPhyTpCal0_2Mbps; //** two point calibraion result0            **//
-extern volatile uint8_t g_rfPhyTpCal1_2Mbps; //** two point calibraion result1            **//
-extern volatile uint8_t g_rfPhyTxPower;      //** rf pa output power setting [0x00 0x1f]  **//
-extern volatile uint8_t g_rfPhyPktFmt;       //** rf_phy pkt format config                **//
-extern volatile uint32 g_rfPhyRxDcIQ;        //** rx dc offset cal result                 **//
-extern volatile int8_t g_rfPhyFreqOffSet;
 
-#define XTAL16M_CAP_SETTING(x) subWriteReg(0x4000f0bc, 4, 0, (0x1f & (x)))
-
-#define XTAL16M_CURRENT_SETTING(x) subWriteReg(0x4000f0bc, 6, 5, (0x03 & (x)))
-#define DIG_LDO_CURRENT_SETTING(x) subWriteReg(0x4000f014, 22, 21, (0x03 & (x)))
-
-#define RF_PHY_LO_LDO_SETTING(x) subWriteReg(0x400300cc, 11, 10, (0x03 & (x)))
-#define RF_PHY_PA_VTRIM_SETTING(x) subWriteReg(0x400300dc, 9, 7, (0x03 & (x)))
-#define RF_PHY_LNA_LDO_SETTING(x) subWriteReg(0x400300dc, 6, 5, (0x03 & (x)))
-
-#define PKT_FMT_ZIGBEE 0
-#define PKT_FMT_BLE1M 1
-#define PKT_FMT_BLE2M 2
-#define PKT_FMT_BLR500K 3
-#define PKT_FMT_BLR125K 4
-
-#define RF_PHY_TX_POWER_EXTRA_MAX 0x3f
-#define RF_PHY_TX_POWER_MAX 0x1f
-#define RF_PHY_TX_POWER_MIN 0x00
-
-#define RF_PHY_TX_POWER_5DBM 0x3f
-#define RF_PHY_TX_POWER_0DBM 0x1f
-#define RF_PHY_TX_POWER_N2DBM 0x0f
-#define RF_PHY_TX_POWER_N5DBM 0x0a
-#define RF_PHY_TX_POWER_N10DBM 0x04
-#define RF_PHY_TX_POWER_N15DBM 0x02
-#define RF_PHY_TX_POWER_N20DBM 0x01
-
-#define RF_PHY_FREQ_FOFF_00KHZ 0
-#define RF_PHY_FREQ_FOFF_20KHZ 5
-#define RF_PHY_FREQ_FOFF_40KHZ 10
-#define RF_PHY_FREQ_FOFF_60KHZ 15
-#define RF_PHY_FREQ_FOFF_80KHZ 20
-#define RF_PHY_FREQ_FOFF_100KHZ 25
-#define RF_PHY_FREQ_FOFF_120KHZ 30
-#define RF_PHY_FREQ_FOFF_140KHZ 35
-#define RF_PHY_FREQ_FOFF_160KHZ 40
-#define RF_PHY_FREQ_FOFF_180KHZ 45
-#define RF_PHY_FREQ_FOFF_200KHZ 50
-#define RF_PHY_FREQ_FOFF_N20KHZ -5
-#define RF_PHY_FREQ_FOFF_N40KHZ -10
-#define RF_PHY_FREQ_FOFF_N60KHZ -15
-#define RF_PHY_FREQ_FOFF_N80KHZ -20
-#define RF_PHY_FREQ_FOFF_N100KHZ -25
-#define RF_PHY_FREQ_FOFF_N120KHZ -30
-#define RF_PHY_FREQ_FOFF_N140KHZ -35
-#define RF_PHY_FREQ_FOFF_N160KHZ -40
-#define RF_PHY_FREQ_FOFF_N180KHZ -45
-#define RF_PHY_FREQ_FOFF_N200KHZ -50
-
-#define RF_PHY_DTM_MANUL_NULL 0x00
-#define RF_PHY_DTM_MANUL_FOFF 0x01
-#define RF_PHY_DTM_MANUL_TXPOWER 0x02
-#define RF_PHY_DTM_MANUL_XTAL_CAP 0x04
-#define RF_PHY_DTM_MANUL_MAX_GAIN 0x08
-
-#define RF_PHY_DTM_MANUL_ALL 0xFF
-
-static void efuse_init(void)
-{
-    write_reg(0x4000f054, 0x0);
-    write_reg(0x4000f140, 0x0);
-    write_reg(0x4000f144, 0x0);
-}
-
-static void hal_rfphy_init(void)
-{
-    // Watchdog_Init(NULL);
-    //============config the txPower
-    g_rfPhyTxPower = RF_PHY_TX_POWER_0DBM;
-    //============config BLE_PHY TYPE
-    g_rfPhyPktFmt = PKT_FMT_BLE1M;
-    //============config RF Frequency Offset
-    g_rfPhyFreqOffSet = RF_PHY_FREQ_FOFF_00KHZ; //	hal_rfPhyFreqOff_Set();
-    //============config xtal 16M cap
-    XTAL16M_CAP_SETTING(0x09); //	hal_xtal16m_cap_Set();
-    XTAL16M_CURRENT_SETTING(0x01);
-
-    hal_rc32k_clk_tracking_init();
-    { /* замена hal_rom_boot_init() */
-        efuse_init();
-        // typedef void (*my_function)(void);
-        // my_function pFunc = (my_function)(0xa2e1);
-        //  ble_main();
-        //  pFunc();
-    }
-
-    extern void hal_rom_boot_init(void);
-    hal_rom_boot_init();
-}
-#include "ll_def.h"
-extern llConnState_t *conn_param;
-extern uint8 llState, llSecondaryState;
-int phy6220_ll_info_show()
-{
-    LOG("ll_recv_ctrl_pkt_cnt        : %d", conn_param[0].pmCounter.ll_recv_ctrl_pkt_cnt);
-    LOG("ll_recv_data_pkt_cnt        : %d", conn_param[0].pmCounter.ll_recv_data_pkt_cnt);
-    LOG("ll_recv_invalid_pkt_cnt     : %d", conn_param[0].pmCounter.ll_recv_invalid_pkt_cnt);
-    LOG("ll_recv_abnormal_cnt        : %d", conn_param[0].pmCounter.ll_recv_abnormal_cnt);
-    LOG("ll_send_data_pkt_cnt        : %d", conn_param[0].pmCounter.ll_send_data_pkt_cnt);
-    LOG("ll_conn_event_cnt           : %d", conn_param[0].pmCounter.ll_conn_event_cnt);
-    LOG("ll_recv_crcerr_event_cnt    : %d", conn_param[0].pmCounter.ll_recv_crcerr_event_cnt);
-    LOG("ll_conn_event_timeout_cnt   : %d", conn_param[0].pmCounter.ll_conn_event_timeout_cnt);
-    LOG("ll_to_hci_pkt_cnt           : %d", conn_param[0].pmCounter.ll_to_hci_pkt_cnt);
-    LOG("ll_hci_to_ll_pkt_cnt        : %d", conn_param[0].pmCounter.ll_hci_to_ll_pkt_cnt);
-    LOG("ll_hci_buffer_alloc_err_cnt : %d", conn_param[0].pmCounter.ll_hci_buffer_alloc_err_cnt);
-    LOG("ll_miss_master_evt_cnt      : %d", conn_param[0].pmCounter.ll_miss_master_evt_cnt);
-    LOG("ll_miss_slave_evt_cnt       : %d", conn_param[0].pmCounter.ll_miss_slave_evt_cnt);
-    LOG("ll_tbd_cnt1                 : %d", conn_param[0].pmCounter.ll_tbd_cnt1);
-    LOG("ll_tbd_cnt2                 : %d", conn_param[0].pmCounter.ll_tbd_cnt2);
-    LOG("ll_tbd_cnt3                 : %d", conn_param[0].pmCounter.ll_tbd_cnt3);
-    LOG("ll_tbd_cnt4                 : %d", conn_param[0].pmCounter.ll_tbd_cnt4);
-
-    LOG("ll_send_undirect_adv_cnt    : %d", g_pmCounters.ll_send_undirect_adv_cnt);
-    LOG("ll_send_nonconn_adv_cnt     : %d", g_pmCounters.ll_send_nonconn_adv_cnt);
-    LOG("ll_send_scan_adv_cnt        : %d", g_pmCounters.ll_send_scan_adv_cnt);
-
-    LOG("ll_send_scan_rsp_cnt        : %d", g_pmCounters.ll_send_scan_rsp_cnt);
-    LOG("ll_send_scan_req_cnt        : %d", g_pmCounters.ll_send_scan_req_cnt);
-    LOG("ll_send_conn_rsp_cnt        : %d", g_pmCounters.ll_send_conn_rsp_cnt);
-    LOG("ll_recv_adv_pkt_cnt         : %d", g_pmCounters.ll_recv_adv_pkt_cnt);
-    LOG("ll_recv_conn_req_cnt        : %d", g_pmCounters.ll_recv_conn_req_cnt);
-    LOG("ll_recv_scan_req_cnt        : %d", g_pmCounters.ll_recv_scan_req_cnt);
-    LOG("ll_recv_scan_req_cnt        : %d", g_pmCounters.ll_recv_scan_req_cnt);
-    LOG("ll_recv_scan_rsp_cnt        : %d", g_pmCounters.ll_recv_scan_rsp_cnt);
-    LOG("ll_recv_scan_req_cnt        : %d", g_pmCounters.ll_recv_scan_req_cnt);
-    LOG("ll_conn_adv_pending_cnt        : %d", g_pmCounters.ll_conn_adv_pending_cnt);
-    LOG("ll_conn_scan_pending_cnt        : %d", g_pmCounters.ll_conn_scan_pending_cnt);
-
-    LOG("llAdjBoffUpperLimitFailure  : %d", g_pmCounters.ll_tbd_cnt4);
-    LOG("scanInfo.numSuccess         : %d", scanInfo.numSuccess);
-    LOG("scanInfo.numFailure         : %d", scanInfo.numFailure);
-    LOG("scanInfo.currentBackoff     : %d", scanInfo.currentBackoff);
-    LOG("llState llSecStatae         : %d %d", llState, llSecondaryState);
-    LOG("ll_trigger_err              : %d ", g_pmCounters.ll_trigger_err);
-    return 0;
-}
-
-extern void init_config(void);
+#include "osal_nuker.h"
 void port_thread(void *args)
 {
     UNUSED(args);
     LOG("hi from bt");
-
-#if (HOST_CONFIG & OBSERVER_CFG)
-    extern void ll_patch_advscan(void);
-#else
-    extern void ll_patch_slave(void);
-    ll_patch_slave();
-#endif
-
-    init_config();
-
-    hal_rfphy_init();
-    LOG("bt2");
-
-    LOG("hciTaskID was %d, now %d", hciTaskID, 0xc0);
-    hciTaskID = 0xc0;
-
-    LOG("Patching OSAL_MSG_SEND, was %08X, now %08X",
-        JUMP_FUNCTION(OSAL_MSG_SEND), (uint32_t)&pplus_ble_recv_msg);
-
-    JUMP_FUNCTION(OSAL_MSG_SEND) = (uint32_t)&pplus_ble_recv_msg;
-
-    JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE) = (uint32_t)&drv_disable_irq1;
-    JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE) = (uint32_t)&drv_enable_irq1;
-    LOG("hciCtrlCmdToken was %d, now 1", hciCtrlCmdToken);
-    hciCtrlCmdToken = 1;
-
-    osal_init_system();
-    // osal_mem_init();
-
-    phy6220_ll_info_show();
-
-    NVIC_SetPriority((IRQn_Type)BB_IRQn, IRQ_PRIO_REALTIME);
-    NVIC_SetPriority((IRQn_Type)TIM1_IRQn, IRQ_PRIO_HIGH); // ll_EVT
-    NVIC_SetPriority((IRQn_Type)TIM2_IRQn, IRQ_PRIO_HIGH); // OSAL_TICK
-    NVIC_SetPriority((IRQn_Type)TIM3_IRQn, IRQ_PRIO_HIGH); // OSAL_TICK
-    NVIC_SetPriority((IRQn_Type)TIM4_IRQn, IRQ_PRIO_HIGH); // LL_EXA_ADV
 
     // uncomment to enable packet logger
     // #define ENABLE_HCI_DUMP
@@ -982,13 +687,10 @@ void port_thread(void *args)
     hci_dump_init(hci_dump_embedded_stdout_get_instance());
 #endif
 #endif
-    LOG("a");
     /// GET STARTED with BTstack ///
     btstack_memory_init();
-    LOG("b");
 
     btstack_run_loop_init(btstack_run_loop_freertos_get_instance());
-    LOG("c");
 
     const btstack_tlv_t *btstack_tlv_impl = btstack_tlv_none_init_instance();
     // setup global tlv
@@ -999,17 +701,24 @@ void port_thread(void *args)
 
     // init HCI
     hci_init(transport_get_instance(), NULL);
-    LOG("d");
 
-    const char *argv[] = {
+    osal_nuker_ble_init();
+
+    LOG("Patching OSAL_MSG_SEND, was %08X, now %08X",
+        JUMP_FUNCTION(OSAL_MSG_SEND), (uint32_t)&pplus_ble_recv_msg);
+    JUMP_FUNCTION(OSAL_MSG_SEND) = (uint32_t)&pplus_ble_recv_msg;
+
+    hciTaskID = HCI_TASK_CUSTOM_ID;
+
+    /*const char *argv[] = {
         "main", "-a", "dd:44:00:12:1e:d9"};
 
-    extern int btstack_main(int argc, const char *argv[]);
-    btstack_main(3, argv);
+    extern int btstack_main(int argc, const char *argv[]);*/
+    extern int btstack_main(void);
+    btstack_main();
 
-    /*extern int btstack_main(void);
+    /*
     btstack_main();*/
-    LOG("f");
 
     log_info("btstack executing run loop...");
     btstack_run_loop_execute();

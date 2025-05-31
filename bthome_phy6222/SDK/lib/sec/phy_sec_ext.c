@@ -126,7 +126,8 @@ void _rom_sec_boot_init(void)
     }
     else
     {
-        while(1);
+        LOG("CHIP VERSION NOT MATCH!");
+        //while(1);
     }
 }
 
