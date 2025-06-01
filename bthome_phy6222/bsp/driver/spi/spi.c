@@ -9,7 +9,11 @@
 
 *******************************************************************************/
 #include "spi.h"
+#include <string.h>
 #include <jump_function.h>
+#include <osal/osal_critical.h>
+#include <driver/pwrmgr/pwrmgr.h>
+#include <log/log.h>
 
 #if DMAC_USE
 #include "dma.h"
@@ -24,6 +28,21 @@ typedef struct _spi_Context
 } spi_Ctx_t;
 
 static spi_Ctx_t m_spiCtx[2];
+
+#if (SPI_USE_TIMEOUT == 1)
+#define SPI_INIT_TOUT(to) int to = hal_systick()
+#define SPI_CHECK_TOUT(to, timeout, loginfo) \
+    {                                        \
+        if (hal_ms_intv(to) > timeout)       \
+        {                                    \
+            LOG(loginfo);                    \
+            return PPlus_ERR_TIMEOUT;        \
+        }                                    \
+    }
+#else
+#define SPI_INIT_TOUT(to)
+#define SPI_CHECK_TOUT(to, timeout, loginfo)
+#endif
 
 #define SPI_HDL_VALIDATE(hdl)                                               \
     {                                                                       \
@@ -191,6 +210,7 @@ static void spis_int_handle(uint8_t id, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
                     trans_ptr->rx_buf[trans_ptr->rx_offset++] = Ssix->DataReg;
                 else
                     garbage = Ssix->DataReg;
+                UNUSED(garbage);
             }
         }
         else

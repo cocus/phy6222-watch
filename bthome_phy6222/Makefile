@@ -10,7 +10,7 @@ UART_LOG_BPS = 115200
 ##############################################################################
 # Source
 SRC_PATH = ./source
-SRC_PRJ = main.c osal_nuker.c
+SRC_PRJ = main.c osal_nuker.c pong.c display.c gfx.c fonts/FreeMono9pt7b.c fonts/FreeSans12pt7b.c
 
 INCLUDES = -I$(SRC_PATH)
 
@@ -82,7 +82,7 @@ SRCS += bsp/jump_table.c \
 	bsp/driver/clock/clock.c \
 	bsp/driver/pwrmgr/pwrmgr.c \
 	bsp/driver/flash/flash.c \
-	bsp/osal/osal_libfn.c \
+	bsp/driver/spi/spi.c \
 
 # bsp/driver/spi/spi.c
 

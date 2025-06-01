@@ -1026,3 +1026,6 @@ tx_scanRsp_desc = 0x1fff1384;
 g_rx_adv_buf = 0x1fff1490;
 LL_EnhConnectionCompleteCback = 0x000049189;
 ll_readPeerIRK = 0x00013660;
+init_reset_cause = 0x0000850f;
+rtc_count_delay_on_wakeup = 0x1FFF0834;
+global_config_alias = 0x1FFF0814;

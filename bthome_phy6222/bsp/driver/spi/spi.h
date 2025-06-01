@@ -20,20 +20,6 @@
 
 #define SPI_USE_TIMEOUT 1
 #define SPI_OP_TIMEOUT 1000 // 100ms for an Byte operation
-#if (SPI_USE_TIMEOUT == 1)
-#define SPI_INIT_TOUT(to) int to = hal_systick()
-#define SPI_CHECK_TOUT(to, timeout, loginfo) \
-    {                                        \
-        if (hal_ms_intv(to) > timeout)       \
-        {                                    \
-            LOG(loginfo);                    \
-            return PPlus_ERR_TIMEOUT;        \
-        }                                    \
-    }
-#else
-#define SPI_INIT_TOUT(to)
-#define SPI_CHECK_TOUT(to, timeout, loginfo)
-#endif
 
 #define ENABLE_SPI Ssix->SSIEN = 1
 #define DISABLE_SPI Ssix->SSIEN = 0

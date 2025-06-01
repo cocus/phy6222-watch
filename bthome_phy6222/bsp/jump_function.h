@@ -29,6 +29,8 @@ extern const uint32_t *jump_table_base[];
 #define JUMP_FUNCTION(x) (*(uint32_t *)(jump_table_base + x))
 #endif
 
+extern unsigned int g_irqstack_top;
+
 // ROM function entries
 enum jump_function_entries
 {

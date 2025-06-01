@@ -63,11 +63,11 @@ void genericTask(void *argument)
 
     for (;;)
     {
-        // LOG("OFF");
+        LOG("OFF");
         hal_gpio_write(GPIO_LED, 1);
         vTaskDelay(pdMS_TO_TICKS(500));
 
-        // LOG("ON");
+        LOG("ON");
         hal_gpio_write(GPIO_LED, 0);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
@@ -78,7 +78,21 @@ void genericTask2(void *argument)
     UNUSED(argument);
 
     LOG("Hi from genericTask2");
-    hal_gpio_write(BKL_PIN, 1);
+
+extern void app_init();
+extern void app_update();
+
+    app_init();
+
+    // This is a simple loop to update the display and handle button presses
+    for (;;)
+    {
+        app_update();
+    }
+
+    // Uncomment this block to blink the backlight pin instead of running the app
+
+/*    hal_gpio_write(BKL_PIN, 1);
 
     for (;;)
     {
@@ -90,6 +104,7 @@ void genericTask2(void *argument)
         hal_gpio_write(BKL_PIN, 0);
         vTaskDelay(pdMS_TO_TICKS(250));
     }
+*/
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -163,8 +178,8 @@ int main(void)
 
     // NVIC_SetPriority((IRQn_Type)PendSV_IRQn, 15);
 
-    xTaskCreate(genericTask, "genericTask", 256, NULL, 1, NULL);
-    // xTaskCreate(genericTask2, "genericTask2", 256, NULL, 1, NULL);
+    //xTaskCreate(genericTask, "genericTask", 256, NULL, 1, NULL);
+    xTaskCreate(genericTask2, "genericTask2", 256, NULL, 1, NULL);
 
     //extern void port_thread(void *args);
     //xTaskCreate(port_thread, "btstack_thread", 4096, NULL, 2, NULL);
