@@ -74,6 +74,9 @@ extern "C"
         GLOBAL VARIABLES
     */
 
+    /* Initialized to NULL by osal_init_system() */
+    extern volatile osal_msg_q_t osal_qHead;
+
     /*********************************************************************
         FUNCTIONS
     */

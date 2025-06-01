@@ -810,23 +810,34 @@ static void spi1_wakeup_handler(void)
 
 void hal_spi_tmod_set(hal_spi_t *spi_ptr, SPI_TMOD_e mod)
 {
-    AP_SSI_TypeDef *Ssix = NULL;
-    Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
-    Ssix->SSIEN = 0;
-    subWriteReg(&Ssix->CR0, 9, 8, mod);
-    Ssix->SSIEN = 1;
+    /* not using a pointer to AP_SPIx due to some gcc warning on subWriteReg */
+    if (spi_ptr->spi_index == SPI0)
+    {
+        AP_SPI0->SSIEN = 0;
+        subWriteReg(&(AP_SPI0->CR0), 9, 8, mod);
+        AP_SPI0->SSIEN = 1;
+    } else {
+        AP_SPI1->SSIEN = 0;
+        subWriteReg(&(AP_SPI1->CR0), 9, 8, mod);
+        AP_SPI1->SSIEN = 1;
+    }
 }
 
 void hal_spi_dfs_set(hal_spi_t *spi_ptr, SPI_DFS_e mod)
 {
-    AP_SSI_TypeDef *Ssix = NULL;
-    spi_Ctx_t *pctx;
-    Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
-    pctx = &m_spiCtx[spi_ptr->spi_index];
-    Ssix->SSIEN = 0;
-    subWriteReg(&Ssix->CR0, 3, 0, mod);
-    Ssix->SSIEN = 1;
-    pctx->cfg.spi_dfsmod = mod;
+    /* not using a pointer to AP_SPIx due to some gcc warning on subWriteReg */
+    if (spi_ptr->spi_index == SPI0)
+    {
+        AP_SPI0->SSIEN = 0;
+        subWriteReg(&(AP_SPI0->CR0), 3, 0, mod);
+        AP_SPI0->SSIEN = 1;
+    } else {
+        AP_SPI1->SSIEN = 0;
+        subWriteReg(&(AP_SPI1->CR0), 3, 0, mod);
+        AP_SPI1->SSIEN = 1;
+    }
+
+    m_spiCtx[spi_ptr->spi_index].cfg.spi_dfsmod = mod;
 }
 
 static void hal_spi_ndf_set(hal_spi_t *spi_ptr, uint16_t len)

@@ -167,6 +167,8 @@ void update_paddles() {
 }
 
 void posedge_callback_wakeup(GPIO_Pin_e pin, IO_Wakeup_Pol_e type) {
+    UNUSED(pin);
+    UNUSED(type);
     // Invert the player's paddle movement direction on button press
     player_paddle_dir = -player_paddle_dir;
 }

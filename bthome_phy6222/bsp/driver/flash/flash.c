@@ -10,6 +10,7 @@
  *******************************************************************************/
 #include "flash.h"
 #include <osal/osal_critical.h>
+#include <driver/pwrmgr/pwrmgr.h>
 
 #define SPIF_WAIT_IDLE_CYC (32)
 

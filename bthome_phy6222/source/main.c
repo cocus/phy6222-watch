@@ -72,7 +72,7 @@ void genericTask(void *argument)
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
-
+#if 0
 void genericTask2(void *argument)
 {
     UNUSED(argument);
@@ -106,7 +106,7 @@ extern void app_update();
     }
 */
 }
-
+#endif
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 
@@ -178,8 +178,8 @@ int main(void)
 
     // NVIC_SetPriority((IRQn_Type)PendSV_IRQn, 15);
 
-    //xTaskCreate(genericTask, "genericTask", 256, NULL, 1, NULL);
-    xTaskCreate(genericTask2, "genericTask2", 256, NULL, 1, NULL);
+    xTaskCreate(genericTask, "genericTask", 256, NULL, 1, NULL);
+    //xTaskCreate(genericTask2, "genericTask2", 256, NULL, 1, NULL);
 
     //extern void port_thread(void *args);
     //xTaskCreate(port_thread, "btstack_thread", 4096, NULL, 2, NULL);

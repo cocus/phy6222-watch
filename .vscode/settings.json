@@ -1,5 +1,23 @@
 {
     "files.associations": {
-        "trigger.h": "c"
+        "trigger.h": "c",
+        "rom_vars.h": "c",
+        "task.h": "c",
+        "log.h": "c",
+        "btstack_stdin.h": "c",
+        "core_bumbee_m0.h": "c",
+        "phy62xx.h": "c",
+        "types.h": "c",
+        "error.h": "c",
+        "osal_nuker.h": "c",
+        "phy_error.h": "c",
+        "clock.h": "c",
+        "flash.h": "c",
+        "jump_function.h": "c",
+        "osal.h": "c",
+        "string.h": "c",
+        "stdint.h": "c",
+        "gpio.h": "c",
+        "freemono9pt7b.h": "c"
     }
 }

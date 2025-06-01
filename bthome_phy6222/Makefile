@@ -10,7 +10,8 @@ UART_LOG_BPS = 115200
 ##############################################################################
 # Source
 SRC_PATH = ./source
-SRC_PRJ = main.c osal_nuker.c pong.c display.c gfx.c fonts/FreeMono9pt7b.c fonts/FreeSans12pt7b.c
+SRC_PRJ = main.c osal_nuker.c
+# pong.c display.c gfx.c fonts/FreeMono9pt7b.c fonts/FreeSans12pt7b.c
 
 INCLUDES = -I$(SRC_PATH)
 

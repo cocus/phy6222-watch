@@ -37,7 +37,6 @@ typedef struct
     uint8_t pin_assignments[NUMBER_OF_PINS];
     uint32_t pin_retention_status;
     gpioin_Ctx_t irq_ctx[NUMBER_OF_PINS];
-
 } gpio_Ctx_t;
 
 typedef struct
@@ -45,7 +44,6 @@ typedef struct
     uint8_t reg_i;
     uint8_t bit_h;
     uint8_t bit_l;
-
 } PULL_TypeDef;
 
 static gpio_Ctx_t m_gpioCtx =
@@ -131,7 +129,7 @@ void hal_gpio_write(gpio_pin_e pin, uint8_t en)
     else
         AP_GPIO->swporta_dr &= ~BIT(pin);
 
-//    hal_gpio_pin_init(pin, GPIO_OUTPUT);
+    hal_gpio_pin_init(pin, GPIO_OUTPUT);
 }
 
 void hal_gpio_fast_write(gpio_pin_e pin, uint8_t en)
