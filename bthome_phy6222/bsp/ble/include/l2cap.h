@@ -20,10 +20,12 @@ extern "C"
 /*********************************************************************
  * INCLUDES
  */
+//#include "bcomdef.h"
+//#include "OSAL.h"
+//#include "log.h"
+#include <types.h>
+#include <osal/OSAL.h>
 #include "bcomdef.h"
-#include "OSAL.h"
-
-#include "log.h"
 /*********************************************************************
     CONSTANTS
 */
@@ -173,21 +175,21 @@ extern "C"
 // Invalid CID in Request format
 typedef struct
 {
-  uint16 localCID;  // Destination CID from the rejected command
-  uint16 remoteCID; // Source CID from the rejected command
+  uint16_t localCID;  // Destination CID from the rejected command
+  uint16_t remoteCID; // Source CID from the rejected command
 } l2capInvalidCID_t;
 
 // Command Reject Reason Data format
 typedef union
 {
-  uint16 signalMTU;             // Maximum Signaling MTU
+  uint16_t signalMTU;             // Maximum Signaling MTU
   l2capInvalidCID_t invalidCID; // Invalid CID in Request
 } l2capReasonData_t;
 
 // Command Reject format
 typedef struct
 {
-  uint16 reason;                // Reason
+  uint16_t reason;                // Reason
   l2capReasonData_t reasonData; // Reason Data
 
   // Shorthand access for union members
@@ -199,52 +201,52 @@ typedef struct
 // Echo Request format
 typedef struct
 {
-  uint8 *pData; // Optional data field
-  uint16 len;   // Length of data
+  uint8_t *pData; // Optional data field
+  uint16_t len;   // Length of data
 } l2capEchoReq_t;
 
 // Echo Response format
 typedef struct
 {
-  uint8 *pData; // Optional data field -- must be freed by the application
-  uint16 len;   // Length of data
+  uint8_t *pData; // Optional data field -- must be freed by the application
+  uint16_t len;   // Length of data
 } l2capEchoRsp_t;
 
 // Information Request format
 typedef struct
 {
-  uint16 infoType; // Information type
+  uint16_t infoType; // Information type
 } l2capInfoReq_t;
 
 // Information Response Data field
 typedef union
 {
-  uint16 connectionlessMTU;                       // Connectionless MTU
-  uint32 extendedFeatures;                        // Extended features supported
-  uint8 fixedChannels[L2CAP_FIXED_CHANNELS_SIZE]; // Fixed channels supported
+  uint16_t connectionlessMTU;                       // Connectionless MTU
+  uint32_t extendedFeatures;                        // Extended features supported
+  uint8_t fixedChannels[L2CAP_FIXED_CHANNELS_SIZE]; // Fixed channels supported
 } l2capInfo_t;
 
 // Information Response format
 typedef struct
 {
-  uint16 result;    // Result
-  uint16 infoType;  // Information type
+  uint16_t result;    // Result
+  uint16_t infoType;  // Information type
   l2capInfo_t info; // Content of Info field depends on infoType
 } l2capInfoRsp_t;
 
 // Connection Parameter Update Request format
 typedef struct
 {
-  uint16 intervalMin;       // Minimum Interval
-  uint16 intervalMax;       // Maximum Interval
-  uint16 slaveLatency;      // Slave Latency
-  uint16 timeoutMultiplier; // Timeout Multiplier
+  uint16_t intervalMin;       // Minimum Interval
+  uint16_t intervalMax;       // Maximum Interval
+  uint16_t slaveLatency;      // Slave Latency
+  uint16_t timeoutMultiplier; // Timeout Multiplier
 } l2capParamUpdateReq_t;
 
 // Connection Parameter Update Response format
 typedef struct
 {
-  uint16 result; // Result
+  uint16_t result; // Result
 } l2capParamUpdateRsp_t;
 
 // Union of all L2CAP Signaling commands
@@ -267,20 +269,20 @@ typedef union
 typedef struct
 {
   osal_event_hdr_t hdr; // L2CAP_SIGNAL_EVENT and status
-  uint16 connHandle;    // connection message was received on
-  uint8 id;             // identifier to match responses with requests
-  uint8 opcode;         // type of command
+  uint16_t connHandle;    // connection message was received on
+  uint8_t id;             // identifier to match responses with requests
+  uint8_t opcode;         // type of command
   l2capSignalCmd_t cmd; // command data
 } l2capSignalEvent_t;
 
 // L2CAP packet structure
 typedef struct
 {
-  uint16 CID;      // local channel id
-  uint8 *pPayload; // pointer to information payload. This contains the payload
+  uint16_t CID;      // local channel id
+  uint8_t *pPayload; // pointer to information payload. This contains the payload
                    // received from the upper layer protocol (outgoing packet),
                    // or delivered to the upper layer protocol (incoming packet).
-  uint16 len;      // length of information payload
+  uint16_t len;      // length of information payload
 } l2capPacket_t;
 
 // OSAL L2CAP_DATA_EVENT message format. This message is used to forward an
@@ -288,49 +290,49 @@ typedef struct
 typedef struct
 {
   osal_event_hdr_t hdr; // L2CAP_DATA_EVENT and status
-  uint16 connHandle;    // connection packet was received on
+  uint16_t connHandle;    // connection packet was received on
   l2capPacket_t pkt;    // received packet
 } l2capDataEvent_t;
 
 
 typedef struct
 {
-  uint16 cIdx;          // reassemble packet current idx
+  uint16_t cIdx;          // reassemble packet current idx
   l2capPacket_t pkt;    // received packet
 } l2capReassemblePkt_t;
 
 typedef struct
 {
-  uint8  len;           // pkt len
-  uint8* ptr ;          // pkt point
+  uint8_t  len;           // pkt len
+  uint8_t* ptr ;          // pkt point
 } segmentBuff_t;
 
 typedef struct
 {
   segmentBuff_t pkt[10];//251/27->9.2
-  uint8 depth;
-  uint8 idx;
-  uint8* pBufScr;       //source buffer ptr
-  uint8 fragment;
+  uint8_t depth;
+  uint8_t idx;
+  uint8_t* pBufScr;       //source buffer ptr
+  uint8_t fragment;
 } l2capSegmentBuff_t;
 
 
 typedef struct
 {
-  uint32 reassembleInCnt;
-  uint32 reassembleOutCnt;
-  uint32 reassembleErrIdx;
-  uint32 reassembleErrCID;
-  uint32 reassembleErrInComp;
-  uint32 reassembleErrMiss;
-  uint32 resssambleMemAlocErr;
-  
-  uint32 segmentInCnt;
-  uint32 segmentOutCnt;
-  uint32 segmentErrCnt;
-  uint32 fragmentSendCounter;
-  uint32 segmentMemAlocErr;
-  uint32 segmentSentToLinkLayerErr;
+  uint32_t reassembleInCnt;
+  uint32_t reassembleOutCnt;
+  uint32_t reassembleErrIdx;
+  uint32_t reassembleErrCID;
+  uint32_t reassembleErrInComp;
+  uint32_t reassembleErrMiss;
+  uint32_t resssambleMemAlocErr;
+
+  uint32_t segmentInCnt;
+  uint32_t segmentOutCnt;
+  uint32_t segmentErrCnt;
+  uint32_t fragmentSendCounter;
+  uint32_t segmentMemAlocErr;
+  uint32_t segmentSentToLinkLayerErr;
   
 } l2capSARDbugCnt_t;
 //typedef enum
@@ -360,105 +362,105 @@ typedef struct
 /*
  *  Initialize L2CAP layer.
  */
-extern void L2CAP_Init( uint8 taskId );
+extern void L2CAP_Init( uint8_t taskId );
 
 /*
  *  L2CAP Task event processing function.
  */
-extern uint16 L2CAP_ProcessEvent( uint8 taskId, uint16 events );
+extern uint16_t L2CAP_ProcessEvent( uint8_t taskId, uint16_t events );
 
 /*
  * Register a protocol/application with an L2CAP channel.
  */
-extern bStatus_t L2CAP_RegisterApp( uint8 taskId, uint16 CID );
+extern bStatus_t L2CAP_RegisterApp( uint8_t taskId, uint16_t CID );
 
 /*
  *  Send L2CAP Data Packet.
  */
-extern bStatus_t L2CAP_SendData( uint16 connHandle, l2capPacket_t *pPkt );
+extern bStatus_t L2CAP_SendData( uint16_t connHandle, l2capPacket_t *pPkt );
 
 /*
  * Send Command Reject.
  */
-extern bStatus_t L2CAP_CmdReject( uint16 connHandle, uint8 id, l2capCmdReject_t *pCmdReject );
+extern bStatus_t L2CAP_CmdReject( uint16_t connHandle, uint8_t id, l2capCmdReject_t *pCmdReject );
 
 /*
  * Build Command Reject.
  */
-extern uint16 L2CAP_BuildCmdReject( uint8 *pBuf, uint8 *pCmd );
+extern uint16_t L2CAP_BuildCmdReject( uint8_t *pBuf, uint8_t *pCmd );
 
 /*
  *  Send L2CAP Echo Request.
  */
-extern bStatus_t L2CAP_EchoReq( uint16 connHandle, l2capEchoReq_t *pEchoReq, uint8 taskId );
+extern bStatus_t L2CAP_EchoReq( uint16_t connHandle, l2capEchoReq_t *pEchoReq, uint8_t taskId );
 
 /*
  *  Send L2CAP Information Request.
  */
-extern bStatus_t L2CAP_InfoReq( uint16 connHandle, l2capInfoReq_t *pInfoReq, uint8 taskId );
+extern bStatus_t L2CAP_InfoReq( uint16_t connHandle, l2capInfoReq_t *pInfoReq, uint8_t taskId );
 
 /*
  * Build Information Response.
  */
-extern uint16 L2CAP_BuildInfoRsp( uint8 *pBuf, uint8 *pCmd );
+extern uint16_t L2CAP_BuildInfoRsp( uint8_t *pBuf, uint8_t *pCmd );
 
 /*
  * Parse Information Request.
  */
-extern bStatus_t L2CAP_ParseInfoReq( l2capSignalCmd_t *pCmd, uint8 *pData, uint16 len );
+extern bStatus_t L2CAP_ParseInfoReq( l2capSignalCmd_t *pCmd, uint8_t *pData, uint16_t len );
 
 /*
  *  Send L2CAP Connection Parameter Update Request.
  */
-extern bStatus_t L2CAP_ConnParamUpdateReq( uint16 connHandle, l2capParamUpdateReq_t *pUpdateReq, uint8 taskId );
+extern bStatus_t L2CAP_ConnParamUpdateReq( uint16_t connHandle, l2capParamUpdateReq_t *pUpdateReq, uint8_t taskId );
 
 /*
  * Parse Connection Parameter Update Request.
  */
-extern bStatus_t L2CAP_ParseParamUpdateReq( l2capSignalCmd_t *pCmd, uint8 *pData, uint16 len );
+extern bStatus_t L2CAP_ParseParamUpdateReq( l2capSignalCmd_t *pCmd, uint8_t *pData, uint16_t len );
 
 /*
  *  Send L2CAP Connection Parameter Update Response.
  */
-extern bStatus_t L2CAP_ConnParamUpdateRsp( uint16 connHandle, uint8 id, l2capParamUpdateRsp_t *pUpdateRsp );
+extern bStatus_t L2CAP_ConnParamUpdateRsp( uint16_t connHandle, uint8_t id, l2capParamUpdateRsp_t *pUpdateRsp );
 
 /*
  * Build Connection Parameter Update Response.
  */
-extern uint16 L2CAP_BuildParamUpdateRsp( uint8 *pBuf, uint8 *pData );
+extern uint16_t L2CAP_BuildParamUpdateRsp( uint8_t *pBuf, uint8_t *pData );
 
 /*
  * Allocate a block of memory at the L2CAP layer.
  */
-extern void *L2CAP_bm_alloc( uint16 size );
+extern void *L2CAP_bm_alloc( uint16_t size );
 
 /*
  * This API is used by the upper layer to turn flow control on
  * or off for data packets sent from the Controller to the Host.
  */
-extern void L2CAP_SetControllerToHostFlowCtrl( uint16 hostBuffSize, uint8 flowCtrlMode );
+extern void L2CAP_SetControllerToHostFlowCtrl( uint16_t hostBuffSize, uint8_t flowCtrlMode );
 /*
  * This API is used by the upper layer to turn flow control on
  * or off for data packets sent from the Controller to the Host.
  * support DLE update
  */
-extern void L2CAP_SetControllerToHostFlowCtrl_DLE( uint16 hostBuffSize, uint8 flowCtrlMode );
+extern void L2CAP_SetControllerToHostFlowCtrl_DLE( uint16_t hostBuffSize, uint8_t flowCtrlMode );
 /*
  * This API is used by the upper layer to notify L2CAP of the
  * number of data packets that have been completed for connection
  * handle since this API was previously called.
  */
-extern void L2CAP_HostNumCompletedPkts( uint16 connHandle, uint16 numCompletedPkts );
+extern void L2CAP_HostNumCompletedPkts( uint16_t connHandle, uint16_t numCompletedPkts );
 
 
-extern uint8 l2capPktToSegmentBuff(uint16 connHandle,l2capSegmentBuff_t* pSegBuf, uint8 blen,uint8* pBuf);
-extern uint8 l2capSegmentBuffToLinkLayer(uint16 connHandle, l2capSegmentBuff_t* pSegBuf);
-extern void l2capPocessFragmentTxData(uint16 connHandle);
+extern uint8_t l2capPktToSegmentBuff(uint16_t connHandle,l2capSegmentBuff_t* pSegBuf, uint8_t blen,uint8_t* pBuf);
+extern uint8_t l2capSegmentBuffToLinkLayer(uint16_t connHandle, l2capSegmentBuff_t* pSegBuf);
+extern void l2capPocessFragmentTxData(uint16_t connHandle);
 extern void l2capSarBufReset(void);
-extern void L2CAP_ReassemblePkt_Reset(uint16 connHandle);
-extern void L2CAP_SegmentPkt_Reset(uint16 connHandle);
+extern void L2CAP_ReassemblePkt_Reset(uint16_t connHandle);
+extern void L2CAP_SegmentPkt_Reset(uint16_t connHandle);
 
-extern void L2CAP_ExtendFramgents_Config(uint8 flag);
+extern void L2CAP_ExtendFramgents_Config(uint8_t flag);
 /*********************************************************************
 *********************************************************************/
 

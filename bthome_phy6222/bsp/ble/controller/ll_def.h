@@ -6,10 +6,13 @@
 #ifndef LL_DEF_H_
 #define LL_DEF_H_
 
-#include "types.h"
-#include "comdef.h"
-//#include "bcomdef.h"
+#include <stdint.h>
 #include "ll_buf.h"
+
+//#include "types.h"
+//#include "comdef.h"
+//#include "bcomdef.h"
+//#include "ll_buf.h"
 
 #if (MAX_NUM_LL_CONN_ROM_LIMT > 1)
 #define   MULTI_ROLE
@@ -327,7 +330,7 @@ enum
 #define LL_ADV_LDC_DIRECT_SCAN_ACTIVE_STATE      0x37
 
 #define HCI_RX_PKT_HDR_SIZE                      5
-#define LL_NUM_BYTES_FOR_CHAN_MAP                5    //(LL_MAX_NUM_ADV_CHAN+LL_MAX_NUM_DATA_CHAN)/sizeof(uint8)
+#define LL_NUM_BYTES_FOR_CHAN_MAP                5    //(LL_MAX_NUM_ADV_CHAN+LL_MAX_NUM_DATA_CHAN)/sizeof(uint8_t)
 
 #define LL_CTRL_PROC_STATUS_SUCCESS              0
 #define LL_CTRL_PROC_STATUS_TERMINATE            1
@@ -509,10 +512,10 @@ typedef struct
     uint8_t       scanRspLen;                    // scan response data length
     
     // add by HZF
-    uint8          advNextChan;
+    uint8_t          advNextChan;
 
 	// multi-connection
-	uint8          connId;
+	uint8_t          connId;
  	  
 }advInfo_t; 
 
@@ -538,7 +541,7 @@ typedef struct
 
 	uint8_t     wlPolicy;                                  // white list policy for Adv
     
-    int8        advTxPower;
+    int8_t        advTxPower;
 	
     uint8_t     primaryAdvPHY;
     uint8_t     secondaryAdvPHY;
@@ -554,13 +557,13 @@ typedef struct
 {
 //    uint8_t     advHandle;
 	uint8_t     dataComplete;                        // all data of advert set received
-    uint8       fragmentPreference;
+    uint8_t       fragmentPreference;
 	
-	uint16       advertisingDataLength;
-	uint8       *advertisingData;
+	uint16_t       advertisingDataLength;
+	uint8_t       *advertisingData;
 
     // LL generated
-	uint16      DIDInfo;                            // 12bits
+	uint16_t      DIDInfo;                            // 12bits
 }advSetData_t; 
 
 /// extended adv parameters, include spec parameters & implemented-specific parameters
@@ -570,8 +573,8 @@ typedef struct
 
 	extAdvParameter_t  parameter;
 	advSetData_t       data;                            // only for extended adv
-	uint16             scanRspMaxLength;                // length of scan rsp data
-	uint8              *scanRspData;
+	uint16_t             scanRspMaxLength;                // length of scan rsp data
+	uint8_t              *scanRspData;
 
 	// ===================== advertisement enable info
     uint32_t    duration;                               // unit us, note spec parameter is 10ms unit
@@ -585,7 +588,7 @@ typedef struct
 	uint16_t    adv_event_counter;                         // counter for extend adv event
 	uint32_t    adv_event_duration;                        // duration of advertise
 
-    int8        tx_power;                                  // range -127 ~ 127 dBm, will be filled to field TxPower
+    int8_t        tx_power;                                  // range -127 ~ 127 dBm, will be filled to field TxPower
 
     uint8_t     sendingAuxAdvInd;
 
@@ -598,64 +601,64 @@ typedef struct
 
 typedef struct  
 {
-    uint16       syncPacketOffset : 13;            // 13bits
-    uint16       offsetUnit       : 1;             // 1 bit
-    uint16       offsetAdj        : 1;             // 1 bit
-    uint16       rfu              : 1;             // 1 bit    
+    uint16_t       syncPacketOffset : 13;            // 13bits
+    uint16_t       offsetUnit       : 1;             // 1 bit
+    uint16_t       offsetAdj        : 1;             // 1 bit
+    uint16_t       rfu              : 1;             // 1 bit    
 } syncInfoOffset_t;
 
 typedef struct  
 {
-    uint8       chn_map : 5;             // 5bits
-    uint8       sca     : 3;             // 3 bit
+    uint8_t       chn_map : 5;             // 5bits
+    uint8_t       sca     : 3;             // 3 bit
 } chanMap4_t;
     
 typedef struct 
 {
     syncInfoOffset_t   offset;
 
-	uint16       interval;
+	uint16_t       interval;
 
-	uint8        chn_map[4];       
+	uint8_t        chn_map[4];       
 	chanMap4_t   chn_map4;         
 
-	uint8        AA[4];
-	uint8        crcInit[3];
+	uint8_t        AA[4];
+	uint8_t        crcInit[3];
 
-	uint16       event_counter;
+	uint16_t       event_counter;
 } syncInfo_t; 
 
 /// data of periodic Advertising set
 typedef struct 
 {
-    uint8       dataComplete;                        // all data of advert set received
+    uint8_t       dataComplete;                        // all data of advert set received
 	
-	uint16      advertisingDataLength;
-	uint8       *advertisingData;
+	uint16_t      advertisingDataLength;
+	uint8_t       *advertisingData;
 }periodicAdvSetData_t; 
 
 // 2020-01-15 add for connection & connectionless parameter
 typedef struct
 {
 	// common
-//	uint16	handle;					// syncConnHandle for connectionless , connHandle for connection 
-	uint8	enable;					// 
-	uint8 	CTE_Length;				// connectionless transmit CTE length or connection request and response CTE Length
-	uint8	CTE_Type;				// AOA, ADO 1us , AOD 2us
-	uint8 	CTE_Count;				// number of CTE to transmit in each PA interval
+//	uint16_t	handle;					// syncConnHandle for connectionless , connHandle for connection 
+	uint8_t	enable;					// 
+	uint8_t 	CTE_Length;				// connectionless transmit CTE length or connection request and response CTE Length
+	uint8_t	CTE_Type;				// AOA, ADO 1us , AOD 2us
+	uint8_t 	CTE_Count;				// number of CTE to transmit in each PA interval
 									// IQ Sample:max number of CTE to sample and report in each PA interval
-	uint8	CTE_Count_Idx;			// record the number of times that the CTE send , max equal to CTE_Count
-	uint8	pattern_LEN;
-	uint8	AntID[LL_CTE_MAX_PATTERN_LEN];
+	uint8_t	CTE_Count_Idx;			// record the number of times that the CTE send , max equal to CTE_Count
+	uint8_t	pattern_LEN;
+	uint8_t	AntID[LL_CTE_MAX_PATTERN_LEN];
 
-	uint8	slot_Duration;			// switching and sampling slot 1us or 2us
+	uint8_t	slot_Duration;			// switching and sampling slot 1us or 2us
 	
 	// connectionless transmit param
-//	uint8	advSet;					// identify connectionless advertising set
+//	uint8_t	advSet;					// identify connectionless advertising set
 									// CTEInfo_t merge to periodicAdvInfo_t , advSet not used
 
 	// connection CTE request & response enable command
-	uint16	CTE_Request_Intv;	
+	uint16_t	CTE_Request_Intv;	
 	
 }CTEInfo_t;
 
@@ -668,8 +671,8 @@ typedef struct
 
 	periodicAdvSetData_t       data;
 
-    uint16    adv_interval_min;
-    uint16    adv_interval_max;	
+    uint16_t    adv_interval_min;
+    uint16_t    adv_interval_max;	
     uint16_t  adv_event_properties;                        // adv event type	
 
     // ================= advertisement context parameters   
@@ -678,18 +681,18 @@ typedef struct
 
 	uint8_t     secondaryAdvPHY;   // reserved, should we copy this setting from ext adv info? ext adv may be disabled while keep periodic adv alive
 
-	uint8        chn_map[5];        // 37 bits
+	uint8_t        chn_map[5];        // 37 bits
 	uint8_t		chanMapTable[LL_MAX_NUM_DATA_CHAN];
 	uint8_t     numUsedChans;                   	// count of the number of usable data channels
-	uint8        sca;               // 3 bit
+	uint8_t        sca;               // 3 bit
 
-	uint32       AA;
-	uint32       crcInit;	
+	uint32_t       AA;
+	uint32_t       crcInit;	
 
     uint8_t     tx_power;                                  // not setting now, reserve for TxPwr field	
 	
 	uint16_t    periodic_adv_event_counter;                // counter for periodic adv event
-	uint8       pa_current_chn;                            // current periodic adv channel
+	uint8_t       pa_current_chn;                            // current periodic adv channel
 
     uint8_t     currentChn;                                // current adv channel
 
@@ -704,20 +707,20 @@ typedef struct
 typedef struct
 {
 //  taskInfo_t *llTask;                                // pointer to associated task block
-  uint8       ownAddrType;                             // own device address type of public or random
-  uint8       ownAddr[ LL_DEVICE_ADDR_LEN ];           // own device address
-  uint8       initPending;                           // flag to indicate if Scan needs to be initialized
-  uint8       scanMode;                              // flag to indicate if currently scanning
-  uint8       scanType;                              // passive or active scan
-  uint16      scanInterval;                          // the interval between scan events
-  uint16      scanWindow;                            // the duration of a scan event
-  uint8       wlPolicy;                              // white list policy for Scan
-  uint8       filterReports;                         // flag to indicate if duplicate Adv packet reports are to be filtered
-  uint16      scanBackoffUL;                         // backoff upper limit count
-  uint8       nextScanChan;                          // advertising channel to be used by scanner
-  uint8       numSuccess;                            // for adjusting backoff count by tracking successive successes
-  uint8       numFailure;                            // for adjusting backoff count by tracking successive failures
-  uint16      currentBackoff;                        // current back off count, uint16 because the upper limit is 256
+  uint8_t       ownAddrType;                             // own device address type of public or random
+  uint8_t       ownAddr[ LL_DEVICE_ADDR_LEN ];           // own device address
+  uint8_t       initPending;                           // flag to indicate if Scan needs to be initialized
+  uint8_t       scanMode;                              // flag to indicate if currently scanning
+  uint8_t       scanType;                              // passive or active scan
+  uint16_t      scanInterval;                          // the interval between scan events
+  uint16_t      scanWindow;                            // the duration of a scan event
+  uint8_t       wlPolicy;                              // white list policy for Scan
+  uint8_t       filterReports;                         // flag to indicate if duplicate Adv packet reports are to be filtered
+  uint16_t      scanBackoffUL;                         // backoff upper limit count
+  uint8_t       nextScanChan;                          // advertising channel to be used by scanner
+  uint8_t       numSuccess;                            // for adjusting backoff count by tracking successive successes
+  uint8_t       numFailure;                            // for adjusting backoff count by tracking successive failures
+  uint16_t      currentBackoff;                        // current back off count, uint16_t because the upper limit is 256
 } scanInfo_t;
 
 ///////////////////////////////////////////////////////////
@@ -729,122 +732,122 @@ typedef struct
 #define LL_SCAN_PHY_CODED_BITMASK                         0x04
 typedef struct
 {
-  uint8       enable;
-  uint8       ownAddrType;                             // own device address type of public or random
-  uint8       ownAddr[ LL_DEVICE_ADDR_LEN ];           // own device address
-  uint8       wlPolicy;                                // white list policy for Scan
+  uint8_t       enable;
+  uint8_t       ownAddrType;                             // own device address type of public or random
+  uint8_t       ownAddr[ LL_DEVICE_ADDR_LEN ];           // own device address
+  uint8_t       wlPolicy;                                // white list policy for Scan
 
-  uint8       numOfScanPHY;
-  uint8       scanPHYs[LL_MAX_EXTENDED_SCAN_PHYS];     // scan PHYs
+  uint8_t       numOfScanPHY;
+  uint8_t       scanPHYs[LL_MAX_EXTENDED_SCAN_PHYS];     // scan PHYs
 
-  uint8       scanType[LL_MAX_EXTENDED_SCAN_PHYS];       // passive or active scan
-  uint16      scanInterval[LL_MAX_EXTENDED_SCAN_PHYS];   // the interval between scan events
-  uint16      scanWindow[LL_MAX_EXTENDED_SCAN_PHYS];     // the duration of a scan event
+  uint8_t       scanType[LL_MAX_EXTENDED_SCAN_PHYS];       // passive or active scan
+  uint16_t      scanInterval[LL_MAX_EXTENDED_SCAN_PHYS];   // the interval between scan events
+  uint16_t      scanWindow[LL_MAX_EXTENDED_SCAN_PHYS];     // the duration of a scan event
 
-  uint8       filterDuplicate;                         // Duplicate filtering setting
-  uint16      duration;                                // scan duration in a scan period
-  uint16      period;                                  // scan period
+  uint8_t       filterDuplicate;                         // Duplicate filtering setting
+  uint16_t      duration;                                // scan duration in a scan period
+  uint16_t      period;                                  // scan period
 
   // scan context
-  uint8       current_index;                           // current scan parameter index, 0 or 1
-  uint8       current_scan_PHY;
-  uint8       current_chn;
+  uint8_t       current_index;                           // current scan parameter index, 0 or 1
+  uint8_t       current_scan_PHY;
+  uint8_t       current_chn;
 
   // TODO: check below members are required or not
-  uint16      adv_data_offset;                        // offset of long adv data
-  uint16      adv_data_buf_len;                       // adv data buffer size
-  uint8       *adv_data;
+  uint16_t      adv_data_offset;                        // offset of long adv data
+  uint16_t      adv_data_buf_len;                       // adv data buffer size
+  uint8_t       *adv_data;
 } extScanInfo_t;
 
 typedef struct
 {
-    uint8     valid;
-    uint8     options;
-    uint8     advertising_SID;
-    uint8     advertiser_Address_Type;
-    uint8     advertiser_Address[LL_DEVICE_ADDR_LEN];
-    uint16    skip;
-    uint16    sync_Timeout;
-    uint8     sync_CTE_Type;
+    uint8_t     valid;
+    uint8_t     options;
+    uint8_t     advertising_SID;
+    uint8_t     advertiser_Address_Type;
+    uint8_t     advertiser_Address[LL_DEVICE_ADDR_LEN];
+    uint16_t    skip;
+    uint16_t    sync_Timeout;
+    uint8_t     sync_CTE_Type;
 } scannerSyncInfo_t;
 
 typedef struct
 {
-    uint8   header;
+    uint8_t   header;
 
-	uint8   advA[LL_DEVICE_ADDR_LEN];
-	uint8   targetA[LL_DEVICE_ADDR_LEN];
-	uint8   cteInfo;
-	uint16  adi;
+	uint8_t   advA[LL_DEVICE_ADDR_LEN];
+	uint8_t   targetA[LL_DEVICE_ADDR_LEN];
+	uint8_t   cteInfo;
+	uint16_t  adi;
 
 	struct 
 	{
-	    uint8  chn_idx;
-		uint8  ca;
-		uint8  offset_unit;
-		uint16 aux_offset;
-		uint8  aux_phy;
+	    uint8_t  chn_idx;
+		uint8_t  ca;
+		uint8_t  offset_unit;
+		uint16_t aux_offset;
+		uint8_t  aux_phy;
 	}  auxPtr;
 
-	uint8 syncInfo[18];
+	uint8_t syncInfo[18];
 
-	uint8 txPower;
+	uint8_t txPower;
 } extAdvHdr_t;
 
 /////////////////// Initiator Event Parameters
 typedef struct
 {
-  uint8       ownAddrType;                             // own device address type of public or random
-  uint8       ownAddr[ LL_DEVICE_ADDR_LEN ];           // own device address
+  uint8_t       ownAddrType;                             // own device address type of public or random
+  uint8_t       ownAddr[ LL_DEVICE_ADDR_LEN ];           // own device address
   //
-  uint8       initPending;                           // flag to indicate if Scan needs to be initialized
-  uint8       scanMode;                              // flag to indicate if currently scanning
-  uint16      scanInterval;                          // the interval between scan events
-  uint16      scanWindow;                            // the duration of a scan event
-  uint8       nextScanChan;                          // advertising channel to be used by scanner
-  uint8       wlPolicy;                              // white list policy for Init
-  uint8       connId;                                // allocated connection ID
-  uint8       scaValue;                              // Master SCA as an ordinal value for PPM
+  uint8_t       initPending;                           // flag to indicate if Scan needs to be initialized
+  uint8_t       scanMode;                              // flag to indicate if currently scanning
+  uint16_t      scanInterval;                          // the interval between scan events
+  uint16_t      scanWindow;                            // the duration of a scan event
+  uint8_t       nextScanChan;                          // advertising channel to be used by scanner
+  uint8_t       wlPolicy;                              // white list policy for Init
+  uint8_t       connId;                                // allocated connection ID
+  uint8_t       scaValue;                              // Master SCA as an ordinal value for PPM
 } initInfo_t;
 
 
 typedef struct
 {
-  uint8       ownAddrType;                             // own device address type of public or random
-  uint8       ownAddr[ LL_DEVICE_ADDR_LEN ];           // own device address
+  uint8_t       ownAddrType;                             // own device address type of public or random
+  uint8_t       ownAddr[ LL_DEVICE_ADDR_LEN ];           // own device address
 
-  uint8       wlPolicy;                                // white list policy for Init
-//  uint8       initPending;                           // flag to indicate if Scan needs to be initialized
-  uint8       scanMode;                              // flag to indicate if currently scanning
+  uint8_t       wlPolicy;                                // white list policy for Init
+//  uint8_t       initPending;                           // flag to indicate if Scan needs to be initialized
+  uint8_t       scanMode;                              // flag to indicate if currently scanning
   
-  uint8       numOfScanPHY;
-  uint8       initPHYs[LL_MAX_EXTENDED_SCAN_PHYS];     // scan PHYs
-  uint16      scanInterval[LL_MAX_EXTENDED_SCAN_PHYS];   // the interval between scan events
-  uint16      scanWindow[LL_MAX_EXTENDED_SCAN_PHYS];     // the duration of a scan event
+  uint8_t       numOfScanPHY;
+  uint8_t       initPHYs[LL_MAX_EXTENDED_SCAN_PHYS];     // scan PHYs
+  uint16_t      scanInterval[LL_MAX_EXTENDED_SCAN_PHYS];   // the interval between scan events
+  uint16_t      scanWindow[LL_MAX_EXTENDED_SCAN_PHYS];     // the duration of a scan event
 
-  uint16      conn_interval_min[LL_MAX_EXTENDED_SCAN_PHYS];
-  uint16      conn_interval_max[LL_MAX_EXTENDED_SCAN_PHYS];
-  uint16      conn_latency[LL_MAX_EXTENDED_SCAN_PHYS];
-  uint16      supervision_timeout[LL_MAX_EXTENDED_SCAN_PHYS];
-  uint16      minimum_CE_length[LL_MAX_EXTENDED_SCAN_PHYS];
-  uint16      maximum_CE_length[LL_MAX_EXTENDED_SCAN_PHYS];
+  uint16_t      conn_interval_min[LL_MAX_EXTENDED_SCAN_PHYS];
+  uint16_t      conn_interval_max[LL_MAX_EXTENDED_SCAN_PHYS];
+  uint16_t      conn_latency[LL_MAX_EXTENDED_SCAN_PHYS];
+  uint16_t      supervision_timeout[LL_MAX_EXTENDED_SCAN_PHYS];
+  uint16_t      minimum_CE_length[LL_MAX_EXTENDED_SCAN_PHYS];
+  uint16_t      maximum_CE_length[LL_MAX_EXTENDED_SCAN_PHYS];
 
   // initiator parameters for 2Mbps PHY
-  uint8       is_2M_parameter_present;
-  uint16      conn_interval_min_2Mbps;
-  uint16      conn_interval_max_2Mbps;
-  uint16      conn_latency_2Mbps;
-  uint16      supervision_timeout_2Mbps;
-  uint16      minimum_CE_length_2Mbps;
-  uint16      maximum_CE_length_2Mbps;
+  uint8_t       is_2M_parameter_present;
+  uint16_t      conn_interval_min_2Mbps;
+  uint16_t      conn_interval_max_2Mbps;
+  uint16_t      conn_latency_2Mbps;
+  uint16_t      supervision_timeout_2Mbps;
+  uint16_t      minimum_CE_length_2Mbps;
+  uint16_t      maximum_CE_length_2Mbps;
 
   // scan context
-  uint8       current_index;                           // current scan parameter index, 0 or 1
-  uint8       current_scan_PHY;
-  uint8       current_chn;  
+  uint8_t       current_index;                           // current scan parameter index, 0 or 1
+  uint8_t       current_scan_PHY;
+  uint8_t       current_chn;  
                            
-  uint8       connId;                                // allocated connection ID
-  uint8       scaValue;                              // Master SCA as an ordinal value for PPM
+  uint8_t       connId;                                // allocated connection ID
+  uint8_t       scaValue;                              // Master SCA as an ordinal value for PPM
 } extInitInfo_t;
 /////////////////////////////////////////////////////////////////
 
@@ -977,8 +980,8 @@ typedef struct
 // for timer drift adjust
 typedef struct
 {
-  uint32 coarse;                                       // number of 625us ticks at SFD capture
-  uint16 fine;                                         // number of 31.25ns ticks at SFD capture
+  uint32_t coarse;                                       // number of 625us ticks at SFD capture
+  uint16_t fine;                                         // number of 31.25ns ticks at SFD capture
 } sysTime_t;
 
 // Encryption
@@ -987,38 +990,38 @@ typedef struct
   // Note: IV and SKD provide enough room for the full IV and SKD. When the
   //       Master and Slave values are provided, the result is one combined
   //       (concatenated) value.
-  uint8  IV[ LL_ENC_IV_LEN ];                        // combined master and slave IV values concatenated
-  uint8  SKD [ LL_ENC_SKD_LEN ];                     // combined master and slave SKD values concatenated
-  uint8  RAND[ LL_ENC_RAND_LEN ];                    // random vector from Master
-  uint8  EDIV[ LL_ENC_EDIV_LEN ];                    // encrypted diversifier from Master
-  uint8  nonce[ LL_ENC_NONCE_LEN ];                  // current nonce with current IV value
-  uint8  SK[ LL_ENC_SK_LEN ];                        // session key derived from LTK and SKD
-  uint8  LTK[ LL_ENC_LTK_LEN ];                      // Long Term Key from Host
-  uint8  SKValid;                                    // flag that indicates the Session Key is valid
-  uint8  LTKValid;                                   // Long Term Key is valid
-  uint32 txPktCount;                                 // used for nonce formation during encryption (Note: 39 bits!)??
-  uint32 rxPktCount;                                 // used for nonce formation during encryption (Note: 39 bits!)??
-  uint8  encRestart;                                 // flag to indicate if an encryption key change took place
-  uint8  encRejectErrCode;                           // error code for rejecting encryption request
+  uint8_t  IV[ LL_ENC_IV_LEN ];                        // combined master and slave IV values concatenated
+  uint8_t  SKD [ LL_ENC_SKD_LEN ];                     // combined master and slave SKD values concatenated
+  uint8_t  RAND[ LL_ENC_RAND_LEN ];                    // random vector from Master
+  uint8_t  EDIV[ LL_ENC_EDIV_LEN ];                    // encrypted diversifier from Master
+  uint8_t  nonce[ LL_ENC_NONCE_LEN ];                  // current nonce with current IV value
+  uint8_t  SK[ LL_ENC_SK_LEN ];                        // session key derived from LTK and SKD
+  uint8_t  LTK[ LL_ENC_LTK_LEN ];                      // Long Term Key from Host
+  uint8_t  SKValid;                                    // flag that indicates the Session Key is valid
+  uint8_t  LTKValid;                                   // Long Term Key is valid
+  uint32_t txPktCount;                                 // used for nonce formation during encryption (Note: 39 bits!)??
+  uint32_t rxPktCount;                                 // used for nonce formation during encryption (Note: 39 bits!)??
+  uint8_t  encRestart;                                 // flag to indicate if an encryption key change took place
+  uint8_t  encRejectErrCode;                           // error code for rejecting encryption request
   // ALT: COULD USE ONE VARIABLE AND STATES FOR THESE FLAGS; IF SO, THE
   //      CONTROL PROCEDURE WOULD NEED TO BE REWORKED.
-  uint8  startEncRspRcved;                           // flag to indicate the Start Request has been responded to
-  uint8  pauseEncRspRcved;                           // flag to indicate the Pause Request has been responded to
-  uint8  encReqRcved;                                // flag to indicate an Enc Req was received in a Enc Pause procedure
+  uint8_t  startEncRspRcved;                           // flag to indicate the Start Request has been responded to
+  uint8_t  pauseEncRspRcved;                           // flag to indicate the Pause Request has been responded to
+  uint8_t  encReqRcved;                                // flag to indicate an Enc Req was received in a Enc Pause procedure
 
 
-  uint8  startEncReqRcved;                           // flag to indicate the Start Request has been responded to
-  uint8  rejectIndRcved;                             // flag to indicate the Start Encryption needs to be aborted
+  uint8_t  startEncReqRcved;                           // flag to indicate the Start Request has been responded to
+  uint8_t  rejectIndRcved;                             // flag to indicate the Start Encryption needs to be aborted
 
 } encInfo_t;
 
 // Packet Error Rate Information - General
 typedef struct
 {
-  uint16 numPkts;                                    // total number of packets
-  uint16 numCrcErr;                                  // total number of packets with CRC error
-  uint16 numEvents;                                  // total number of connection events
-  uint16 numMissedEvts;                              // total number of missed connection events
+  uint16_t numPkts;                                    // total number of packets
+  uint16_t numCrcErr;                                  // total number of packets with CRC error
+  uint16_t numEvents;                                  // total number of connection events
+  uint16_t numMissedEvts;                              // total number of missed connection events
 } perInfo_t;
 
 typedef struct 
@@ -1210,9 +1213,9 @@ typedef struct
     connParam_t    paramUpdate;                      // update parameters
     // Channel Map Update Control Procedure
     uint8_t          pendingChanUpdate;              // flag to indicate connection channel map update is pending
-    uint16         chanMapUpdateEvent;               // event count to indicate when to apply pending chan map update
+    uint16_t         chanMapUpdateEvent;               // event count to indicate when to apply pending chan map update
     // Encryption Data Control Procedure
-    uint8          encEnabled;                       // flag to indicate that encryption is enabled for this connection
+    uint8_t          encEnabled;                       // flag to indicate that encryption is enabled for this connection
     encInfo_t      encInfo;                          // structure that holds encryption related data
     // Feature Set
     featureSet_t   featureSetInfo;                   // feature set for this connection
@@ -1222,7 +1225,7 @@ typedef struct
     // Termination Control Procedure
     termInfo_t     termInfo;                         // structure that holds connection termination data
     // Unknnown Control Packet
-    uint8          unknownCtrlType;                  // value of unknown control type
+    uint8_t          unknownCtrlType;                  // value of unknown control type
     // Packet Error Rate
     perInfo_t      perInfo;                          // PER
 
@@ -1266,122 +1269,122 @@ typedef struct
 
 	// 2020-01-19 add for CTE
 	// llCTE_ReqFlag,llCTE_RspFlag only indicate CTE Request and Response enable or disable status
-	uint8 llCTE_ReqFlag;
-	uint8 llCTE_RspFlag;
+	uint8_t llCTE_ReqFlag;
+	uint8_t llCTE_RspFlag;
 	// CTE REQ & RSP Control
 	llCTEModeManagement_t llCTEModeCtrl;
 	CTEInfo_t	llConnCTE;
 
 	// reserved variables
-	uint32      llTbd1;
-	uint32      llTbd2;
-	uint32      llTbd3;
-	uint32      llTbd4;
+	uint32_t      llTbd1;
+	uint32_t      llTbd2;
+	uint32_t      llTbd3;
+	uint32_t      llTbd4;
 } llConnState_t;
 
 typedef struct 
 {
-	uint8   	  rsc_idx;	                      // connection ID, reserved for dynamic resource allocate
-    uint8         priority;
-    uint8         linkRole;                       // link role, slave(LL_ROLE_SLAVE) or master(LL_ROLE_MASTER)
+	uint8_t   	  rsc_idx;	                      // connection ID, reserved for dynamic resource allocate
+    uint8_t         priority;
+    uint8_t         linkRole;                       // link role, slave(LL_ROLE_SLAVE) or master(LL_ROLE_MASTER)
 
-    uint32        task_period;                    // schedule period, calculate from connection interval, in us. required???
-    uint32        task_duration;                  // task duration
-	uint32        remainder;                      // remainder time
+    uint32_t        task_period;                    // schedule period, calculate from connection interval, in us. required???
+    uint32_t        task_duration;                  // task duration
+	uint32_t        remainder;                      // remainder time
 
-//    uint32        lastTimerValue;                      // last timer configure value
+//    uint32_t        lastTimerValue;                      // last timer configure value
 
 }  llScheduleInfo_t;
 
 // Per BLE LL Connection (max number is BLE_LL_MAX_NUM_LL_CONNS)
 typedef struct
 {
-    uint8         numLLConns;                          // number of allocated connections
-    uint8         numLLMasterConns;                    // number of master, to check whether we need it
-    uint8         currentConn;                         // the LL connection currently in use
+    uint8_t         numLLConns;                          // number of allocated connections
+    uint8_t         numLLMasterConns;                    // number of master, to check whether we need it
+    uint8_t         currentConn;                         // the LL connection currently in use
 #define MAX_NUM_LL_CONN_ROM_LIMT                 16          //hard code for BBB ROM define
 
     llScheduleInfo_t         scheduleInfo[MAX_NUM_LL_CONN_ROM_LIMT];     // scheduler information
 
     // ========== common link parameter for all master connection
-    uint16        connInterval;                         // connection interval
-    uint16        slaveLatency;                         // number of connection events the slave can ignore
-    uint16        connTimeout;                          // supervision connection timeout    
+    uint16_t        connInterval;                         // connection interval
+    uint16_t        slaveLatency;                         // number of connection events the slave can ignore
+    uint16_t        connTimeout;                          // supervision connection timeout    
 
-	uint32        per_slot_time;                        // delta T per resource slot
+	uint32_t        per_slot_time;                        // delta T per resource slot
 
-	uint32        timerExpiryTick;                      // last LL timer expiry tick in 1s timer	
-	uint32        current_timer;                        // LL timer initial load value
+	uint32_t        timerExpiryTick;                      // last LL timer expiry tick in 1s timer	
+	uint32_t        current_timer;                        // LL timer initial load value
   
 } llConns_t;
 
 // for extended/periodic adv shceduler
 typedef struct 
 {
-//	uint8   	  advInfoIdx;	                      // index in the adv parameters array
-//	uint8   	  advSetIdx;	                      // index in the adv parameters array
-    uint8         adv_handler;
+//	uint8_t   	  advInfoIdx;	                      // index in the adv parameters array
+//	uint8_t   	  advSetIdx;	                      // index in the adv parameters array
+    uint8_t         adv_handler;
 	extAdvInfo_t  *pAdvInfo;
 	
-//    uint8         eventType;                          // adv event type
+//    uint8_t         eventType;                          // adv event type
 
-//    uint32        task_period;                    // schedule period, calculate from connection interval, in us. required???
-//    uint32        task_duration;                  // task duration
-	uint32        nextEventRemainder;               // remainder time
-	uint32        auxPduRemainder;                  // remainder time
+//    uint32_t        task_period;                    // schedule period, calculate from connection interval, in us. required???
+//    uint32_t        task_duration;                  // task duration
+	uint32_t        nextEventRemainder;               // remainder time
+	uint32_t        auxPduRemainder;                  // remainder time
 
 }  llAdvScheduleInfo_t;
 
 typedef struct 
 {
-//	uint8   	  advInfoIdx;	                      // index in the adv parameters array
-//	uint8   	  advSetIdx;	                      // index in the adv parameters array
-    uint8         adv_handler;
+//	uint8_t   	  advInfoIdx;	                      // index in the adv parameters array
+//	uint8_t   	  advSetIdx;	                      // index in the adv parameters array
+    uint8_t         adv_handler;
 	periodicAdvInfo_t  *pAdvInfo_prd;
 	extAdvInfo_t       *pAdvInfo;
 	
-//    uint32        task_period;                    // schedule period, calculate from connection interval, in us. required???
-//    uint32        task_duration;                  // task duration
-	uint32        nextEventRemainder;               // primary channel PDU remainder time
-	uint32        auxPduRemainder;                  // auxilary channel PDU remainder time
+//    uint32_t        task_period;                    // schedule period, calculate from connection interval, in us. required???
+//    uint32_t        task_duration;                  // task duration
+	uint32_t        nextEventRemainder;               // primary channel PDU remainder time
+	uint32_t        auxPduRemainder;                  // auxilary channel PDU remainder time
 
 }  llPeriodicAdvScheduleInfo_t;
 
 // periodic scanner context
 typedef struct 
 {
-    uint16       syncHandler;
-	uint8        valid;                  // the syncInfo is valid or not
-	uint8        syncEstOk;              // sync the periodic adv event OK?
-	uint8        event1stFlag;           // indicate LL is searching AUX_SYNC_IND PDU
+    uint16_t       syncHandler;
+	uint8_t        valid;                  // the syncInfo is valid or not
+	uint8_t        syncEstOk;              // sync the periodic adv event OK?
+	uint8_t        event1stFlag;           // indicate LL is searching AUX_SYNC_IND PDU
 
-    uint16       skip;
-    uint32       syncTimeout;            // unit us, need *1250 when convert from HCI value
-    uint8        syncCteType;
+    uint16_t       skip;
+    uint32_t       syncTimeout;            // unit us, need *1250 when convert from HCI value
+    uint8_t        syncCteType;
 
 //    syncInfoOffset_t   offset;
 
-	uint32       advInterval;         // periodic adv event interval, unit us, need *1250 when convert from air interface PDU value
+	uint32_t       advInterval;         // periodic adv event interval, unit us, need *1250 when convert from air interface PDU value
 
-	uint8        chnMap[5];       
+	uint8_t        chnMap[5];       
 
 	uint8_t		chanMapTable[LL_MAX_NUM_DATA_CHAN];
 	uint8_t     numUsedChans;                   	// count of the number of usable data channels	
 
-	uint8        sca;
+	uint8_t        sca;
 
-	uint8        accessAddress[4];
-	uint16       channelIdentifier;
-	uint8        crcInit[3];
+	uint8_t        accessAddress[4];
+	uint16_t       channelIdentifier;
+	uint8_t        crcInit[3];
 
-    uint8        advPhy;
-    uint8        current_channel;         // current scan channel, for AUX_CHAIN_IND, it may different with 1st PDU channel
-	uint8        currentEventChannel;     // current periodic adv event 1st PDU channel
-	uint16       eventCounter;	          // periodic adv event counter
+    uint8_t        advPhy;
+    uint8_t        current_channel;         // current scan channel, for AUX_CHAIN_IND, it may different with 1st PDU channel
+	uint8_t        currentEventChannel;     // current periodic adv event 1st PDU channel
+	uint16_t       eventCounter;	          // periodic adv event counter
 
-	uint16       syncLostTime;
+	uint16_t       syncLostTime;
 	
-	uint32       nextEventRemainder;               // next periodic advertisement event remainder time
+	uint32_t       nextEventRemainder;               // next periodic advertisement event remainder time
 
 	// 2020-01-17 add for CTE Sampling
 	CTEInfo_t	IQSampleInfo;
@@ -1390,48 +1393,48 @@ typedef struct
 // ===== BBB ROM code added
 typedef struct
 {
-    uint8    isTimer1RecoverRequired;
-	uint32   timer1Remainder;
+    uint8_t    isTimer1RecoverRequired;
+	uint32_t   timer1Remainder;
 
-//    uint8    isTimer2RecoverRequired;
-//	uint32   timer2Remainder;
+//    uint8_t    isTimer2RecoverRequired;
+//	uint32_t   timer2Remainder;
 //
-//    uint8    isTimer3RecoverRequired;
-//	uint32   timer3Remainder;
+//    uint8_t    isTimer3RecoverRequired;
+//	uint32_t   timer3Remainder;
 
-    uint8    isTimer4RecoverRequired;
-	uint32   timer4Remainder;
+    uint8_t    isTimer4RecoverRequired;
+	uint32_t   timer4Remainder;
 }  llSleepContext;
 
-typedef uint8 llStatus_t;
+typedef uint8_t llStatus_t;
 
 // Packet Error Rate Information By Channel
 typedef struct
 {
-  uint16 numPkts[ LL_MAX_NUM_DATA_CHAN ];
-  uint16 numCrcErr[ LL_MAX_NUM_DATA_CHAN ];
+  uint16_t numPkts[ LL_MAX_NUM_DATA_CHAN ];
+  uint16_t numCrcErr[ LL_MAX_NUM_DATA_CHAN ];
 } perByChan_t;
 
 typedef struct
 {
-  uint16 rxNumPkts[ LL_MAX_NUM_DATA_CHAN ];
-  uint16 rxNumCrcErr[ LL_MAX_NUM_DATA_CHAN ];
-  uint16 txNumRetry[ LL_MAX_NUM_DATA_CHAN ];
-  uint16 TxNumAck[ LL_MAX_NUM_DATA_CHAN ];
-  uint16 rxToCnt[ LL_MAX_NUM_DATA_CHAN ];
-  uint16 connEvtCnt[ LL_MAX_NUM_DATA_CHAN ];
+  uint16_t rxNumPkts[ LL_MAX_NUM_DATA_CHAN ];
+  uint16_t rxNumCrcErr[ LL_MAX_NUM_DATA_CHAN ];
+  uint16_t txNumRetry[ LL_MAX_NUM_DATA_CHAN ];
+  uint16_t TxNumAck[ LL_MAX_NUM_DATA_CHAN ];
+  uint16_t rxToCnt[ LL_MAX_NUM_DATA_CHAN ];
+  uint16_t connEvtCnt[ LL_MAX_NUM_DATA_CHAN ];
   
   
 } perStatsByChan_t;
 
 typedef struct
 {
-  uint16 rxNumPkts;
-  uint16 rxNumCrcErr;
-  uint16 txNumRetry;
-  uint16 TxNumAck;
-  uint16 rxToCnt;
-  uint16 connEvtCnt;
+  uint16_t rxNumPkts;
+  uint16_t rxNumCrcErr;
+  uint16_t txNumRetry;
+  uint16_t TxNumAck;
+  uint16_t rxToCnt;
+  uint16_t connEvtCnt;
   
   
 } perStats_t;
@@ -1452,18 +1455,18 @@ typedef uint8_t ( *LL_PLUS_ScanRequestFilterCB_t )(void);
 // Counters
 typedef struct
 {
-  uint8 numTxDone;                                   // TX pkts ACK'ed (auto-empty not counted)
-  uint8 numTxAck;                                    // TX pkts ACK'ed (both auto-empty and TX FIFO packets)
-  uint8 numTxCtrlAck;                                // TX control pkts ACK'ed
-  uint8 numTxCtrl;                                   // TX control pkts TX'ed
-  uint8 numTxRetrans;                                // retrans + auto-empty retrans
-  uint8 numTx;                                       // trans (incl. auto-empty) + retrans (incl. auto-empty)
-  uint8 numRxOk;                                     // non-empty correctly RX'ed and not ignored data and control pkts
-  uint8 numRxCtrl;                                   // correctly RX'ed control pkts
-  uint8 numRxNotOk;                                  // RX'ed with bad CRC
-  uint8 numRxIgnored;                                // correctly RX'ed, but ignored
-  uint8 numRxEmpty;                                  // correctly RX'ed empty packets
-  uint8 numRxFifoFull;                               // correctly RX'ed but discarded due to full RX FIFO
+  uint8_t numTxDone;                                   // TX pkts ACK'ed (auto-empty not counted)
+  uint8_t numTxAck;                                    // TX pkts ACK'ed (both auto-empty and TX FIFO packets)
+  uint8_t numTxCtrlAck;                                // TX control pkts ACK'ed
+  uint8_t numTxCtrl;                                   // TX control pkts TX'ed
+  uint8_t numTxRetrans;                                // retrans + auto-empty retrans
+  uint8_t numTx;                                       // trans (incl. auto-empty) + retrans (incl. auto-empty)
+  uint8_t numRxOk;                                     // non-empty correctly RX'ed and not ignored data and control pkts
+  uint8_t numRxCtrl;                                   // correctly RX'ed control pkts
+  uint8_t numRxNotOk;                                  // RX'ed with bad CRC
+  uint8_t numRxIgnored;                                // correctly RX'ed, but ignored
+  uint8_t numRxEmpty;                                  // correctly RX'ed empty packets
+  uint8_t numRxFifoFull;                               // correctly RX'ed but discarded due to full RX FIFO
 } rfCounters_t;
 
 
@@ -1480,13 +1483,13 @@ extern chanMap_t           chanMapUpdate;
 extern featureSet_t        deviceFeatureSet;
 //extern preChanMapUpdate_t preChanMapUpdate[];
 
-extern uint8               g_maxConnNum;
-extern uint8               g_maxPktPerEventTx;
-extern uint8               g_maxPktPerEventRx;
+extern uint8_t               g_maxConnNum;
+extern uint8_t               g_maxPktPerEventTx;
+extern uint8_t               g_maxPktPerEventRx;
 extern llConnState_t       *conn_param;
 
-extern uint8               numComplPkts;
-extern uint8               numComplPktsLimit;
+extern uint8_t               numComplPkts;
+extern uint8_t               numComplPktsLimit;
 
 extern verInfo_t         verInfo; 
 
@@ -1502,34 +1505,34 @@ extern llPduLenManagment_t g_llPduLen;
 extern peerInfo_t        g_llWhitelist[];
 // Resolving list
 extern resolvingListInfo_t  g_llResolvinglist[]; 
-extern uint8                g_llRlEnable;
-extern uint8                g_llRlDeviceNum;                     // current device number in resolving list, should not exceed LL_RESOLVINGLIST_ENTRY_NUM
-extern uint16               g_llRlTimeout;     
+extern uint8_t                g_llRlEnable;
+extern uint8_t                g_llRlDeviceNum;                     // current device number in resolving list, should not exceed LL_RESOLVINGLIST_ENTRY_NUM
+extern uint16_t               g_llRlTimeout;     
 
 // extended advertiser
 extern extAdvInfo_t        *g_pExtendedAdvInfo;
 extern periodicAdvInfo_t   *g_pPeriodicAdvInfo;
-extern uint8                g_extAdvNumber;           // number of ext adv set
-extern uint8                g_perioAdvNumber;           // number of periodic adv set
+extern uint8_t                g_extAdvNumber;           // number of ext adv set
+extern uint8_t                g_perioAdvNumber;           // number of periodic adv set
 
-extern uint16               g_advSetMaximumLen;
+extern uint16_t               g_advSetMaximumLen;
 
 // extended adv scheduler context
 extern llAdvScheduleInfo_t  *g_pAdvSchInfo;
-extern uint8                g_schExtAdvNum;            // current schedule extended adv number
-extern uint8                g_currentExtAdv;             // current schedule extended adv index
+extern uint8_t                g_schExtAdvNum;            // current schedule extended adv number
+extern uint8_t                g_currentExtAdv;             // current schedule extended adv index
 
 // ==== periodic adv scheduler context
 extern llPeriodicAdvScheduleInfo_t  *g_pAdvSchInfo_periodic;        // periodic adv scheduler info
-extern uint8          g_schExtAdvNum_periodic;              // current scheduler periodic adv number
-extern uint8          g_currentExtAdv_periodic;             // current scheduler periodic adv index
+extern uint8_t          g_schExtAdvNum_periodic;              // current scheduler periodic adv number
+extern uint8_t          g_currentExtAdv_periodic;             // current scheduler periodic adv index
 
-extern uint32               g_advPerSlotTick;            // us
-extern uint32               g_advSlotPeriodic;           // us
-extern uint32               g_currentAdvTimer;           // us
-extern uint32               g_timerExpiryTick;           // us
+extern uint32_t               g_advPerSlotTick;            // us
+extern uint32_t               g_advSlotPeriodic;           // us
+extern uint32_t               g_currentAdvTimer;           // us
+extern uint32_t               g_timerExpiryTick;           // us
 
-extern uint8                g_currentTimerTask; 
+extern uint8_t                g_currentTimerTask; 
 
 extern llSleepContext       g_llSleepContext;
 
@@ -1546,13 +1549,13 @@ extern llPeriodicScannerInfo_t    g_llPeriodAdvSyncInfo[];
 //#define    LL_TASK_MASTER_CONN            0x04
 #define    LL_TASK_OTHERS                 0x10
 #define    LL_TASK_INVALID                0xFF
-extern uint8    llTaskState;
+extern uint8_t    llTaskState;
 
 extern extAdvHdr_t  ext_adv_hdr;
 
  // 2020-02-15 add for connectionless IQ Sample buffer
-extern uint16 *g_pLLcteISample;
-extern uint16 *g_pLLcteQSample;
+extern uint16_t *g_pLLcteISample;
+extern uint16_t *g_pLLcteQSample;
 #endif
 
 

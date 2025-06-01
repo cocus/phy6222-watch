@@ -9,15 +9,8 @@
 
 **************************************************************************************************/
 
-#include "bcomdef.h"
-#include "OSAL.h"
-#include "hci.h"
-#include "gap_internal.h"
-#include "linkdb.h"
-#include "sm.h"
 #include "sm_internal.h"
-#include "smp.h"
-#include "osal_cbtimer.h"
+#include <log/log.h>
 
 /*********************************************************************
     MACROS
@@ -49,23 +42,23 @@
 // Structure used to generate a Key
 typedef struct
 {
-    uint8 state;          // Key Generation State
-    uint8 taskID;         // Task ID of task that wants the key
-    uint8 key[KEYLEN];    // Place to put the key
+    uint8_t state;          // Key Generation State
+    uint8_t taskID;         // Task ID of task that wants the key
+    uint8_t key[KEYLEN];    // Place to put the key
 } smGenKey_t;
 
 // Encrypt function structure
 typedef struct
 {
-    uint8 key[KEYLEN];              // Key to encrypt with
-    uint8 plainTextData[KEYLEN];    // Plain Text data to encrypt
-    uint8 result[KEYLEN];           // Result of encrypt (key + Plain Text data)
+    uint8_t key[KEYLEN];              // Key to encrypt with
+    uint8_t plainTextData[KEYLEN];    // Plain Text data to encrypt
+    uint8_t result[KEYLEN];           // Result of encrypt (key + Plain Text data)
 } sm_Encrypt_t;
 
 /*********************************************************************
     GLOBAL VARIABLES
 */
-uint8 smTO_CBTimer[15]= {0};
+uint8_t smTO_CBTimer[15]= {0};
 
 /*********************************************************************
     EXTERNAL VARIABLES
@@ -83,7 +76,7 @@ uint8 smTO_CBTimer[15]= {0};
 static smGenKey_t* pSmGenKey = (smGenKey_t*)NULL;
 
 // Const table used in key calculations
-static CONST uint8 const_Rb[16] =
+static CONST uint8_t const_Rb[16] =
 {
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
     0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x87
@@ -92,16 +85,16 @@ static CONST uint8 const_Rb[16] =
 /*********************************************************************
     LOCAL FUNCTIONS
 */
-static void smSendGenKeyEvent( uint8 status );
+static void smSendGenKeyEvent( uint8_t status );
 static bStatus_t smEncrypt( sm_Encrypt_t* pParam );
-static bStatus_t smEncryptLocal( uint8* pKey, uint8* pPlaintextData, uint8* pEncryptedData );
+static bStatus_t smEncryptLocal( uint8_t* pKey, uint8_t* pPlaintextData, uint8_t* pEncryptedData );
 
-static void sm_xor( uint8* p1, uint8* p2 );
-static bStatus_t sm_CMAC( uint8* pK, uint8* pM, uint8 mLen, uint8* pMac );
-static bStatus_t generate_subkey( uint8* pKey, uint8* pK1, uint8* pK2 );
-static void xor_128( uint8* pA, CONST uint8* pB, uint8* pOutcome );
-static void padding ( uint8* pLastb, uint8* pPad, uint8 length );
-static void leftshift_onebit( uint8* pInp, uint8* pOutp );
+static void sm_xor( uint8_t* p1, uint8_t* p2 );
+static bStatus_t sm_CMAC( uint8_t* pK, uint8_t* pM, uint8_t mLen, uint8_t* pMac );
+static bStatus_t generate_subkey( uint8_t* pKey, uint8_t* pK1, uint8_t* pK2 );
+static void xor_128( uint8_t* pA, CONST uint8_t* pB, uint8_t* pOutcome );
+static void padding ( uint8_t* pLastb, uint8_t* pPad, uint8_t length );
+static void leftshift_onebit( uint8_t* pInp, uint8_t* pOutp );
 
 // The next section is used to validate the Key Calculation Algorithm
 // used during the pairing process.
@@ -173,7 +166,7 @@ void Testsm_CMAC( void )
 
     Public function defined in sm.h.
 */
-bStatus_t SM_NewRandKey( uint8 taskID )
+bStatus_t SM_NewRandKey( uint8_t taskID )
 {
     // Already doing something?
     if ( smInProcess() )
@@ -209,10 +202,10 @@ bStatus_t SM_NewRandKey( uint8 taskID )
 
     Public function defined in sm.h.
 */
-bStatus_t SM_CalcRandomAddr( uint8* pIRK, uint8* pNewAddr )
+bStatus_t SM_CalcRandomAddr( uint8_t* pIRK, uint8_t* pNewAddr )
 {
     bStatus_t status;         // return value
-    uint8 PRand[PRAND_SIZE];  // Place to hold the PRAND
+    uint8_t PRand[PRAND_SIZE];  // Place to hold the PRAND
 
     // parameter validation
     if ( (pIRK == NULL) || (pNewAddr == NULL) )
@@ -231,7 +224,7 @@ bStatus_t SM_CalcRandomAddr( uint8* pIRK, uint8* pNewAddr )
     if ( status == SUCCESS )
     {
         // attach the PRAND to the new address
-        VOID osal_memcpy( &(pNewAddr[PRAND_SIZE]), PRand, PRAND_SIZE );
+        osal_memcpy( &(pNewAddr[PRAND_SIZE]), PRand, PRAND_SIZE );
     }
 
     return ( status );
@@ -242,11 +235,11 @@ bStatus_t SM_CalcRandomAddr( uint8* pIRK, uint8* pNewAddr )
 
     Public function defined in sm.h.
 */
-bStatus_t SM_ResolveRandomAddrs( uint8* pIRK, uint8* pAddr )
+bStatus_t SM_ResolveRandomAddrs( uint8_t* pIRK, uint8_t* pAddr )
 {
     bStatus_t stat;          // return value
-    uint8 rand[PRAND_SIZE];  // place for PRAND
-    uint8 hash[PRAND_SIZE];  // place for hash (calc PRAND)
+    uint8_t rand[PRAND_SIZE];  // place for PRAND
+    uint8_t hash[PRAND_SIZE];  // place for hash (calc PRAND)
 
     // Parameter check
     if ( (pIRK == NULL) || (pAddr == NULL) )
@@ -255,7 +248,7 @@ bStatus_t SM_ResolveRandomAddrs( uint8* pIRK, uint8* pAddr )
     }
 
     // Get PRAND out of address
-    VOID osal_memcpy( rand, &(pAddr[PRAND_SIZE]), PRAND_SIZE );
+    osal_memcpy( rand, &(pAddr[PRAND_SIZE]), PRAND_SIZE );
     // Clear the Random Address header bits and force the address type
     rand[PRAND_SIZE-1] &= ~(RANDOM_ADDR_HDR);
     rand[PRAND_SIZE-1] |= PRIVATE_RESOLVE_ADDR_HDR;
@@ -286,7 +279,7 @@ bStatus_t SM_ResolveRandomAddrs( uint8* pIRK, uint8* pAddr )
 
     Public function defined in sm.h.
 */
-bStatus_t SM_Encrypt( uint8* pKey, uint8* pPlainText, uint8* pResult )
+bStatus_t SM_Encrypt( uint8_t* pKey, uint8_t* pPlainText, uint8_t* pResult )
 {
     bStatus_t stat;       // return value
     sm_Encrypt_t param;   // place to perform work
@@ -298,12 +291,12 @@ bStatus_t SM_Encrypt( uint8* pKey, uint8* pPlainText, uint8* pResult )
     }
 
     // Copy MSByte first
-    VOID osal_revmemcpy( param.key, pKey, KEYLEN );
-    VOID osal_revmemcpy( param.plainTextData, pPlainText, KEYLEN );
+    osal_revmemcpy( param.key, pKey, KEYLEN );
+    osal_revmemcpy( param.plainTextData, pPlainText, KEYLEN );
     // Perform Encrypt
     stat = smEncrypt( &param );
     // Reverse results
-    VOID osal_revmemcpy( pResult, param.result, KEYLEN );
+    osal_revmemcpy( pResult, param.result, KEYLEN );
     return ( stat );
 }
 
@@ -312,14 +305,14 @@ bStatus_t SM_Encrypt( uint8* pKey, uint8* pPlainText, uint8* pResult )
 
     Public function defined in sm.h.
 */
-bStatus_t SM_GenerateAuthenSig( uint8* pData, uint8 len, uint8* pAuthenSig )
+bStatus_t SM_GenerateAuthenSig( uint8_t* pData, uint8_t len, uint8_t* pAuthenSig )
 {
     bStatus_t stat;         // return value
-    uint8* pM;               // "M" variable in CMAC algorithm
-    uint32 signCounter;     // Sign Counter
-    uint8 mLen;             // Length of "M" needed
-    uint8 mac[LEN_64BIT];   // CMAC result
-    uint8 revKey[KEYLEN];   // A place to hold the reverse SRK
+    uint8_t* pM;               // "M" variable in CMAC algorithm
+    uint32_t signCounter;     // Sign Counter
+    uint8_t mLen;             // Length of "M" needed
+    uint8_t mac[LEN_64BIT];   // CMAC result
+    uint8_t revKey[KEYLEN];   // A place to hold the reverse SRK
 
     // Check parameters
     if ( (pData == NULL) || (pAuthenSig == NULL) )
@@ -336,12 +329,12 @@ bStatus_t SM_GenerateAuthenSig( uint8* pData, uint8 len, uint8* pAuthenSig )
         // Get this device's sign counter
         signCounter = gapGetSignCounter();
         // Pass all variables to CMAC in MSByte order
-        VOID osal_revmemcpy( &pM[LEN_32BIT], pData, len );
+        osal_revmemcpy( &pM[LEN_32BIT], pData, len );
         pM[3] = BREAK_UINT32( signCounter, 0 );
         pM[2] = BREAK_UINT32( signCounter, 1 );
         pM[1] = BREAK_UINT32( signCounter, 2 );
         pM[0] = BREAK_UINT32( signCounter, 3 );
-        VOID osal_revmemcpy( revKey, gapGetSRK(), KEYLEN );
+        osal_revmemcpy( revKey, gapGetSRK(), KEYLEN );
         // Perform CMAC algorithm
         stat = sm_CMAC( revKey, pM, mLen, mac );
 
@@ -352,7 +345,7 @@ bStatus_t SM_GenerateAuthenSig( uint8* pData, uint8 len, uint8* pAuthenSig )
             pAuthenSig[1] = BREAK_UINT32( signCounter, 1 );
             pAuthenSig[2] = BREAK_UINT32( signCounter, 2 );
             pAuthenSig[3] = BREAK_UINT32( signCounter, 3 );
-            VOID osal_revmemcpy( &pAuthenSig[LEN_32BIT], mac, LEN_64BIT );
+            osal_revmemcpy( &pAuthenSig[LEN_32BIT], mac, LEN_64BIT );
             // Increment this device's signature counter
             gapIncSignCounter();
         }
@@ -372,17 +365,17 @@ bStatus_t SM_GenerateAuthenSig( uint8* pData, uint8 len, uint8* pAuthenSig )
 
     Public function defined in sm.h.
 */
-bStatus_t SM_VerifyAuthenSig( uint16 connHandle, uint8 authentication,
-                              uint8* pData, uint16 len, uint8* pAuthenSig )
+bStatus_t SM_VerifyAuthenSig( uint16_t connHandle, uint8_t authentication,
+                              uint8_t* pData, uint16_t len, uint8_t* pAuthenSig )
 {
     bStatus_t stat;           // return value
     linkDBItem_t* pConnItem;  // pointer to connection information
-    uint32 signCounter;       // sign counter in pAuthenSig field
-    uint8* pM;                // "M" variable
-    uint8 mLen;               // Length of "M"
-    uint8 mac[LEN_64BIT];     // CMAC
-    uint8 revmac[LEN_64BIT];  // A place to reverse CMAC
-    uint8 revKey[KEYLEN];     // A place to reverse the SRK
+    uint32_t signCounter;       // sign counter in pAuthenSig field
+    uint8_t* pM;                // "M" variable
+    uint8_t mLen;               // Length of "M"
+    uint8_t mac[LEN_64BIT];     // CMAC
+    uint8_t revmac[LEN_64BIT];  // A place to reverse CMAC
+    uint8_t revKey[KEYLEN];     // A place to reverse the SRK
 
     // Check parameters
     if ( (pData == NULL) || (pAuthenSig == NULL) )
@@ -415,7 +408,7 @@ bStatus_t SM_VerifyAuthenSig( uint16 connHandle, uint8 authentication,
     }
 
     // Initialize CMAC
-    VOID osal_memset( mac, 0, LEN_64BIT );
+    osal_memset( mac, 0, LEN_64BIT );
     // Adjust the M length for the sign counter and allocate space for "M"
     mLen = len + LEN_32BIT;
     pM = osal_mem_alloc( mLen );
@@ -426,16 +419,16 @@ bStatus_t SM_VerifyAuthenSig( uint16 connHandle, uint8 authentication,
     }
 
     // Pass all variables to CMAC in MSByte order
-    VOID osal_revmemcpy( &pM[LEN_32BIT], pData, len );
-    VOID osal_revmemcpy( pM, pAuthenSig, LEN_32BIT );
-    VOID osal_revmemcpy( revKey, pConnItem->sec.srk, KEYLEN );
+    osal_revmemcpy( &pM[LEN_32BIT], pData, len );
+    osal_revmemcpy( pM, pAuthenSig, LEN_32BIT );
+    osal_revmemcpy( revKey, pConnItem->sec.srk, KEYLEN );
     // perform CMAC algorithm
     stat = sm_CMAC( revKey, pM, mLen, mac );
 
     if ( stat == SUCCESS )
     {
         // Compare the calculated CMAC against the CMAC in the signature
-        VOID osal_revmemcpy( revmac, mac, LEN_64BIT );
+        osal_revmemcpy( revmac, mac, LEN_64BIT );
 
         if ( osal_memcmp( revmac, &pAuthenSig[LEN_32BIT], LEN_64BIT ) != TRUE )
         {
@@ -463,11 +456,11 @@ bStatus_t SM_VerifyAuthenSig( uint16 connHandle, uint8 authentication,
     @return      TRUE if we asked for this message
                 FALSE if we aren't expecting this messsage
 */
-uint8 smProcessRandComplete( uint8 status, uint8* rand )
+uint8_t smProcessRandComplete( uint8_t status, uint8_t* rand )
 {
     if ( pSmGenKey )
     {
-        uint8 stateDone = FALSE;  // Process finish flag
+        uint8_t stateDone = FALSE;  // Process finish flag
 
         if ( status == SUCCESS )
         {
@@ -475,7 +468,7 @@ uint8 smProcessRandComplete( uint8 status, uint8* rand )
             if ( pSmGenKey->state == GENERATE_KEY_INIT )
             {
                 // Save off the random bytes
-                VOID osal_memcpy( pSmGenKey->key, rand, LEN_64BIT );
+                osal_memcpy( pSmGenKey->key, rand, LEN_64BIT );
 
                 // Ask for more random bytes
                 if ( HCI_LE_RandCmd() == SUCCESS )
@@ -493,7 +486,7 @@ uint8 smProcessRandComplete( uint8 status, uint8* rand )
             else
             {
                 // This is the second set of random bytes, we are done
-                VOID osal_memcpy( &(pSmGenKey->key[LEN_64BIT]), rand, LEN_64BIT );
+                osal_memcpy( &(pSmGenKey->key[LEN_64BIT]), rand, LEN_64BIT );
                 stateDone = TRUE;
             }
         }
@@ -528,10 +521,10 @@ uint8 smProcessRandComplete( uint8 status, uint8* rand )
     @return      none
 */
 
-void smStartRspTimer( uint16 connectionHandle )
+void smStartRspTimer( uint16_t connectionHandle )
 {
     // Get the timeout value
-    uint32 timeout = GAP_GetParamValue( TGAP_SM_TIMEOUT );
+    uint32_t timeout = GAP_GetParamValue( TGAP_SM_TIMEOUT );
 
     if( pPairingParams[connectionHandle] )
     {
@@ -565,7 +558,7 @@ void smStartRspTimer( uint16 connectionHandle )
 
     @return      none
 */
-void smStopRspTimer( uint16 connectionHandle )
+void smStopRspTimer( uint16_t connectionHandle )
 {
 //    VOID osal_stop_timerEx( smTaskID, SM_TIMEOUT_EVT );
     if( pPairingParams[connectionHandle] )
@@ -589,7 +582,7 @@ void smStopRspTimer( uint16 connectionHandle )
 
     @return      TRUE if already processing, FALSE if not
 */
-uint8 smInProcess( void )
+uint8_t smInProcess( void )
 {
     if ( pSmGenKey  )
     {
@@ -612,19 +605,19 @@ uint8 smInProcess( void )
 
     @return      status
 */
-bStatus_t sm_d1( uint8* pK, uint16 d, uint8* pD1 )
+bStatus_t sm_d1( uint8_t* pK, uint16_t d, uint8_t* pD1 )
 {
     bStatus_t stat;       // return value
     sm_Encrypt_t param;   // place to work for the encrypt function
     // Clear the encrypt parameters
-    VOID osal_memset( &param, 0, sizeof ( sm_Encrypt_t ) );
+    osal_memset( &param, 0, sizeof ( sm_Encrypt_t ) );
     // Copy the encrypt variables
-    VOID osal_revmemcpy( param.key, pK, KEYLEN );
+    osal_revmemcpy( param.key, pK, KEYLEN );
     param.plainTextData[KEYLEN - 2] = HI_UINT16( d );
     param.plainTextData[KEYLEN - 1] = LO_UINT16( d );
     stat = smEncrypt( &param );
     // Copy the results
-    VOID osal_revmemcpy( pD1, param.result, KEYLEN );
+    osal_revmemcpy( pD1, param.result, KEYLEN );
     return ( stat );
 }
 
@@ -639,19 +632,19 @@ bStatus_t sm_d1( uint8* pK, uint16 d, uint8* pD1 )
 
     @return      status
 */
-bStatus_t sm_ah( uint8* pK, uint8* pR, uint8* pAh )
+bStatus_t sm_ah( uint8_t* pK, uint8_t* pR, uint8_t* pAh )
 {
     bStatus_t stat;       // return value
     sm_Encrypt_t param;   // place to work for the encrypt function
     // Clear the encrypt parameters
-    VOID osal_memset( &param, 0, sizeof ( sm_Encrypt_t ) );
+    osal_memset( &param, 0, sizeof ( sm_Encrypt_t ) );
     // Copy the encrypt variables
-    VOID osal_revmemcpy( param.key, pK, KEYLEN );
-    VOID osal_revmemcpy( &(param.plainTextData[KEYLEN - LEN_24BIT]),
+    osal_revmemcpy( param.key, pK, KEYLEN );
+    osal_revmemcpy( &(param.plainTextData[KEYLEN - LEN_24BIT]),
                          pR, LEN_24BIT );
     stat = smEncrypt( &param );
     // Copy the results
-    VOID osal_revmemcpy( pAh, &(param.result[KEYLEN - LEN_24BIT]), LEN_24BIT );
+    osal_revmemcpy( pAh, &(param.result[KEYLEN - LEN_24BIT]), LEN_24BIT );
     return ( stat );
 }
 
@@ -666,15 +659,15 @@ bStatus_t sm_ah( uint8* pK, uint8* pR, uint8* pAh )
 
     @return      status
 */
-bStatus_t sm_dm( uint8* pK, uint8* pR, uint16* pDm )
+bStatus_t sm_dm( uint8_t* pK, uint8_t* pR, uint16_t* pDm )
 {
     bStatus_t stat;       // return value
     sm_Encrypt_t param;   // place to work for the encrypt function
     // Clear the encrypt parameters
-    VOID osal_memset( &param, 0, sizeof ( sm_Encrypt_t ) );
+    osal_memset( &param, 0, sizeof ( sm_Encrypt_t ) );
     // Copy the encrypt variables
-    VOID osal_revmemcpy( param.key, pK, KEYLEN );
-    VOID osal_revmemcpy( &(param.plainTextData[KEYLEN - LEN_64BIT]), pR, LEN_64BIT );
+    osal_revmemcpy( param.key, pK, KEYLEN );
+    osal_revmemcpy( &(param.plainTextData[KEYLEN - LEN_64BIT]), pR, LEN_64BIT );
     stat = smEncrypt( &param );
     // Copy the results
     *pDm = BUILD_UINT16( param.result[KEYLEN - 1], param.result[KEYLEN - 2] );
@@ -703,40 +696,40 @@ bStatus_t sm_dm( uint8* pK, uint8* pR, uint16* pDm )
 
     @return      status
 */
-bStatus_t sm_c1new( uint8* pK, uint8* pR, uint8* pRes, uint8* pReq,
-                    uint8 iat, uint8* pIA, uint8 rat, uint8* pRA, uint8* pC1 )
+bStatus_t sm_c1new( uint8_t* pK, uint8_t* pR, uint8_t* pRes, uint8_t* pReq,
+                    uint8_t iat, uint8_t* pIA, uint8_t rat, uint8_t* pRA, uint8_t* pC1 )
 {
     bStatus_t stat;         // return value
-    uint8 p1[P1LEN];        // major formula variable
-    uint8 p2[P2LEN];        // major formula variable
+    uint8_t p1[P1LEN];        // major formula variable
+    uint8_t p2[P2LEN];        // major formula variable
     sm_Encrypt_t c1param;   // Place to work for the encrypt
     // First, clear the structure
-    VOID osal_memset( &c1param, 0, sizeof ( sm_Encrypt_t ) );
+    osal_memset( &c1param, 0, sizeof ( sm_Encrypt_t ) );
     // Copy the key into the correct format
-    VOID osal_revmemcpy( c1param.key, pK, KEYLEN );
+    osal_revmemcpy( c1param.key, pK, KEYLEN );
     // Make p1
-    VOID osal_memset( p1, 0, P1LEN );
-    VOID osal_revmemcpy( p1, pRes, SMP_PAIRING_RSP_LEN );
-    VOID osal_revmemcpy( &p1[SMP_PAIRING_RSP_LEN], pReq, SMP_PAIRING_REQ_LEN );
+    osal_memset( p1, 0, P1LEN );
+    osal_revmemcpy( p1, pRes, SMP_PAIRING_RSP_LEN );
+    osal_revmemcpy( &p1[SMP_PAIRING_RSP_LEN], pReq, SMP_PAIRING_REQ_LEN );
     p1[SMP_PAIRING_RSP_LEN + SMP_PAIRING_REQ_LEN] = (rat > ADDRTYPE_PUBLIC) ? 1 : 0;
     p1[SMP_PAIRING_RSP_LEN + SMP_PAIRING_REQ_LEN + 1] = (iat > ADDRTYPE_PUBLIC) ? 1 : 0;
     // Make p2
-    VOID osal_memset( p2, 0, P2LEN );
-    VOID osal_revmemcpy( &(p2[PADDINGLEN]), pIA, B_ADDR_LEN );
-    VOID osal_revmemcpy( &(p2[PADDINGLEN + B_ADDR_LEN]), pRA, B_ADDR_LEN );
+    osal_memset( p2, 0, P2LEN );
+    osal_revmemcpy( &(p2[PADDINGLEN]), pIA, B_ADDR_LEN );
+    osal_revmemcpy( &(p2[PADDINGLEN + B_ADDR_LEN]), pRA, B_ADDR_LEN );
     // copy r into the correct format
-    VOID osal_revmemcpy( c1param.plainTextData, pR, SMP_RANDOM_LEN );
+    osal_revmemcpy( c1param.plainTextData, pR, SMP_RANDOM_LEN );
     // r XOR p1
     sm_xor( c1param.plainTextData, p1 );
     // e(k, r XOR p1)
     stat = smEncrypt( &c1param );
-    VOID osal_memcpy( c1param.plainTextData, c1param.result, KEYLEN );
+    osal_memcpy( c1param.plainTextData, c1param.result, KEYLEN );
     // e(k, r XOR p1) XOR p2
     sm_xor( c1param.plainTextData, p2 );
     // e(k, e(k, r XOR p1) XOR p2)
     stat |= smEncrypt( &c1param );
     // copy the result
-    VOID osal_revmemcpy( pC1, c1param.result, KEYLEN );
+    osal_revmemcpy( pC1, c1param.result, KEYLEN );
     return ( stat );
 }
 
@@ -752,9 +745,9 @@ bStatus_t sm_c1new( uint8* pK, uint8* pR, uint8* pRes, uint8* pReq,
 
     @return      none
 */
-static void sm_xor( uint8* p1, uint8* p2 )
+static void sm_xor( uint8_t* p1, uint8_t* p2 )
 {
-    uint8 x;  // loop counter
+    uint8_t x;  // loop counter
 
     for ( x = 0; x < KEYLEN; x++, p1++, p2++ )
     {
@@ -775,17 +768,17 @@ static void sm_xor( uint8* p1, uint8* p2 )
 
     @return      status
 */
-bStatus_t sm_s1( uint8* pK, uint8* pR1, uint8* pR2, uint8* pS1 )
+bStatus_t sm_s1( uint8_t* pK, uint8_t* pR1, uint8_t* pR2, uint8_t* pS1 )
 {
     bStatus_t stat;       // return value
     sm_Encrypt_t param;   // place to work for the encrypt function
     // Fill in the parameters
-    VOID osal_revmemcpy( param.key, pK, KEYLEN );
-    VOID osal_revmemcpy( param.plainTextData, pR1, LEN_64BIT );
-    VOID osal_revmemcpy( &(param.plainTextData[LEN_64BIT]), pR2, LEN_64BIT );
+    osal_revmemcpy( param.key, pK, KEYLEN );
+    osal_revmemcpy( param.plainTextData, pR1, LEN_64BIT );
+    osal_revmemcpy( &(param.plainTextData[LEN_64BIT]), pR2, LEN_64BIT );
     stat = smEncrypt( &param );
     // Copy the results
-    VOID osal_revmemcpy( pS1, param.result, KEYLEN );
+    osal_revmemcpy( pS1, param.result, KEYLEN );
     return ( stat );
 }
 
@@ -799,10 +792,10 @@ bStatus_t sm_s1( uint8* pK, uint8* pR1, uint8* pR2, uint8* pS1 )
 
     @return      none
 */
-void smGenerateRandBuf( uint8* pRandNum, uint8 len )
+void smGenerateRandBuf( uint8_t* pRandNum, uint8_t len )
 {
-    uint8 x = 0;  // loop counter
-    uint16 rand;  // Random value
+    uint8_t x = 0;  // loop counter
+    uint16_t rand;  // Random value
 
     while ( x < len  )
     {
@@ -823,15 +816,15 @@ void smGenerateRandBuf( uint8* pRandNum, uint8 len )
 /*********************************************************************
     @fn          smAuthReqToUint8
 
-    @brief       Conversion function to convert authReq_t to uint8
+    @brief       Conversion function to convert authReq_t to uint8_t
 
     @param       pAuthReq - pointer to
 
-    @return      uint8 conversion
+    @return      uint8_t conversion
 */
-uint8 smAuthReqToUint8( authReq_t* pAuthReq )
+uint8_t smAuthReqToUint8( authReq_t* pAuthReq )
 {
-    uint8 tmp;
+    uint8_t tmp;
     tmp = pAuthReq->bonding;
     tmp |= (pAuthReq->mitm << 2);
     tmp |= (pAuthReq->reserved << 3);
@@ -841,14 +834,14 @@ uint8 smAuthReqToUint8( authReq_t* pAuthReq )
 /*********************************************************************
     @fn          smUint8ToAuthReq
 
-    @brief       Conversion function to convert uint8 to authReq_t
+    @brief       Conversion function to convert uint8_t to authReq_t
 
     @param       pAuthReq - pointer to structure
     @param       authReqUint8 - byte version of authReq
 
     @return      none
 */
-void smUint8ToAuthReq( authReq_t* pAuthReq, uint8 authReqUint8 )
+void smUint8ToAuthReq( authReq_t* pAuthReq, uint8_t authReqUint8 )
 {
     pAuthReq->bonding = (authReqUint8 & 0x03);
     pAuthReq->mitm = (authReqUint8 & 0x04) ? TRUE : FALSE;
@@ -865,7 +858,7 @@ void smUint8ToAuthReq( authReq_t* pAuthReq, uint8 authReqUint8 )
 
     @return      none
 */
-static void smSendGenKeyEvent( uint8 status )
+static void smSendGenKeyEvent( uint8_t status )
 {
     if ( pSmGenKey )
     {
@@ -876,8 +869,8 @@ static void smSendGenKeyEvent( uint8 status )
         {
             pRsp->hdr.event = SM_NEW_RAND_KEY_EVENT;
             pRsp->hdr.status = status;
-            VOID osal_memcpy( pRsp->newKey, pSmGenKey->key, KEYLEN );
-            VOID osal_msg_send( pSmGenKey->taskID, (uint8*)pRsp );
+            osal_memcpy( pRsp->newKey, pSmGenKey->key, KEYLEN );
+            osal_msg_send( pSmGenKey->taskID, (uint8_t*)pRsp );
         }
 
         osal_mem_free( pSmGenKey );
@@ -911,7 +904,7 @@ static bStatus_t smEncrypt( sm_Encrypt_t* pParam )
 
     @return      Status_t
 */
-static bStatus_t smEncryptLocal( uint8* pKey, uint8* pPlaintextData, uint8* pEncryptedData )
+static bStatus_t smEncryptLocal( uint8_t* pKey, uint8_t* pPlaintextData, uint8_t* pEncryptedData )
 {
     // This function is kind of a cheat because it isn't going through
     // HCI.  If the host is to be used on different (from LL) processor
@@ -936,11 +929,11 @@ static bStatus_t smEncryptLocal( uint8* pKey, uint8* pPlaintextData, uint8* pEnc
 
     @return      bStatus_t
 */
-static bStatus_t sm_CMAC( uint8* pK, uint8* pM, uint8 mLen, uint8* pMac )
+static bStatus_t sm_CMAC( uint8_t* pK, uint8_t* pM, uint8_t mLen, uint8_t* pMac )
 {
-    int16 n, i, flag;
-    uint8* pK1;
-    uint8* pK2;
+    int16_t n, i, flag;
+    uint8_t* pK1;
+    uint8_t* pK2;
     bStatus_t stat;
     // Allocate RAM needed
     pK1 = osal_mem_alloc( KEYLEN );
@@ -953,14 +946,14 @@ static bStatus_t sm_CMAC( uint8* pK, uint8* pM, uint8 mLen, uint8* pMac )
 
         if ( stat == SUCCESS )
         {
-            uint8*  pX;
-            uint8*  pM_last;
+            uint8_t*  pX;
+            uint8_t*  pM_last;
             pX = osal_mem_alloc( KEYLEN );
             pM_last = osal_mem_alloc( KEYLEN );
 
             if ( (pX != NULL) && (pM_last != NULL) )
             {
-                uint8  mIdx;
+                uint8_t  mIdx;
                 n = (mLen + 15)/16;  /* n is number of rounds */
 
                 if ( n == 0 )
@@ -980,7 +973,7 @@ static bStatus_t sm_CMAC( uint8* pK, uint8* pM, uint8 mLen, uint8* pMac )
                     }
                 }
 
-                mIdx = (uint8)(16*(n-1));
+                mIdx = (uint8_t)(16*(n-1));
 
                 if ( flag ) /* last block is complete block */
                 {
@@ -988,18 +981,18 @@ static bStatus_t sm_CMAC( uint8* pK, uint8* pM, uint8 mLen, uint8* pMac )
                 }
                 else
                 {
-                    uint8 padded[KEYLEN];
+                    uint8_t padded[KEYLEN];
                     padding( &pM[mIdx], padded, mLen%16 );
                     xor_128( padded, pK2, pM_last );
                 }
 
-                VOID osal_memset( pX, 0, KEYLEN );
+                osal_memset( pX, 0, KEYLEN );
                 {
-                    uint8 Y[KEYLEN];
+                    uint8_t Y[KEYLEN];
 
                     for ( i = 0; (i < (n-1)) && (stat == SUCCESS); i++ )
                     {
-                        mIdx = (uint8)(16*i);
+                        mIdx = (uint8_t)(16*i);
                         xor_128( pX, &pM[mIdx], Y ); /* Y := Mi (+) X  */
                         stat = smEncryptLocal( pK, Y, pX );
                     }
@@ -1009,7 +1002,7 @@ static bStatus_t sm_CMAC( uint8* pK, uint8* pM, uint8 mLen, uint8* pMac )
                         xor_128( pX, pM_last, Y );
                         stat = smEncryptLocal( pK, Y, pX );
                         // T = MSB[Tlen]( Cn ); T = mac, Tlen = LEN_64BIT, Cn = X
-                        VOID osal_memcpy( pMac, pX, LEN_64BIT );
+                        osal_memcpy( pMac, pX, LEN_64BIT );
                     }
                 }
             }
@@ -1058,17 +1051,17 @@ static bStatus_t sm_CMAC( uint8* pK, uint8* pM, uint8 mLen, uint8* pMac )
 
     @return      bStatus_t
 */
-static bStatus_t generate_subkey( uint8* pKey, uint8* pK1, uint8* pK2 )
+static bStatus_t generate_subkey( uint8_t* pKey, uint8_t* pK1, uint8_t* pK2 )
 {
-    uint8* pL;
-    uint8* pTmp;
-    uint8 stat;
+    uint8_t* pL;
+    uint8_t* pTmp;
+    uint8_t stat;
     pL = osal_mem_alloc( KEYLEN );
     pTmp = osal_mem_alloc( KEYLEN );
 
     if ( (pL != NULL) && (pTmp != NULL) )
     {
-        VOID osal_memset( pTmp, 0, KEYLEN );
+        osal_memset( pTmp, 0, KEYLEN );
         stat = smEncryptLocal( pKey, pTmp, pL );
 
         if ( stat == SUCCESS )
@@ -1124,9 +1117,9 @@ static bStatus_t generate_subkey( uint8* pKey, uint8* pK1, uint8* pK2 )
 
     @return      None
 */
-static void xor_128( uint8* pA, CONST uint8* pB, uint8* pOutcome )
+static void xor_128( uint8_t* pA, CONST uint8_t* pB, uint8_t* pOutcome )
 {
-    for ( uint8 i = 0; i < KEYLEN; i++ )
+    for ( uint8_t i = 0; i < KEYLEN; i++ )
     {
         pOutcome[i] = pA[i] ^ pB[i];
     }
@@ -1145,10 +1138,10 @@ static void xor_128( uint8* pA, CONST uint8* pB, uint8* pOutcome )
 
     @return      None
 */
-static void padding ( uint8* pLastb, uint8* pPad, uint8 length )
+static void padding ( uint8_t* pLastb, uint8_t* pPad, uint8_t length )
 {
     /* original last block */
-    for ( uint8 j = 0; j < KEYLEN; j++ )
+    for ( uint8_t j = 0; j < KEYLEN; j++ )
     {
         if ( j < length )
         {
@@ -1175,11 +1168,11 @@ static void padding ( uint8* pLastb, uint8* pPad, uint8 length )
 
     @return      None
 */
-static void leftshift_onebit( uint8* pInp, uint8* pOutp )
+static void leftshift_onebit( uint8_t* pInp, uint8_t* pOutp )
 {
-    uint8 overflow = 0;
+    uint8_t overflow = 0;
 
-    for ( int8 i = 15; i >= 0; i-- )
+    for ( int8_t i = 15; i >= 0; i-- )
     {
         pOutp[i] = pInp[i] << 1;
         pOutp[i] |= overflow;

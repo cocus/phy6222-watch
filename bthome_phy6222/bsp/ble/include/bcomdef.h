@@ -24,14 +24,10 @@ extern "C"
 /*********************************************************************
     INCLUDES
 */
-#include "rom_sym_def.h"
 
-#include "comdef.h"
-#include "log.h"
+#include <ble/controller/ll_def.h>
+#include <osal/OSAL_comdef.h>
 
-//#define LOG_DEBUG(...)
-//#define LOG(...)
-//#define OM_LOG(...)
 /*********************************************************************
     CONSTANTS
 */

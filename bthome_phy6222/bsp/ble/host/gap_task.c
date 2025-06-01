@@ -14,14 +14,20 @@
 /*******************************************************************************
     INCLUDES
 */
-#include "bcomdef.h"
-#include "OSAL.h"
-#include "hci_tl.h"
-#include "l2cap.h"
-#include "gatt.h"
-#include "gap.h"
+//#include "bcomdef.h"
+//#include "OSAL.h"
+//#include "hci_tl.h"
+//#include "l2cap.h"
+//#include "gatt.h"
+//#include "gap.h"
+//#include "gap_internal.h"
+//#include "linkdb.h"
+#include <ble/include/bcomdef.h>
+#include <ble/include/hci.h>
+#include <ble/include/l2cap.h>
+#include <ble/hci/hci_tl.h>
+//#include <ble/include/gap.h>
 #include "gap_internal.h"
-#include "linkdb.h"
 
 /*********************************************************************
     MACROS
@@ -38,8 +44,8 @@
 /*********************************************************************
     GLOBAL VARIABLES
 */
-uint8 gapTaskID;                           // The GAP's Task ID
-uint8 gapUnwantedTaskID = INVALID_TASK_ID; // The task ID of an app/profile that
+uint8_t gapTaskID;                           // The GAP's Task ID
+uint8_t gapUnwantedTaskID = INVALID_TASK_ID; // The task ID of an app/profile that
 // wants unexpected HCI messages.
 
 // Callback function pointers for Peripheral
@@ -63,10 +69,10 @@ static const gapCentralCBs_t* pfnCentralCBs = NULL;
 /*********************************************************************
     LOCAL FUNCTIONS
 */
-static uint8 gapProcessOSALMsg( osal_event_hdr_t* pMsg );
-static uint8 gapProcessBLEEvents( osal_event_hdr_t* pMsg );
-static uint8 gapProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg );
-static uint8 gapProcessCommandStatusEvt( hciEvt_CommandStatus_t* pMsg );
+static uint8_t gapProcessOSALMsg( osal_event_hdr_t* pMsg );
+static uint8_t gapProcessBLEEvents( osal_event_hdr_t* pMsg );
+static uint8_t gapProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg );
+static uint8_t gapProcessCommandStatusEvt( hciEvt_CommandStatus_t* pMsg );
 
 /*********************************************************************
     API FUNCTIONS
@@ -78,7 +84,7 @@ static uint8 gapProcessCommandStatusEvt( hciEvt_CommandStatus_t* pMsg );
 
     Public function defined in gap.h.
 */
-void GAP_RegisterForHCIMsgs( uint8 taskID )
+void GAP_RegisterForHCIMsgs( uint8_t taskID )
 {
     gapUnwantedTaskID = taskID;
 }
@@ -92,7 +98,7 @@ void GAP_RegisterForHCIMsgs( uint8 taskID )
 
     @return      void
 */
-void GAP_Init( uint8 task_id )
+void GAP_Init( uint8_t task_id )
 {
     // Save our own Task ID
     gapTaskID = task_id;
@@ -101,7 +107,7 @@ void GAP_Init( uint8 task_id )
     // Register with HCI to receive events
     HCI_GAPTaskRegister( gapTaskID );
     // Register with L2CAP to receive unprocessed Signaling messages
-    VOID L2CAP_RegisterApp( gapTaskID, L2CAP_CID_SIG );
+    L2CAP_RegisterApp( gapTaskID, L2CAP_CID_SIG );
 }
 
 /*********************************************************************
@@ -114,13 +120,13 @@ void GAP_Init( uint8 task_id )
 
     @return      events not processed
 */
-uint16 GAP_ProcessEvent( uint8 task_id, uint16 events )
+uint16_t GAP_ProcessEvent( uint8_t task_id, uint16_t events )
 {
-    VOID task_id; // OSAL required parameter that isn't used in this function
+    UNUSED(task_id); // OSAL required parameter that isn't used in this function
 
     if ( events & SYS_EVENT_MSG )
     {
-        uint8* pMsg;
+        uint8_t* pMsg;
 
         if ( (pMsg = osal_msg_receive( gapTaskID )) != NULL )
         {
@@ -141,7 +147,7 @@ uint16 GAP_ProcessEvent( uint8 task_id, uint16 events )
             }
 
             // Release the OSAL message
-            VOID osal_msg_deallocate( pMsg );
+            osal_msg_deallocate( pMsg );
         }
 
         // return unprocessed events
@@ -181,7 +187,7 @@ uint16 GAP_ProcessEvent( uint8 task_id, uint16 events )
             // Time to change the Resolvable Private Address?
             if ( gapPrivateAddrChangeTimeout == 0 )
             {
-                uint8 newAddr[B_ADDR_LEN];  // space for the new address
+                uint8_t newAddr[B_ADDR_LEN];  // space for the new address
 
                 // Are we advertising now?
                 if ( gapIsAdvertising() )
@@ -196,9 +202,9 @@ uint16 GAP_ProcessEvent( uint8 task_id, uint16 events )
                 }
 
                 // Calculate a new address
-                VOID SM_CalcRandomAddr( gapGetIRK(), newAddr );
+                SM_CalcRandomAddr( gapGetIRK(), newAddr );
                 // Send the new address to the app/profile
-                VOID gapProcessNewAddr( newAddr );
+                gapProcessNewAddr( newAddr );
                 // Reset the timer
                 gapPrivateAddrChangeTimeout = GAP_GetParamValue( TGAP_PRIVATE_ADDR_INT );
             }
@@ -206,7 +212,7 @@ uint16 GAP_ProcessEvent( uint8 task_id, uint16 events )
         else
         {
             // It shouldn't be set, so stop the timer
-            VOID osal_stop_timerEx( gapTaskID, GAP_CHANGE_RESOLVABLE_PRIVATE_ADDR_EVT );
+            osal_stop_timerEx( gapTaskID, GAP_CHANGE_RESOLVABLE_PRIVATE_ADDR_EVT );
         }
 
         return ( events ^ GAP_CHANGE_RESOLVABLE_PRIVATE_ADDR_EVT );
@@ -226,7 +232,7 @@ uint16 GAP_ProcessEvent( uint8 task_id, uint16 events )
 
     @return      number of active connections
 */
-uint8 GAP_NumActiveConnections( void )
+uint8_t GAP_NumActiveConnections( void )
 {
     return ( linkDB_NumActive() );
 }
@@ -241,9 +247,9 @@ uint8 GAP_NumActiveConnections( void )
     @return  TRUE if processed and safe to deallocate, FALSE if passed
             off to another task.
 */
-static uint8 gapProcessOSALMsg( osal_event_hdr_t* pMsg )
+static uint8_t gapProcessOSALMsg( osal_event_hdr_t* pMsg )
 {
-    uint8 safeToDealloc = TRUE;
+    uint8_t safeToDealloc = TRUE;
 
     switch ( pMsg->event )
     {
@@ -286,11 +292,11 @@ static uint8 gapProcessOSALMsg( osal_event_hdr_t* pMsg )
             // packet it shall respond with a Command Reject packet with reason
             // 0x0000 (Command not understood).
             cmdReject.reason = L2CAP_REJECT_CMD_NOT_UNDERSTOOD;
-            VOID L2CAP_CmdReject( pCmd->connHandle, pCmd->id, &cmdReject );
+            L2CAP_CmdReject( pCmd->connHandle, pCmd->id, &cmdReject );
         }
         else if ( pfnCentralConnCBs && pfnCentralConnCBs->pfnProcessConnEvt )
         {
-            VOID pfnCentralConnCBs->pfnProcessConnEvt( L2CAP_PARAM_UPDATE,
+            pfnCentralConnCBs->pfnProcessConnEvt( L2CAP_PARAM_UPDATE,
                                                        (hciEvt_CommandStatus_t*)pMsg );
         }
 
@@ -314,9 +320,9 @@ static uint8 gapProcessOSALMsg( osal_event_hdr_t* pMsg )
     @return  TRUE if processed and safe to deallocate, FALSE if passed
             off to another task.
 */
-static uint8 gapProcessBLEEvents( osal_event_hdr_t* pMsg )
+static uint8_t gapProcessBLEEvents( osal_event_hdr_t* pMsg )
 {
-    uint8 safeToDealloc = TRUE;
+    uint8_t safeToDealloc = TRUE;
 
     switch ( ((hciEvt_BLEAdvPktReport_t*)(pMsg))->BLEEventCode )
     {
@@ -362,9 +368,9 @@ static uint8 gapProcessBLEEvents( osal_event_hdr_t* pMsg )
     @return  TRUE if processed and safe to deallocate, FALSE if passed
             off to another task.
 */
-static uint8 gapProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg )
+static uint8_t gapProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg )
 {
-    uint8 safeToDealloc = TRUE;
+    uint8_t safeToDealloc = TRUE;
 
     switch ( pMsg->cmdOpcode )
     {
@@ -454,9 +460,9 @@ static uint8 gapProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg )
     @return  TRUE if processed and safe to deallocate, FALSE if passed
             off to another task.
 */
-static uint8 gapProcessCommandStatusEvt( hciEvt_CommandStatus_t* pMsg )
+static uint8_t gapProcessCommandStatusEvt( hciEvt_CommandStatus_t* pMsg )
 {
-    uint8 safeToDealloc = TRUE;
+    uint8_t safeToDealloc = TRUE;
 
     switch ( pMsg->cmdOpcode )
     {

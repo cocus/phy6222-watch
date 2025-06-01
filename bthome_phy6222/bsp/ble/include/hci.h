@@ -25,10 +25,13 @@ extern "C"
 /*******************************************************************************
     INCLUDES
 */
-#include "bcomdef.h"
-#include "OSAL.h"
-#include "ll.h"
+//#include "bcomdef.h"
+//#include "OSAL.h"
+//#include "ll.h"
 //#include "hal_assert.h"
+//#include <types.h>
+#include <osal/OSAL.h>
+#include "bcomdef.h"
 
 /*******************************************************************************
     MACROS
@@ -283,7 +286,7 @@ extern "C"
     TYPEDEFS
 */
 
-typedef uint8 hciStatus_t;
+typedef uint8_t hciStatus_t;
 
 /*
 ** LE Events
@@ -293,52 +296,52 @@ typedef uint8 hciStatus_t;
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint8  status;
-    uint16 connectionHandle;
-    uint8  role;
-    uint8  peerAddrType;
-    uint8  peerAddr[B_ADDR_LEN];
-    uint16 connInterval;
-    uint16 connLatency;
-    uint16 connTimeout;
-    uint8  clockAccuracy;
+    uint8_t  BLEEventCode;
+    uint8_t  status;
+    uint16_t connectionHandle;
+    uint8_t  role;
+    uint8_t  peerAddrType;
+    uint8_t  peerAddr[B_ADDR_LEN];
+    uint16_t connInterval;
+    uint16_t connLatency;
+    uint16_t connTimeout;
+    uint8_t  clockAccuracy;
 } hciEvt_BLEConnComplete_t;
 
 // LE Connection Complete Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint8  status;
-    uint16 connectionHandle;
-    uint8  role;
-    uint8  peerAddrType;
-    uint8  peerAddr[B_ADDR_LEN];
-    uint8  localRpaAddr[B_ADDR_LEN];
-    uint8  peerRpaAddr[B_ADDR_LEN];
-    uint16 connInterval;
-    uint16 connLatency;
-    uint16 connTimeout;
-    uint8  clockAccuracy;
+    uint8_t  BLEEventCode;
+    uint8_t  status;
+    uint16_t connectionHandle;
+    uint8_t  role;
+    uint8_t  peerAddrType;
+    uint8_t  peerAddr[B_ADDR_LEN];
+    uint8_t  localRpaAddr[B_ADDR_LEN];
+    uint8_t  peerRpaAddr[B_ADDR_LEN];
+    uint16_t connInterval;
+    uint16_t connLatency;
+    uint16_t connTimeout;
+    uint8_t  clockAccuracy;
 } hciEvt_BLEEnhConnComplete_t;
 
 // LE Advertising Report Event
 typedef struct
 {
-    uint8  eventType;                       // advertisment or scan response event type
-    uint8  addrType;                        // public or random address type
-    uint8  addr[B_ADDR_LEN];                // device address
-    uint8  dataLen;                         // length of report data
-    uint8  rspData[B_MAX_ADV_LEN];          // report data given by dataLen
-    int8   rssi;                            // report RSSI
+    uint8_t  eventType;                       // advertisment or scan response event type
+    uint8_t  addrType;                        // public or random address type
+    uint8_t  addr[B_ADDR_LEN];                // device address
+    uint8_t  dataLen;                         // length of report data
+    uint8_t  rspData[B_MAX_ADV_LEN];          // report data given by dataLen
+    int8_t   rssi;                            // report RSSI
 } hciEvt_DevInfo_t;
 
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint8  numDevices;
+    uint8_t  BLEEventCode;
+    uint8_t  numDevices;
     hciEvt_DevInfo_t* devInfo;              // pointer to the array of devInfo
 } hciEvt_BLEAdvPktReport_t;
 
@@ -346,155 +349,155 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint8  status;
-    uint16 connectionHandle;
-    uint16 connInterval;
-    uint16 connLatency;
-    uint16 connTimeout;
+    uint8_t  BLEEventCode;
+    uint8_t  status;
+    uint16_t connectionHandle;
+    uint16_t connInterval;
+    uint16_t connLatency;
+    uint16_t connTimeout;
 } hciEvt_BLEConnUpdateComplete_t;
 
 // LE Read Remote Used Features Complete Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint8  status;
-    uint16 connectionHandle;
-    uint8  features[8];
+    uint8_t  BLEEventCode;
+    uint8_t  status;
+    uint16_t connectionHandle;
+    uint8_t  features[8];
 } hciEvt_BLEReadRemoteFeatureComplete_t;
 
 // LE Encryption Change Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint16 connHandle;
-    uint8  reason;
-    uint8  encEnable;
+    uint8_t  BLEEventCode;
+    uint16_t connHandle;
+    uint8_t  reason;
+    uint8_t  encEnable;
 } hciEvt_EncryptChange_t;
 
 // LE Long Term Key Requested Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint16 connHandle;
-    uint8  random[B_RANDOM_NUM_SIZE];
-    uint16 encryptedDiversifier;
+    uint8_t  BLEEventCode;
+    uint16_t connHandle;
+    uint8_t  random[B_RANDOM_NUM_SIZE];
+    uint16_t encryptedDiversifier;
 } hciEvt_BLELTKReq_t;
 
 // LE DATE LENGTH CHANGE Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint16 connHandle;
-    uint16 MaxTxOctets;
-    uint16 MaxTxTime;
-    uint16 MaxRxOctets;
-    uint16 MaxRxTime;
+    uint8_t  BLEEventCode;
+    uint16_t connHandle;
+    uint16_t MaxTxOctets;
+    uint16_t MaxTxTime;
+    uint16_t MaxRxOctets;
+    uint16_t MaxRxTime;
 } hciEvt_BLEDataLenChange_t;
 
 // LE PHY UPDATE Complete Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint8  status;
-    uint16 connHandle;
-    uint8  txPhy;
-    uint8  rxPhy;
+    uint8_t  BLEEventCode;
+    uint8_t  status;
+    uint16_t connHandle;
+    uint8_t  txPhy;
+    uint8_t  rxPhy;
 } hciEvt_BLEPhyUpdateComplete_t;
 
 // LE PHY UPDATE Complete Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
+    uint8_t  BLEEventCode;
 } hciEvt_BLEEvent_Hdr_t;
 
 // Number of Completed Packets Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  numHandles;
-    uint16* pConnectionHandle;              // pointer to the connection handle array
-    uint16* pNumCompletedPackets;           // pointer to the number of completed packets array
+    uint8_t  numHandles;
+    uint16_t* pConnectionHandle;              // pointer to the connection handle array
+    uint16_t* pNumCompletedPackets;           // pointer to the number of completed packets array
 } hciEvt_NumCompletedPkt_t;
 
 // Command Complete Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  numHciCmdPkt;                    // number of HCI Command Packet
-    uint16 cmdOpcode;
-    uint8*  pReturnParam;                    // pointer to the return parameter
+    uint8_t  numHciCmdPkt;                    // number of HCI Command Packet
+    uint16_t cmdOpcode;
+    uint8_t*  pReturnParam;                    // pointer to the return parameter
 } hciEvt_CmdComplete_t;
 
 // Command Status Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  cmdStatus;
-    uint8  numHciCmdPkt;
-    uint16 cmdOpcode;
+    uint8_t  cmdStatus;
+    uint8_t  numHciCmdPkt;
+    uint16_t cmdOpcode;
 } hciEvt_CommandStatus_t;
 
 // Hardware Error Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8 hardwareCode;
+    uint8_t hardwareCode;
 } hciEvt_HardwareError_t;
 
 // Disconnection Complete Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  status;
-    uint16 connHandle;                      // connection handle
-    uint8  reason;
+    uint8_t  status;
+    uint16_t connHandle;                      // connection handle
+    uint8_t  reason;
 } hciEvt_DisconnComplete_t;
 
 // Data Buffer Overflow Event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8 linkType;                         // synchronous or asynchronous buffer overflow
+    uint8_t linkType;                         // synchronous or asynchronous buffer overflow
 } hciEvt_BufferOverflow_t;
 
 // Data structure for HCI Command Complete Event Return Parameter
 typedef struct
 {
-    uint8  status;
-    uint16 dataPktLen;
-    uint8  numDataPkts;
+    uint8_t  status;
+    uint16_t dataPktLen;
+    uint8_t  numDataPkts;
 } hciRetParam_LeReadBufSize_t;
 
 typedef struct
 {
-    uint16  eventType;                       // advertisment or scan response event type
-    uint8   addrType;                        // public or random address type
-    uint8   addr[B_ADDR_LEN];                // device address
-    uint8   primaryPHY;
-    uint8   secondaryPHY;
-    uint8   advertisingSID;
-    uint8   txPower;
-    int8    rssi;                            // report RSSI
-    uint16  periodicAdvertisingInterval;
-    uint8   directAddrType;
-    uint8   directAddr[B_ADDR_LEN];
-    uint8   dataLen;                         // length of report data
-    uint8   rptData[B_MAX_EXT_ADV_LEN];          // report data given by dataLen
+    uint16_t  eventType;                       // advertisment or scan response event type
+    uint8_t   addrType;                        // public or random address type
+    uint8_t   addr[B_ADDR_LEN];                // device address
+    uint8_t   primaryPHY;
+    uint8_t   secondaryPHY;
+    uint8_t   advertisingSID;
+    uint8_t   txPower;
+    int8_t    rssi;                            // report RSSI
+    uint16_t  periodicAdvertisingInterval;
+    uint8_t   directAddrType;
+    uint8_t   directAddr[B_ADDR_LEN];
+    uint8_t   dataLen;                         // length of report data
+    uint8_t   rptData[B_MAX_EXT_ADV_LEN];          // report data given by dataLen
 } hciEvt_ExtAdvRptInfo_t;
 
 // Extended adv report
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint8  numReports;
+    uint8_t  BLEEventCode;
+    uint8_t  numReports;
     hciEvt_ExtAdvRptInfo_t* rptInfo;              // pointer to the array of devInfo
 } hciEvt_BLEExtAdvPktReport_t;
 
@@ -502,65 +505,65 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8             BLEEventCode;
-    uint8             status;
-    uint16            syncHandle;
-    uint8             advertisingSID;
-    uint8             advertiserAddressType;
-    uint8             advertiserAddress[B_ADDR_LEN];
-    uint8             advertiserPHY;
-    uint16            periodicAdvertisingInterval;
-    uint8             advertiserClockAccuracy;
+    uint8_t             BLEEventCode;
+    uint8_t             status;
+    uint16_t            syncHandle;
+    uint8_t             advertisingSID;
+    uint8_t             advertiserAddressType;
+    uint8_t             advertiserAddress[B_ADDR_LEN];
+    uint8_t             advertiserPHY;
+    uint16_t            periodicAdvertisingInterval;
+    uint8_t             advertiserClockAccuracy;
 } hciEvt_BLEPrdAdvSyncEstabPkt_t;
 
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8             BLEEventCode;
-    uint16            syncHandle;
+    uint8_t             BLEEventCode;
+    uint16_t            syncHandle;
 } hciEvt_BLEPrdAdvSyncLostPkt_t;
 
 // 2020-4-22 LE Advertising Set Terminated event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8             BLEEventCode;
-    uint8             status;
-    uint8             adv_handle;
-    uint16            connHandle;                      // connection handle
-    uint8             Num_Completed_Extended_Advertising_Events;
+    uint8_t             BLEEventCode;
+    uint8_t             status;
+    uint8_t             adv_handle;
+    uint16_t            connHandle;                      // connection handle
+    uint8_t             Num_Completed_Extended_Advertising_Events;
 } hciEvt_AdvSetTerminated_t;
 
 // 2020-4-22 LE Channel Selection Algorithm event
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
-    uint16 connHandle;                      // connection handle
-    uint8  chn_sel;
+    uint8_t  BLEEventCode;
+    uint16_t connHandle;                      // connection handle
+    uint8_t  chn_sel;
 } hciEvt_ChannelSelAlgo_t;
 
 // 2020-01-14 LE IQ report event structure
 typedef struct
 {
-    uint16              Handle;     // syncHandle for connectionless handle , connection for connection Handle
-    uint8               chan_idx;
-    int16               rssi;
-    uint8               rssi_antID;
-    uint8               cte_type;
-    uint8               slot_duration;
-    uint8               packet_status;
-    uint16              EventCnt;   // paEventcounter or connEventCounter
-    uint8               sampCnt;
-    uint8               ISample[B_MAX_IQ_LEN];
-    uint8               QSample[B_MAX_IQ_LEN];
+    uint16_t              Handle;     // syncHandle for connectionless handle , connection for connection Handle
+    uint8_t               chan_idx;
+    int16_t               rssi;
+    uint8_t               rssi_antID;
+    uint8_t               cte_type;
+    uint8_t               slot_duration;
+    uint8_t               packet_status;
+    uint16_t              EventCnt;   // paEventcounter or connEventCounter
+    uint8_t               sampCnt;
+    uint8_t               ISample[B_MAX_IQ_LEN];
+    uint8_t               QSample[B_MAX_IQ_LEN];
 } hciEvt_IQReportPkt_t;
 
 // 2020-01-14 LE Connectionless IQ report event structure
 typedef struct
 {
     osal_event_hdr_t    hdr;
-    uint8               BLEEventCode;
+    uint8_t               BLEEventCode;
     hciEvt_IQReportPkt_t    ConnectionlessIQ;
 } hciEvt_BLEConnectionlessIQ_Pkt_t;
 
@@ -568,8 +571,8 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t    hdr;
-    uint8               BLEEventCode;
-    uint8               RX_PHY;
+    uint8_t               BLEEventCode;
+    uint8_t               RX_PHY;
     hciEvt_IQReportPkt_t    ConnectionIQ;
 } hciEvt_BLEConnectionIQ_Pkt_t;
 
@@ -577,21 +580,21 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t    hdr;
-    uint8               BLEEventCode;
-    uint8               status;
-    uint16              connHandle;
+    uint8_t               BLEEventCode;
+    uint8_t               status;
+    uint16_t              connHandle;
 } hciEvt_BLE_CTEReport_Pkt_t;
 
 
 typedef struct
 {
-    uint16 syncHandle;
-    uint8 txPower;
-    uint8 rssi;
-    uint8 cteType;
-    uint8 dataStatus;
-    uint8 dataLength;
-    uint8 data[B_MAX_PERIOD_ADV_LEN];
+    uint16_t syncHandle;
+    uint8_t txPower;
+    uint8_t rssi;
+    uint8_t cteType;
+    uint8_t dataStatus;
+    uint8_t dataLength;
+    uint8_t data[B_MAX_PERIOD_ADV_LEN];
 } hciEvt_PrdAdvRptInfo_t;
 
 
@@ -600,24 +603,24 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;
-    uint8  BLEEventCode;
+    uint8_t  BLEEventCode;
     hciEvt_PrdAdvRptInfo_t* rptInfo;              // pointer to the array of devInfo
 } hciEvt_BLEPrdAdvPktReport_t;
 
 typedef struct
 {
     osal_event_hdr_t hdr;
-    uint8*            pData;
+    uint8_t*            pData;
 } hciPacket_t;
 
 typedef struct
 {
     osal_event_hdr_t hdr;
-    uint8  pktType;
-    uint16 connHandle;
-    uint8  pbFlag;
-    uint16 pktLen;
-    uint8*  pData;
+    uint8_t  pktType;
+    uint16_t connHandle;
+    uint8_t  pbFlag;
+    uint16_t pktLen;
+    uint8_t*  pData;
 } hciDataPacket_t;
 
 // OSAL HCI_DATA_EVENT message format. This message is used to forward incoming
@@ -625,10 +628,10 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t hdr;                   // OSAL event header
-    uint16 connHandle;                      // connection handle
-    uint8  pbFlag;                          // data packet boundary flag
-    uint16 len;                             // length of data packet
-    uint8*  pData;                          // data packet given by len
+    uint16_t connHandle;                      // connection handle
+    uint8_t  pbFlag;                          // data packet boundary flag
+    uint16_t len;                             // length of data packet
+    uint8_t*  pData;                          // data packet given by len
 } hciDataEvent_t;
 
 
@@ -664,7 +667,7 @@ typedef struct
 
     @return      Pointer to buffer, or NULL.
 */
-extern void* HCI_bm_alloc( uint16 size );
+extern void* HCI_bm_alloc( uint16_t size );
 
 
 /*******************************************************************************
@@ -691,10 +694,10 @@ extern void* HCI_bm_alloc( uint16 size );
     @return      TRUE:  Connection time parameter check is valid.
                 FALSE: Connection time parameter check is invalid.
 */
-extern uint8 HCI_ValidConnTimeParams( uint16 connIntervalMin,
-                                      uint16 connIntervalMax,
-                                      uint16 connLatency,
-                                      uint16 connTimeout );
+extern uint8_t HCI_ValidConnTimeParams( uint16_t connIntervalMin,
+                                      uint16_t connIntervalMax,
+                                      uint16_t connLatency,
+                                      uint16_t connTimeout );
 
 
 /*******************************************************************************
@@ -712,7 +715,7 @@ extern uint8 HCI_ValidConnTimeParams( uint16 connIntervalMin,
 
     @return      None.
 */
-extern void HCI_TestAppTaskRegister( uint8 taskID );
+extern void HCI_TestAppTaskRegister( uint8_t taskID );
 
 
 /*******************************************************************************
@@ -730,7 +733,7 @@ extern void HCI_TestAppTaskRegister( uint8 taskID );
 
     @return      None.
 */
-extern void HCI_GAPTaskRegister( uint8 taskID );
+extern void HCI_GAPTaskRegister( uint8_t taskID );
 
 
 /*******************************************************************************
@@ -750,7 +753,7 @@ extern void HCI_GAPTaskRegister( uint8 taskID );
     @return      None.
 
 */
-extern void HCI_L2CAPTaskRegister( uint8 taskID );
+extern void HCI_L2CAPTaskRegister( uint8_t taskID );
 
 
 /*******************************************************************************
@@ -768,7 +771,7 @@ extern void HCI_L2CAPTaskRegister( uint8 taskID );
 
     @return      None.
 */
-extern void HCI_SMPTaskRegister( uint8 taskID );
+extern void HCI_SMPTaskRegister( uint8_t taskID );
 
 
 /*******************************************************************************
@@ -786,7 +789,7 @@ extern void HCI_SMPTaskRegister( uint8 taskID );
 
     @return      None.
 */
-extern void HCI_ExtTaskRegister( uint8 taskID );
+extern void HCI_ExtTaskRegister( uint8_t taskID );
 
 
 /*******************************************************************************
@@ -811,10 +814,10 @@ extern void HCI_ExtTaskRegister( uint8 taskID );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_SendDataPkt( uint16 connHandle,
-                                    uint8  pbFlag,
-                                    uint16 pktLen,
-                                    uint8*  pData );
+extern hciStatus_t HCI_SendDataPkt( uint16_t connHandle,
+                                    uint8_t  pbFlag,
+                                    uint16_t pktLen,
+                                    uint8_t*  pData );
 
 
 
@@ -847,8 +850,8 @@ extern hciStatus_t HCI_SendDataPkt( uint16 connHandle,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_DisconnectCmd( uint16 connHandle,
-                                      uint8  reason );
+extern hciStatus_t HCI_DisconnectCmd( uint16_t connHandle,
+                                      uint8_t  reason );
 
 
 /*******************************************************************************
@@ -870,7 +873,7 @@ extern hciStatus_t HCI_DisconnectCmd( uint16 connHandle,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_ReadRemoteVersionInfoCmd( uint16 connHandle );
+extern hciStatus_t HCI_ReadRemoteVersionInfoCmd( uint16_t connHandle );
 
 
 
@@ -892,7 +895,7 @@ extern hciStatus_t HCI_ReadRemoteVersionInfoCmd( uint16 connHandle );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_SetEventMaskCmd( uint8* pMask );
+extern hciStatus_t HCI_SetEventMaskCmd( uint8_t* pMask );
 
 
 /*******************************************************************************
@@ -935,8 +938,8 @@ extern hciStatus_t HCI_ResetCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_ReadTransmitPowerLevelCmd( uint16 connHandle,
-                                                  uint8  txPwrType );
+extern hciStatus_t HCI_ReadTransmitPowerLevelCmd( uint16_t connHandle,
+                                                  uint8_t  txPwrType );
 
 
 /*******************************************************************************
@@ -962,7 +965,7 @@ extern hciStatus_t HCI_ReadTransmitPowerLevelCmd( uint16 connHandle,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_SetControllerToHostFlowCtrlCmd( uint8 flowControlEnable );
+extern hciStatus_t HCI_SetControllerToHostFlowCtrlCmd( uint8_t flowControlEnable );
 
 
 /*******************************************************************************
@@ -991,10 +994,10 @@ extern hciStatus_t HCI_SetControllerToHostFlowCtrlCmd( uint8 flowControlEnable )
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_HostBufferSizeCmd( uint16 hostAclPktLen,
-                                          uint8  hostSyncPktLen,
-                                          uint16 hostTotalNumAclPkts,
-                                          uint16 hostTotalNumSyncPkts );
+extern hciStatus_t HCI_HostBufferSizeCmd( uint16_t hostAclPktLen,
+                                          uint8_t  hostSyncPktLen,
+                                          uint16_t hostTotalNumAclPkts,
+                                          uint16_t hostTotalNumSyncPkts );
 
 
 /*******************************************************************************
@@ -1031,9 +1034,9 @@ extern hciStatus_t HCI_HostBufferSizeCmd( uint16 hostAclPktLen,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_HostNumCompletedPktCmd( uint8  numHandles,
-                                               uint16* connHandles,
-                                               uint16* numCompletedPkts );
+extern hciStatus_t HCI_HostNumCompletedPktCmd( uint8_t  numHandles,
+                                               uint16_t* connHandles,
+                                               uint16_t* numCompletedPkts );
 
 
 /*******************************************************************************
@@ -1138,7 +1141,7 @@ extern hciStatus_t HCI_ReadBDADDRCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_ReadRssiCmd( uint16 connHandle );
+extern hciStatus_t HCI_ReadRssiCmd( uint16_t connHandle );
 
 /*
 ** HCI Low Energy Commands
@@ -1163,7 +1166,7 @@ extern hciStatus_t HCI_ReadRssiCmd( uint16 connHandle );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_SetEventMaskCmd( uint8* pEventMask );
+extern hciStatus_t HCI_LE_SetEventMaskCmd( uint8_t* pEventMask );
 
 
 /*******************************************************************************
@@ -1224,7 +1227,7 @@ extern hciStatus_t HCI_LE_ReadLocalSupportedFeaturesCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_SetRandomAddressCmd( uint8* pRandAddr );
+extern hciStatus_t HCI_LE_SetRandomAddressCmd( uint8_t* pRandAddr );
 
 
 
@@ -1268,14 +1271,14 @@ extern hciStatus_t HCI_LE_SetRandomAddressCmd( uint8* pRandAddr );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_SetAdvParamCmd( uint16 advIntervalMin,
-                                          uint16 advIntervalMax,
-                                          uint8  advType,
-                                          uint8  ownAddrType,
-                                          uint8  directAddrType,
-                                          uint8*  directAddr,
-                                          uint8  advChannelMap,
-                                          uint8  advFilterPolicy );
+extern hciStatus_t HCI_LE_SetAdvParamCmd( uint16_t advIntervalMin,
+                                          uint16_t advIntervalMax,
+                                          uint8_t  advType,
+                                          uint8_t  ownAddrType,
+                                          uint8_t  directAddrType,
+                                          uint8_t*  directAddr,
+                                          uint8_t  advChannelMap,
+                                          uint8_t  advFilterPolicy );
 
 
 /*******************************************************************************
@@ -1296,8 +1299,8 @@ extern hciStatus_t HCI_LE_SetAdvParamCmd( uint16 advIntervalMin,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_SetAdvDataCmd( uint8 dataLen,
-                                         uint8* pData );
+extern hciStatus_t HCI_LE_SetAdvDataCmd( uint8_t dataLen,
+                                         uint8_t* pData );
 
 
 /*******************************************************************************
@@ -1318,8 +1321,8 @@ extern hciStatus_t HCI_LE_SetAdvDataCmd( uint8 dataLen,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_SetScanRspDataCmd( uint8 dataLen,
-                                             uint8* pData );
+extern hciStatus_t HCI_LE_SetScanRspDataCmd( uint8_t dataLen,
+                                             uint8_t* pData );
 
 
 /*******************************************************************************
@@ -1339,7 +1342,7 @@ extern hciStatus_t HCI_LE_SetScanRspDataCmd( uint8 dataLen,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_SetAdvEnableCmd( uint8 advEnable );
+extern hciStatus_t HCI_LE_SetAdvEnableCmd( uint8_t advEnable );
 
 
 /*******************************************************************************
@@ -1385,11 +1388,11 @@ extern hciStatus_t HCI_LE_ReadAdvChanTxPowerCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_SetScanParamCmd( uint8  scanType,
-                                           uint16 scanInterval,
-                                           uint16 scanWindow,
-                                           uint8  ownAddrType,
-                                           uint8  filterPolicy );
+extern hciStatus_t HCI_LE_SetScanParamCmd( uint8_t  scanType,
+                                           uint16_t scanInterval,
+                                           uint16_t scanWindow,
+                                           uint8_t  ownAddrType,
+                                           uint8_t  filterPolicy );
 
 
 /*******************************************************************************
@@ -1412,8 +1415,8 @@ extern hciStatus_t HCI_LE_SetScanParamCmd( uint8  scanType,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_SetScanEnableCmd( uint8 scanEnable,
-                                            uint8 filterDuplicates );
+extern hciStatus_t HCI_LE_SetScanEnableCmd( uint8_t scanEnable,
+                                            uint8_t filterDuplicates );
 
 
 /*******************************************************************************
@@ -1451,18 +1454,18 @@ extern hciStatus_t HCI_LE_SetScanEnableCmd( uint8 scanEnable,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_CreateConnCmd( uint16 scanInterval,
-                                         uint16 scanWindow,
-                                         uint8  initFilterPolicy,
-                                         uint8  addrTypePeer,
-                                         uint8*  peerAddr,
-                                         uint8  ownAddrType,
-                                         uint16 connIntervalMin,
-                                         uint16 connIntervalMax,
-                                         uint16 connLatency,
-                                         uint16 connTimeout,
-                                         uint16 minLen,
-                                         uint16 maxLen );
+extern hciStatus_t HCI_LE_CreateConnCmd( uint16_t scanInterval,
+                                         uint16_t scanWindow,
+                                         uint8_t  initFilterPolicy,
+                                         uint8_t  addrTypePeer,
+                                         uint8_t*  peerAddr,
+                                         uint8_t  ownAddrType,
+                                         uint16_t connIntervalMin,
+                                         uint16_t connIntervalMax,
+                                         uint16_t connLatency,
+                                         uint16_t connTimeout,
+                                         uint16_t minLen,
+                                         uint16_t maxLen );
 
 
 /*******************************************************************************
@@ -1543,8 +1546,8 @@ extern hciStatus_t HCI_LE_ClearWhiteListCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_AddWhiteListCmd( uint8 addrType,
-                                           uint8* devAddr );
+extern hciStatus_t HCI_LE_AddWhiteListCmd( uint8_t addrType,
+                                           uint8_t* devAddr );
 
 
 /*******************************************************************************
@@ -1566,8 +1569,8 @@ extern hciStatus_t HCI_LE_AddWhiteListCmd( uint8 addrType,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_RemoveWhiteListCmd( uint8 addrType,
-                                              uint8* devAddr );
+extern hciStatus_t HCI_LE_RemoveWhiteListCmd( uint8_t addrType,
+                                              uint8_t* devAddr );
 
 
 
@@ -1595,13 +1598,13 @@ extern hciStatus_t HCI_LE_RemoveWhiteListCmd( uint8 addrType,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_ConnUpdateCmd( uint16 connHandle,
-                                         uint16 connIntervalMin,
-                                         uint16 connIntervalMax,
-                                         uint16 connLatency,
-                                         uint16 connTimeout,
-                                         uint16 minLen,
-                                         uint16 maxLen );
+extern hciStatus_t HCI_LE_ConnUpdateCmd( uint16_t connHandle,
+                                         uint16_t connIntervalMin,
+                                         uint16_t connIntervalMax,
+                                         uint16_t connLatency,
+                                         uint16_t connTimeout,
+                                         uint16_t minLen,
+                                         uint16_t maxLen );
 
 
 /*******************************************************************************
@@ -1621,7 +1624,7 @@ extern hciStatus_t HCI_LE_ConnUpdateCmd( uint16 connHandle,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_SetHostChanClassificationCmd( uint8* chanMap );
+extern hciStatus_t HCI_LE_SetHostChanClassificationCmd( uint8_t* chanMap );
 
 
 /*******************************************************************************
@@ -1641,7 +1644,7 @@ extern hciStatus_t HCI_LE_SetHostChanClassificationCmd( uint8* chanMap );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_ReadChannelMapCmd( uint16 connHandle );
+extern hciStatus_t HCI_LE_ReadChannelMapCmd( uint16_t connHandle );
 
 /*******************************************************************************
     @fn          HCI_LE_ReadRemoteUsedFeaturesCmd API
@@ -1661,7 +1664,7 @@ extern hciStatus_t HCI_LE_ReadChannelMapCmd( uint16 connHandle );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_ReadRemoteUsedFeaturesCmd( uint16 connHandle );
+extern hciStatus_t HCI_LE_ReadRemoteUsedFeaturesCmd( uint16_t connHandle );
 
 
 /*******************************************************************************
@@ -1684,8 +1687,8 @@ extern hciStatus_t HCI_LE_ReadRemoteUsedFeaturesCmd( uint16 connHandle );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_EncryptCmd( uint8* key,
-                                      uint8* plainText );
+extern hciStatus_t HCI_LE_EncryptCmd( uint8_t* key,
+                                      uint8_t* plainText );
 
 
 /*******************************************************************************
@@ -1731,10 +1734,10 @@ extern hciStatus_t HCI_LE_RandCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_StartEncyptCmd( uint16 connHandle,
-                                          uint8*  random,
-                                          uint8*  encDiv,
-                                          uint8*  ltk );
+extern hciStatus_t HCI_LE_StartEncyptCmd( uint16_t connHandle,
+                                          uint8_t*  random,
+                                          uint8_t*  encDiv,
+                                          uint8_t*  ltk );
 
 /*******************************************************************************
     @fn          HCI_LE_LtkReqReplyCmd API
@@ -1755,8 +1758,8 @@ extern hciStatus_t HCI_LE_StartEncyptCmd( uint16 connHandle,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_LtkReqReplyCmd( uint16 connHandle,
-                                          uint8*  ltk );
+extern hciStatus_t HCI_LE_LtkReqReplyCmd( uint16_t connHandle,
+                                          uint8_t*  ltk );
 
 /*******************************************************************************
     @fn          HCI_LE_LtkReqNegReplyCmd API
@@ -1776,7 +1779,7 @@ extern hciStatus_t HCI_LE_LtkReqReplyCmd( uint16 connHandle,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_LtkReqNegReplyCmd( uint16 connHandle );
+extern hciStatus_t HCI_LE_LtkReqNegReplyCmd( uint16_t connHandle );
 
 
 /*******************************************************************************
@@ -1819,7 +1822,7 @@ extern hciStatus_t HCI_LE_ReadSupportedStatesCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_ReceiverTestCmd( uint8 rxFreq );
+extern hciStatus_t HCI_LE_ReceiverTestCmd( uint8_t rxFreq );
 
 
 /*******************************************************************************
@@ -1854,9 +1857,9 @@ extern hciStatus_t HCI_LE_ReceiverTestCmd( uint8 rxFreq );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_LE_TransmitterTestCmd( uint8 txFreq,
-                                              uint8 dataLen,
-                                              uint8 pktPayload );
+extern hciStatus_t HCI_LE_TransmitterTestCmd( uint8_t txFreq,
+                                              uint8_t dataLen,
+                                              uint8_t pktPayload );
 
 
 /*******************************************************************************
@@ -1882,69 +1885,69 @@ extern hciStatus_t HCI_LE_TestEndCmd( void );
 
 
 // BBB ROM code add
-extern hciStatus_t HCI_LE_AddDevToResolvingListCmd( uint8  addrType,
-                                                    uint8* devAddr,
-                                                    uint8* peerIrk,
-                                                    uint8* localIrk);
+extern hciStatus_t HCI_LE_AddDevToResolvingListCmd( uint8_t  addrType,
+                                                    uint8_t* devAddr,
+                                                    uint8_t* peerIrk,
+                                                    uint8_t* localIrk);
 
 
-extern hciStatus_t HCI_LE_RemoveResolvingListCmd( uint8 addrType,
-                                                  uint8* devAddr );
+extern hciStatus_t HCI_LE_RemoveResolvingListCmd( uint8_t addrType,
+                                                  uint8_t* devAddr );
 
 extern hciStatus_t HCI_LE_ClearResolvingListCmd( void );
 
 extern hciStatus_t HCI_LE_ReadResolvingListSizeCmd( void );
 
-extern hciStatus_t HCI_LE_SetAddressResolutionEnableCmd( uint8 enable );
+extern hciStatus_t HCI_LE_SetAddressResolutionEnableCmd( uint8_t enable );
 
-extern hciStatus_t HCI_LE_SetResolvablePrivateAddressTimeoutCmd( uint16 rpaTimeout );
+extern hciStatus_t HCI_LE_SetResolvablePrivateAddressTimeoutCmd( uint16_t rpaTimeout );
 
 
 /*
 ** HCI for Extended Adv
 */
 //
-extern hciStatus_t HCI_LE_SetExtAdvSetRandomAddressCmd( uint8 adv_handle,
-                                                        uint8* random_address);
+extern hciStatus_t HCI_LE_SetExtAdvSetRandomAddressCmd( uint8_t adv_handle,
+                                                        uint8_t* random_address);
 
-extern hciStatus_t HCI_LE_SetExtAdvParamCmd( uint8 adv_handle,
-                                             uint16 adv_event_properties,
-                                             uint32 primary_advertising_interval_Min,          // 3 octets
-                                             uint32 primary_advertising_interval_Max,          // 3 octets
-                                             uint8  primary_advertising_channel_map,
-                                             uint8  own_address_type,
-                                             uint8  peer_address_type,
-                                             uint8* peer_address,
-                                             uint8  advertising_filter_policy,
-                                             int8   advertising_tx_power,                      // update 2020-04-08
-                                             uint8  primary_advertising_PHY,
-                                             uint8  secondary_advertising_max_skip,
-                                             uint8  secondary_advertising_PHY,
-                                             uint8  advertising_SID,
-                                             uint8  scan_request_notification_enable
+extern hciStatus_t HCI_LE_SetExtAdvParamCmd( uint8_t adv_handle,
+                                             uint16_t adv_event_properties,
+                                             uint32_t primary_advertising_interval_Min,          // 3 octets
+                                             uint32_t primary_advertising_interval_Max,          // 3 octets
+                                             uint8_t  primary_advertising_channel_map,
+                                             uint8_t  own_address_type,
+                                             uint8_t  peer_address_type,
+                                             uint8_t* peer_address,
+                                             uint8_t  advertising_filter_policy,
+                                             int8_t   advertising_tx_power,                      // update 2020-04-08
+                                             uint8_t  primary_advertising_PHY,
+                                             uint8_t  secondary_advertising_max_skip,
+                                             uint8_t  secondary_advertising_PHY,
+                                             uint8_t  advertising_SID,
+                                             uint8_t  scan_request_notification_enable
                                            );
 
 //
-extern hciStatus_t HCI_LE_SetExtAdvDataCmd( uint8 adv_handle,
-                                            uint8 operation,
-                                            uint8  fragment_preference,
-                                            uint8  advertising_data_length,
-                                            uint8* advertising_data
+extern hciStatus_t HCI_LE_SetExtAdvDataCmd( uint8_t adv_handle,
+                                            uint8_t operation,
+                                            uint8_t  fragment_preference,
+                                            uint8_t  advertising_data_length,
+                                            uint8_t* advertising_data
                                           );
 //
-extern hciStatus_t HCI_LE_SetExtScanRspDataCmd( uint8 adv_handle,
-                                                uint8 operation,
-                                                uint8  fragment_preference,
-                                                uint8  scan_rsp_data_length,
-                                                uint8* scan_rsp_data
+extern hciStatus_t HCI_LE_SetExtScanRspDataCmd( uint8_t adv_handle,
+                                                uint8_t operation,
+                                                uint8_t  fragment_preference,
+                                                uint8_t  scan_rsp_data_length,
+                                                uint8_t* scan_rsp_data
                                               );
 
 //
-extern hciStatus_t HCI_LE_SetExtAdvEnableCmd( uint8  enable,
-                                              uint8  number_of_sets,
-                                              uint8*  advertising_handle,
-                                              uint16* duration,
-                                              uint8*  max_extended_advertising_events);
+extern hciStatus_t HCI_LE_SetExtAdvEnableCmd( uint8_t  enable,
+                                              uint8_t  number_of_sets,
+                                              uint8_t*  advertising_handle,
+                                              uint16_t* duration,
+                                              uint8_t*  max_extended_advertising_events);
 
 //
 extern hciStatus_t HCI_LE_ReadMaximumAdvDataLengthCmd( void );
@@ -1953,73 +1956,73 @@ extern hciStatus_t HCI_LE_ReadMaximumAdvDataLengthCmd( void );
 extern hciStatus_t HCI_LE_ReadNumberOfSupportAdvSetCmd( void );
 
 //
-extern hciStatus_t HCI_LE_RemoveAdvSetCmd( uint8 adv_handle);
+extern hciStatus_t HCI_LE_RemoveAdvSetCmd( uint8_t adv_handle);
 
 //
 extern hciStatus_t HCI_LE_ClearAdvSetsCmd( void);
 
 
-extern hciStatus_t HCI_LE_SetExtendedScanParametersCmd(uint8 own_address_type,
-                                                       uint8 scanning_filter_policy,
-                                                       uint8 scanning_PHYs,
-                                                       uint8* scan_sype,
-                                                       uint16* scan_interval,
-                                                       uint16* scan_window);
+extern hciStatus_t HCI_LE_SetExtendedScanParametersCmd(uint8_t own_address_type,
+                                                       uint8_t scanning_filter_policy,
+                                                       uint8_t scanning_PHYs,
+                                                       uint8_t* scan_sype,
+                                                       uint16_t* scan_interval,
+                                                       uint16_t* scan_window);
 
-extern hciStatus_t HCI_LE_SetExtendedScanEnableCmd(uint8 enable,
-                                                   uint8 filter_duplicates,
-                                                   uint16 duration,
-                                                   uint16 period);
+extern hciStatus_t HCI_LE_SetExtendedScanEnableCmd(uint8_t enable,
+                                                   uint8_t filter_duplicates,
+                                                   uint16_t duration,
+                                                   uint16_t period);
 
-extern hciStatus_t HCI_LE_ExtendedCreateConnectionCmd(uint8 initiator_filter_policy,
-                                                      uint8 own_address_type,
-                                                      uint8 peer_address_type,
-                                                      uint8* peer_address,
-                                                      uint8 initiating_PHYs,
-                                                      uint16* scan_interval,
-                                                      uint16* scan_window,
-                                                      uint16* conn_interval_min,
-                                                      uint16* conn_interval_max,
-                                                      uint16* conn_latency,
-                                                      uint16* supervision_timeout,
-                                                      uint16* minimum_CE_length,
-                                                      uint16* maximum_CE_length);
+extern hciStatus_t HCI_LE_ExtendedCreateConnectionCmd(uint8_t initiator_filter_policy,
+                                                      uint8_t own_address_type,
+                                                      uint8_t peer_address_type,
+                                                      uint8_t* peer_address,
+                                                      uint8_t initiating_PHYs,
+                                                      uint16_t* scan_interval,
+                                                      uint16_t* scan_window,
+                                                      uint16_t* conn_interval_min,
+                                                      uint16_t* conn_interval_max,
+                                                      uint16_t* conn_latency,
+                                                      uint16_t* supervision_timeout,
+                                                      uint16_t* minimum_CE_length,
+                                                      uint16_t* maximum_CE_length);
 
 //
-extern hciStatus_t HCI_LE_SetPeriodicAdvParameterCmd( uint8 adv_handle,
-                                                      uint16   interval_min,
-                                                      uint16   interval_max,
-                                                      uint16   adv_event_properties
+extern hciStatus_t HCI_LE_SetPeriodicAdvParameterCmd( uint8_t adv_handle,
+                                                      uint16_t   interval_min,
+                                                      uint16_t   interval_max,
+                                                      uint16_t   adv_event_properties
                                                     );
 
-extern hciStatus_t HCI_LE_SetPeriodicAdvDataCmd( uint8 adv_handle,
-                                                 uint8 operation,
-                                                 uint8  advertising_data_length,
-                                                 uint8* advertising_data
+extern hciStatus_t HCI_LE_SetPeriodicAdvDataCmd( uint8_t adv_handle,
+                                                 uint8_t operation,
+                                                 uint8_t  advertising_data_length,
+                                                 uint8_t* advertising_data
                                                );
 
-extern hciStatus_t HCI_LE_SetPeriodicAdvEnableCmd( uint8  enable,
-                                                   uint8  advertising_handle);
+extern hciStatus_t HCI_LE_SetPeriodicAdvEnableCmd( uint8_t  enable,
+                                                   uint8_t  advertising_handle);
 
 
-extern hciStatus_t HCI_LE_PeriodicAdvertisingCreateSyncCmd(uint8 Options,
-                                                           uint8 Advertising_SID,
-                                                           uint8 Advertiser_Address_Type,
-                                                           uint8* Advertiser_Address,
-                                                           uint16 Skip,
-                                                           uint16 Sync_Timeout,
-                                                           uint8 Sync_CTE_Type);
+extern hciStatus_t HCI_LE_PeriodicAdvertisingCreateSyncCmd(uint8_t Options,
+                                                           uint8_t Advertising_SID,
+                                                           uint8_t Advertiser_Address_Type,
+                                                           uint8_t* Advertiser_Address,
+                                                           uint16_t Skip,
+                                                           uint16_t Sync_Timeout,
+                                                           uint8_t Sync_CTE_Type);
 
 extern hciStatus_t HCI_LE_PeriodicAdvertisingCreateSyncCancelCmd(void);
 
-extern hciStatus_t HCI_LE_PeriodicAdvertisingTerminateSyncCmd(uint16 sync_handle);
+extern hciStatus_t HCI_LE_PeriodicAdvertisingTerminateSyncCmd(uint16_t sync_handle);
 
-extern hciStatus_t HCI_LE_AddDevToPeriodicAdvListCmd( uint8  addrType,
-                                                      uint8* devAddr,
-                                                      uint8 sid);
-extern hciStatus_t HCI_LE_RemovePeriodicAdvListCmd( uint8  addrType,
-                                                    uint8* devAddr,
-                                                    uint8 sid);
+extern hciStatus_t HCI_LE_AddDevToPeriodicAdvListCmd( uint8_t  addrType,
+                                                      uint8_t* devAddr,
+                                                      uint8_t sid);
+extern hciStatus_t HCI_LE_RemovePeriodicAdvListCmd( uint8_t  addrType,
+                                                    uint8_t* devAddr,
+                                                    uint8_t sid);
 extern hciStatus_t HCI_LE_ClearPeriodicAdvListCmd( void );
 extern hciStatus_t HCI_LE_ReadPeriodicAdvListSizeCmd( void );
 
@@ -2050,12 +2053,12 @@ extern hciStatus_t HCI_LE_ReadPeriodicAdvListSizeCmd( void );
     return       hciStatus_t         : HCI_SUCCESS
 
  ******************************************************************************/
-hciStatus_t HCI_LE_ConnectionlessCTE_TransmitParamCmd(              uint8 advertising_handle,
-                                                                    uint8 len,
-                                                                    uint8 type,
-                                                                    uint8 count,
-                                                                    uint8 Pattern_LEN,
-                                                                    uint8* AnaIDs);
+hciStatus_t HCI_LE_ConnectionlessCTE_TransmitParamCmd(              uint8_t advertising_handle,
+                                                                    uint8_t len,
+                                                                    uint8_t type,
+                                                                    uint8_t count,
+                                                                    uint8_t Pattern_LEN,
+                                                                    uint8_t* AnaIDs);
 
 
 /******************************************************************************
@@ -2076,8 +2079,8 @@ hciStatus_t HCI_LE_ConnectionlessCTE_TransmitParamCmd(              uint8 advert
     return       hciStatus_t         : HCI_SUCCESS or other error codes
 
  ******************************************************************************/
-hciStatus_t HCI_LE_ConnectionlessCTE_TransmitEnableCmd(                 uint8 advertising_handle,
-                                                                        uint8 enable);
+hciStatus_t HCI_LE_ConnectionlessCTE_TransmitEnableCmd(                 uint8_t advertising_handle,
+                                                                        uint8_t enable);
 
 
 
@@ -2108,12 +2111,12 @@ hciStatus_t HCI_LE_ConnectionlessCTE_TransmitEnableCmd(                 uint8 ad
     return       hciStatus_t     : HCI_SUCCESS
 
  ******************************************************************************/
-hciStatus_t HCI_LE_ConnectionlessIQ_SampleEnableCmd(                uint16 sync_handle,
-                                                                    uint8 enable,
-                                                                    uint8 slot_Duration,
-                                                                    uint8 MaxSampledCTEs,
-                                                                    uint8 pattern_len,
-                                                                    uint8* AnaIDs);
+hciStatus_t HCI_LE_ConnectionlessIQ_SampleEnableCmd(                uint16_t sync_handle,
+                                                                    uint8_t enable,
+                                                                    uint8_t slot_Duration,
+                                                                    uint8_t MaxSampledCTEs,
+                                                                    uint8_t pattern_len,
+                                                                    uint8_t* AnaIDs);
 
 
 /******************************************************************************
@@ -2140,11 +2143,11 @@ hciStatus_t HCI_LE_ConnectionlessIQ_SampleEnableCmd(                uint16 sync_
     return       hciStatus_t
 
  ******************************************************************************/
-hciStatus_t HCI_LE_Set_ConnectionCTE_ReceiveParamCmd(               uint16 connHandle,
-                                                                    uint8 enable,
-                                                                    uint8 slot_Duration,
-                                                                    uint8 pattern_len,
-                                                                    uint8* AnaIDs);
+hciStatus_t HCI_LE_Set_ConnectionCTE_ReceiveParamCmd(               uint16_t connHandle,
+                                                                    uint8_t enable,
+                                                                    uint8_t slot_Duration,
+                                                                    uint8_t pattern_len,
+                                                                    uint8_t* AnaIDs);
 
 
 
@@ -2170,10 +2173,10 @@ hciStatus_t HCI_LE_Set_ConnectionCTE_ReceiveParamCmd(               uint16 connH
     return       hciStatus_t
 
  ******************************************************************************/
-hciStatus_t HCI_LE_Set_ConnectionCTE_TransmitParamCmd(                  uint16 connHandle,
-                                                                        uint8 type,
-                                                                        uint8 pattern_len,
-                                                                        uint8* AnaIDs);
+hciStatus_t HCI_LE_Set_ConnectionCTE_TransmitParamCmd(                  uint16_t connHandle,
+                                                                        uint8_t type,
+                                                                        uint8_t pattern_len,
+                                                                        uint8_t* AnaIDs);
 
 
 
@@ -2213,11 +2216,11 @@ hciStatus_t HCI_LE_Set_ConnectionCTE_TransmitParamCmd(                  uint16 c
     return       hciStatus_t
 
  ******************************************************************************/
-hciStatus_t HCI_LE_Connection_CTE_Request_EnableCmd(              uint16 connHandle,
-                                                                  uint8 enable,
-                                                                  uint16 Interval,
-                                                                  uint8 len,
-                                                                  uint8 type);
+hciStatus_t HCI_LE_Connection_CTE_Request_EnableCmd(              uint16_t connHandle,
+                                                                  uint8_t enable,
+                                                                  uint16_t Interval,
+                                                                  uint8_t len,
+                                                                  uint8_t type);
 
 
 /******************************************************************************
@@ -2241,8 +2244,8 @@ hciStatus_t HCI_LE_Connection_CTE_Request_EnableCmd(              uint16 connHan
     return       hciStatus_t
 
  ******************************************************************************/
-hciStatus_t HCI_LE_Connection_CTE_Response_EnableCmd(               uint16 connHandle,
-                                                                    uint8 enable);
+hciStatus_t HCI_LE_Connection_CTE_Response_EnableCmd(               uint16_t connHandle,
+                                                                    uint8_t enable);
 
 
 /******************************************************************************
@@ -2293,7 +2296,7 @@ hciStatus_t HCI_LE_READ_Anatenna_InfoCmd(void);
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_SetRxGainCmd( uint8 rxGain );
+extern hciStatus_t HCI_EXT_SetRxGainCmd( uint8_t rxGain );
 
 
 /*******************************************************************************
@@ -2316,7 +2319,7 @@ extern hciStatus_t HCI_EXT_SetRxGainCmd( uint8 rxGain );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_SetTxPowerCmd( uint8 txPower );
+extern hciStatus_t HCI_EXT_SetTxPowerCmd( uint8_t txPower );
 
 
 /*******************************************************************************
@@ -2338,7 +2341,7 @@ extern hciStatus_t HCI_EXT_SetTxPowerCmd( uint8 txPower );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_OnePktPerEvtCmd( uint8 control );
+extern hciStatus_t HCI_EXT_OnePktPerEvtCmd( uint8_t control );
 
 
 /*******************************************************************************
@@ -2360,7 +2363,7 @@ extern hciStatus_t HCI_EXT_OnePktPerEvtCmd( uint8 control );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_ClkDivOnHaltCmd( uint8 control );
+extern hciStatus_t HCI_EXT_ClkDivOnHaltCmd( uint8_t control );
 
 
 /*******************************************************************************
@@ -2382,7 +2385,7 @@ extern hciStatus_t HCI_EXT_ClkDivOnHaltCmd( uint8 control );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_DeclareNvUsageCmd( uint8 mode );
+extern hciStatus_t HCI_EXT_DeclareNvUsageCmd( uint8_t mode );
 
 
 /*******************************************************************************
@@ -2404,8 +2407,8 @@ extern hciStatus_t HCI_EXT_DeclareNvUsageCmd( uint8 mode );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_DecryptCmd( uint8* key,
-                                       uint8* encText );
+extern hciStatus_t HCI_EXT_DecryptCmd( uint8_t* key,
+                                       uint8_t* encText );
 
 
 /*******************************************************************************
@@ -2426,7 +2429,7 @@ extern hciStatus_t HCI_EXT_DecryptCmd( uint8* key,
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_SetLocalSupportedFeaturesCmd( uint8* localFeatures );
+extern hciStatus_t HCI_EXT_SetLocalSupportedFeaturesCmd( uint8_t* localFeatures );
 
 
 /*******************************************************************************
@@ -2448,7 +2451,7 @@ extern hciStatus_t HCI_EXT_SetLocalSupportedFeaturesCmd( uint8* localFeatures );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_SetFastTxResponseTimeCmd( uint8 control );
+extern hciStatus_t HCI_EXT_SetFastTxResponseTimeCmd( uint8_t control );
 
 /*******************************************************************************
     @fn          HCI_EXT_SetSlaveLatencyOverrideCmd API
@@ -2469,7 +2472,7 @@ extern hciStatus_t HCI_EXT_SetFastTxResponseTimeCmd( uint8 control );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_SetSlaveLatencyOverrideCmd( uint8 control );
+extern hciStatus_t HCI_EXT_SetSlaveLatencyOverrideCmd( uint8_t control );
 
 
 /*******************************************************************************
@@ -2499,8 +2502,8 @@ extern hciStatus_t HCI_EXT_SetSlaveLatencyOverrideCmd( uint8 control );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_ModemTestTxCmd( uint8 cwMode,
-                                           uint8 txFreq );
+extern hciStatus_t HCI_EXT_ModemTestTxCmd( uint8_t cwMode,
+                                           uint8_t txFreq );
 
 
 /*******************************************************************************
@@ -2555,7 +2558,7 @@ extern hciStatus_t HCI_EXT_ModemHopTestTxCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_ModemTestRxCmd( uint8 rxFreq );
+extern hciStatus_t HCI_EXT_ModemTestRxCmd( uint8_t rxFreq );
 
 
 /*******************************************************************************
@@ -2599,7 +2602,7 @@ extern hciStatus_t HCI_EXT_EndModemTestCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_SetBDADDRCmd( uint8* bdAddr );
+extern hciStatus_t HCI_EXT_SetBDADDRCmd( uint8_t* bdAddr );
 
 
 /*******************************************************************************
@@ -2628,7 +2631,7 @@ extern hciStatus_t HCI_EXT_SetBDADDRCmd( uint8* bdAddr );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_SetSCACmd( uint16 scaInPPM );
+extern hciStatus_t HCI_EXT_SetSCACmd( uint16_t scaInPPM );
 
 
 /*******************************************************************************
@@ -2673,7 +2676,7 @@ extern hciStatus_t HCI_EXT_EnablePTMCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_SetFreqTuneCmd( uint8 step );
+extern hciStatus_t HCI_EXT_SetFreqTuneCmd( uint8_t step );
 
 
 /*******************************************************************************
@@ -2718,13 +2721,13 @@ extern hciStatus_t HCI_EXT_SaveFreqTuneCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_SetMaxDtmTxPowerCmd( uint8 txPower );
+extern hciStatus_t HCI_EXT_SetMaxDtmTxPowerCmd( uint8_t txPower );
 
 
 /*******************************************************************************
 
 */
-extern llStatus_t HCI_EXT_MapPmIoPortCmd( uint8 ioPort, uint8 ioPin );
+extern llStatus_t HCI_EXT_MapPmIoPortCmd( uint8_t ioPort, uint8_t ioPin );
 
 
 /*******************************************************************************
@@ -2747,7 +2750,7 @@ extern llStatus_t HCI_EXT_MapPmIoPortCmd( uint8 ioPort, uint8 ioPin );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_DisconnectImmedCmd( uint16 connHandle );
+extern hciStatus_t HCI_EXT_DisconnectImmedCmd( uint16_t connHandle );
 
 
 /*******************************************************************************
@@ -2770,7 +2773,7 @@ extern hciStatus_t HCI_EXT_DisconnectImmedCmd( uint16 connHandle );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_PacketErrorRateCmd( uint16 connHandle, uint8 command );
+extern hciStatus_t HCI_EXT_PacketErrorRateCmd( uint16_t connHandle, uint8_t command );
 
 
 
@@ -2801,7 +2804,7 @@ extern hciStatus_t HCI_EXT_PacketErrorRateCmd( uint16 connHandle, uint8 command 
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_PERbyChanCmd( uint16 connHandle, perByChan_t* perByChan );
+extern hciStatus_t HCI_EXT_PERbyChanCmd( uint16_t connHandle, perByChan_t* perByChan );
 
 
 /*******************************************************************************
@@ -2828,7 +2831,7 @@ extern hciStatus_t HCI_EXT_ExtendRfRangeCmd( void );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_HaltDuringRfCmd( uint8 mode );
+extern hciStatus_t HCI_EXT_HaltDuringRfCmd( uint8_t mode );
 
 
 /*******************************************************************************
@@ -2851,7 +2854,7 @@ extern hciStatus_t HCI_EXT_HaltDuringRfCmd( uint8 mode );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_AdvEventNoticeCmd( uint8 taskID, uint16 taskEvent );
+extern hciStatus_t HCI_EXT_AdvEventNoticeCmd( uint8_t taskID, uint16_t taskEvent );
 
 
 /*******************************************************************************
@@ -2876,7 +2879,7 @@ extern hciStatus_t HCI_EXT_AdvEventNoticeCmd( uint8 taskID, uint16 taskEvent );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_ConnEventNoticeCmd( uint8 taskID, uint16 taskEvent );
+extern hciStatus_t HCI_EXT_ConnEventNoticeCmd( uint8_t taskID, uint16_t taskEvent );
 
 
 /*******************************************************************************
@@ -2895,7 +2898,7 @@ extern hciStatus_t HCI_EXT_ConnEventNoticeCmd( uint8 taskID, uint16 taskEvent );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_BuildRevisionCmd( uint8 mode, uint16 userRevNum );
+extern hciStatus_t HCI_EXT_BuildRevisionCmd( uint8_t mode, uint16_t userRevNum );
 
 
 /*******************************************************************************
@@ -2913,7 +2916,7 @@ extern hciStatus_t HCI_EXT_BuildRevisionCmd( uint8 mode, uint16 userRevNum );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_DelaySleepCmd( uint16 delay );
+extern hciStatus_t HCI_EXT_DelaySleepCmd( uint16_t delay );
 
 
 /*******************************************************************************
@@ -2932,7 +2935,7 @@ extern hciStatus_t HCI_EXT_DelaySleepCmd( uint16 delay );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_ResetSystemCmd( uint8 mode );
+extern hciStatus_t HCI_EXT_ResetSystemCmd( uint8_t mode );
 
 
 
@@ -2953,7 +2956,7 @@ extern hciStatus_t HCI_EXT_ResetSystemCmd( uint8 mode );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_OverlappedProcessingCmd( uint8 mode );
+extern hciStatus_t HCI_EXT_OverlappedProcessingCmd( uint8_t mode );
 
 /*******************************************************************************
     @fn          HCI_EXT_NumComplPktsLimitCmd Vendor Specific API
@@ -2977,8 +2980,8 @@ extern hciStatus_t HCI_EXT_OverlappedProcessingCmd( uint8 mode );
 
     @return      hciStatus_t
 */
-extern hciStatus_t HCI_EXT_NumComplPktsLimitCmd( uint8 limit,
-                                                 uint8 flushOnEvt );
+extern hciStatus_t HCI_EXT_NumComplPktsLimitCmd( uint8_t limit,
+                                                 uint8_t flushOnEvt );
 
 
 /*******************************************************************************
@@ -3000,7 +3003,7 @@ extern hciStatus_t HCI_EXT_NumComplPktsLimitCmd( uint8 limit,
 
     @return      hciStatus_t
 */
-hciStatus_t HCI_PPLUS_AdvEventDoneNoticeCmd( uint8 taskID, uint16 taskEvent );
+hciStatus_t HCI_PPLUS_AdvEventDoneNoticeCmd( uint8_t taskID, uint16_t taskEvent );
 
 /*******************************************************************************
     @fn          HCI_PPLUS_ConnEventDoneNoticeCmd Vendor Specific API
@@ -3021,7 +3024,7 @@ hciStatus_t HCI_PPLUS_AdvEventDoneNoticeCmd( uint8 taskID, uint16 taskEvent );
 
     @return      hciStatus_t
 */
-hciStatus_t HCI_PPLUS_ConnEventDoneNoticeCmd( uint8 taskID, uint16 taskEvent );
+hciStatus_t HCI_PPLUS_ConnEventDoneNoticeCmd( uint8_t taskID, uint16_t taskEvent );
 
 /*******************************************************************************
     This HCI Extension API is used to enable or disable a notification to the
@@ -3030,7 +3033,7 @@ hciStatus_t HCI_PPLUS_ConnEventDoneNoticeCmd( uint8 taskID, uint16 taskEvent );
     taskEvent is taken to be "disable".
 
 */
-hciStatus_t HCI_PPLUS_DateLengthChangedNoticeCmd( uint8 taskID, uint16 taskEvent );
+hciStatus_t HCI_PPLUS_DateLengthChangedNoticeCmd( uint8_t taskID, uint16_t taskEvent );
 
 /*******************************************************************************
     This HCI Extension API is used to enable or disable a notification to the
@@ -3039,7 +3042,7 @@ hciStatus_t HCI_PPLUS_DateLengthChangedNoticeCmd( uint8 taskID, uint16 taskEvent
     taskEvent is taken to be "disable".
 
 */
-hciStatus_t HCI_PPLUS_PhyUpdateNoticeCmd( uint8 taskID, uint16 taskEvent );
+hciStatus_t HCI_PPLUS_PhyUpdateNoticeCmd( uint8_t taskID, uint16_t taskEvent );
 
 
 /*******************************************************************************
@@ -3058,15 +3061,15 @@ hciStatus_t HCI_PPLUS_PhyUpdateNoticeCmd( uint8 taskID, uint16 taskEvent );
 
     @return      hciStatus_t
 */
-hciStatus_t HCI_PPLUS_ExtendTRXCmd( uint8 enable );
+hciStatus_t HCI_PPLUS_ExtendTRXCmd( uint8_t enable );
 
 #endif /*#if (PHY_MCU_TYPE == MCU_BUMBEE_M0)*/
 
 /*******************************************************************************
 */
-hciStatus_t HCI_LE_SetDataLengthCmd( uint16 connHandle,
-                                     uint16 TxOctets,
-                                     uint16 TxTime );
+hciStatus_t HCI_LE_SetDataLengthCmd( uint16_t connHandle,
+                                     uint16_t TxOctets,
+                                     uint16_t TxTime );
 
 
 /*******************************************************************************
@@ -3085,7 +3088,7 @@ hciStatus_t HCI_LE_ReadSuggestedDefaultDataLengthCmd(void);
 
     Public function defined in hci.h.
 */
-hciStatus_t HCI_LE_WriteSuggestedDefaultDataLengthCmd(uint16 suggestedMaxTxOctets,uint16 suggestedMaxTxTime);
+hciStatus_t HCI_LE_WriteSuggestedDefaultDataLengthCmd(uint16_t suggestedMaxTxOctets,uint16_t suggestedMaxTxTime);
 
 
 /*******************************************************************************
@@ -3093,7 +3096,7 @@ hciStatus_t HCI_LE_WriteSuggestedDefaultDataLengthCmd(uint16 suggestedMaxTxOctet
 
     Public function defined in hci.h.
 */
-hciStatus_t HCI_LE_SetDefaultPhyMode( uint16 connId,uint8 allPhy,uint8 txPhy, uint8 rxPhy);
+hciStatus_t HCI_LE_SetDefaultPhyMode( uint16_t connId,uint8_t allPhy,uint8_t txPhy, uint8_t rxPhy);
 
 
 /*******************************************************************************
@@ -3101,14 +3104,14 @@ hciStatus_t HCI_LE_SetDefaultPhyMode( uint16 connId,uint8 allPhy,uint8 txPhy, ui
 
     Public function defined in hci.h.
 */
-hciStatus_t HCI_LE_SetPhyMode( uint16 connId,uint8 allPhy,uint8 txPhy, uint8 rxPhy,uint16 phyOptions);
+hciStatus_t HCI_LE_SetPhyMode( uint16_t connId,uint8_t allPhy,uint8_t txPhy, uint8_t rxPhy,uint16_t phyOptions);
 
 /*******************************************************************************
     This LE API is used to Read PHY Mode
 
     Public function defined in hci.h.
 */
-hciStatus_t HCI_LE_ReadPhyMode( uint16 connId);
+hciStatus_t HCI_LE_ReadPhyMode( uint16_t connId);
 
 
 

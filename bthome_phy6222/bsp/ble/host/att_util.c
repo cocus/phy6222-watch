@@ -14,11 +14,6 @@
 /*********************************************************************
     INCLUDES
 */
-#include "bcomdef.h"
-#include "osal_bufmgr.h"
-#include "linkdb.h"
-#include "sm.h"
-
 #include "att_internal.h"
 
 /*********************************************************************
@@ -83,21 +78,21 @@
 */
 
 // Bluetooth base UUID for Attribute Protocol: 00000000-0000-1000-8000-00805F9B34FB
-CONST uint8 btBaseUUID[ATT_UUID_SIZE] =
+CONST uint8_t btBaseUUID[ATT_UUID_SIZE] =
 {
     0xFB, 0x34, 0x9B, 0x5F, 0x80, 0x00, 0x00, 0x80,
     0x00, 0x10, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
 //add for MTU size exchange
-uint16 g_ATT_MTU_SIZE_MAX   = ATT_MTU_SIZE;
+uint16_t g_ATT_MTU_SIZE_MAX   = ATT_MTU_SIZE;
 
-uint16 g_ATT_MAX_NUM_HANDLES_INFO   =( ( ATT_MTU_SIZE_MIN - 1 ) / 4 );
-uint16 g_ATT_MAX_NUM_HANDLES        =( ( ATT_MTU_SIZE_MIN - 1 ) / 2 );
+uint16_t g_ATT_MAX_NUM_HANDLES_INFO   =( ( ATT_MTU_SIZE_MIN - 1 ) / 4 );
+uint16_t g_ATT_MAX_NUM_HANDLES        =( ( ATT_MTU_SIZE_MIN - 1 ) / 2 );
 attMTU_t g_attMtuClientServer;
 
 // multi-role MTU size variables
-uint16  gAttMtuSize[MAX_NUM_LL_CONN];
+uint16_t  gAttMtuSize[MAX_NUM_LL_CONN];
 
 /*********************************************************************
     EXTERNAL VARIABLES
@@ -111,7 +106,7 @@ uint16  gAttMtuSize[MAX_NUM_LL_CONN];
     LOCAL VARIABLES
 */
 #if defined ( TESTMODES )
-    static uint16 paramValue = 0;
+    static uint16_t paramValue = 0;
 #endif
 
 /*********************************************************************
@@ -133,20 +128,20 @@ uint16  gAttMtuSize[MAX_NUM_LL_CONN];
 
     @return  SUCCESS or FAILURE
 */
-uint8 ATT_ParsePacket( l2capDataEvent_t* pL2capMsg, attPacket_t* pPkt )
+uint8_t ATT_ParsePacket( l2capDataEvent_t* pL2capMsg, attPacket_t* pPkt )
 {
-    uint16 len = pL2capMsg->pkt.len;
+    uint16_t len = pL2capMsg->pkt.len;
 
     // PDU should contain at least the Opcode
     if ( len > 0 )
     {
         // Attribute Opcode
-        uint8 opcode = pL2capMsg->pkt.pPayload[0];
+        uint8_t opcode = pL2capMsg->pkt.pPayload[0];
 
         // First check for authenticated data
         if ( attAuthenSigFlag( opcode ) != 0 )
         {
-            uint8 authenSig; // Whether or not to authenticate incoming signature
+            uint8_t authenSig; // Whether or not to authenticate incoming signature
 
             // PDU should contain at least the Opcode and Authentication Signature
             if ( len <= AUTHEN_SIG_LEN )
@@ -217,7 +212,7 @@ uint8 ATT_ParsePacket( l2capDataEvent_t* pL2capMsg, attPacket_t* pPkt )
 
     @return  length of the command data
 */
-uint16 ATT_BuildErrorRsp( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildErrorRsp( uint8_t* pBuf, uint8_t* pMsg )
 {
     attErrorRsp_t* pRsp = (attErrorRsp_t*)pMsg;
     // Command opcode in error
@@ -241,7 +236,7 @@ uint16 ATT_BuildErrorRsp( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseErrorRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseErrorRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     if ( len == ERROR_RSP_SIZE )
     {
@@ -268,7 +263,7 @@ bStatus_t ATT_ParseErrorRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     @return  length of the request data
 */
-uint16 ATT_BuildExchangeMTUReq( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildExchangeMTUReq( uint8_t* pBuf, uint8_t* pMsg )
 {
     attExchangeMTUReq_t* pReq = (attExchangeMTUReq_t*)pMsg;
     // Client receive MTU size
@@ -290,10 +285,10 @@ uint16 ATT_BuildExchangeMTUReq( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseExchangeMTUReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseExchangeMTUReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID sig; // Not applicable to this message
-    VOID cmd; // Not applicable to this message
+    UNUSED(sig); // Not applicable to this message
+    UNUSED(cmd); // Not applicable to this message
 
     if ( len == EXCHANGE_MTU_REQ_SIZE )
     {
@@ -316,7 +311,7 @@ bStatus_t ATT_ParseExchangeMTUReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 
 
     @return  length of the command data
 */
-uint16 ATT_BuildExchangeMTURsp( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildExchangeMTURsp( uint8_t* pBuf, uint8_t* pMsg )
 {
     attExchangeMTURsp_t* pRsp = (attExchangeMTURsp_t*)pMsg;
     // Server receive MTU size
@@ -336,7 +331,7 @@ uint16 ATT_BuildExchangeMTURsp( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseExchangeMTURsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseExchangeMTURsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     if ( len == EXCHANGE_MTU_RSP_SIZE )
     {
@@ -359,7 +354,7 @@ bStatus_t ATT_ParseExchangeMTURsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     @return  length of the command data
 */
-uint16 ATT_BuildFindInfoReq( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildFindInfoReq( uint8_t* pBuf, uint8_t* pMsg )
 {
     attFindInfoReq_t* pReq = (attFindInfoReq_t*)pMsg;
     // First requested handle number
@@ -384,10 +379,10 @@ uint16 ATT_BuildFindInfoReq( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseFindInfoReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseFindInfoReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID sig; // Not applicable to this message
-    VOID cmd; // Not applicable to this message
+    UNUSED(sig); // Not applicable to this message
+    UNUSED(cmd); // Not applicable to this message
 
     // Requested UUID
     if ( len == FIND_INFO_REQ_FIXED_SIZE )
@@ -413,15 +408,15 @@ bStatus_t ATT_ParseFindInfoReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len
 
     @return  length of the command data
 */
-uint16 ATT_BuildFindInfoRsp( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildFindInfoRsp( uint8_t* pBuf, uint8_t* pMsg )
 {
-    uint16 len = FIND_INFO_RSP_FIXED_SIZE;
+    uint16_t len = FIND_INFO_RSP_FIXED_SIZE;
     attFindInfoRsp_t* pRsp = (attFindInfoRsp_t*)pMsg;
     // Format
     *pBuf++ = pRsp->format;
 
     // Information data (handle-UUID pairs)
-    for ( uint8 i = 0; i < pRsp->numInfo; i++ )
+    for ( uint8_t i = 0; i < pRsp->numInfo; i++ )
     {
         if ( pRsp->format == ATT_HANDLE_BT_UUID_TYPE )
         {
@@ -430,7 +425,7 @@ uint16 ATT_BuildFindInfoRsp( uint8* pBuf, uint8* pMsg )
             *pBuf++ = HI_UINT16( pRsp->info.btPair[i].handle );
             len += 2;
             // 2-octet Bluetooth UUID
-            VOID osal_memcpy( pBuf, pRsp->info.btPair[i].uuid, ATT_BT_UUID_SIZE );
+            osal_memcpy( pBuf, pRsp->info.btPair[i].uuid, ATT_BT_UUID_SIZE );
             pBuf += ATT_BT_UUID_SIZE;
             len  += ATT_BT_UUID_SIZE;
         }
@@ -441,7 +436,7 @@ uint16 ATT_BuildFindInfoRsp( uint8* pBuf, uint8* pMsg )
             *pBuf++ = HI_UINT16( pRsp->info.pair[i].handle );
             len += 2;
             // 16-octet UUID
-            VOID osal_memcpy( pBuf, pRsp->info.pair[i].uuid, ATT_UUID_SIZE );
+            osal_memcpy( pBuf, pRsp->info.pair[i].uuid, ATT_UUID_SIZE );
             pBuf += ATT_UUID_SIZE;
             len  += ATT_UUID_SIZE;
         }
@@ -461,14 +456,14 @@ uint16 ATT_BuildFindInfoRsp( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseFindInfoRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseFindInfoRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    uint8 stat = ATT_ERR_INVALID_PDU;
+    uint8_t stat = ATT_ERR_INVALID_PDU;
 
     if ( len >= FIND_INFO_RSP_FIXED_SIZE )
     {
-        uint8 numInfo = 0;
-        uint8 dataLen = len - FIND_INFO_RSP_FIXED_SIZE; // Length of information data field
+        uint8_t numInfo = 0;
+        uint8_t dataLen = len - FIND_INFO_RSP_FIXED_SIZE; // Length of information data field
 
         // Find out the number of handle-UUID pairs
         if ( ( pParams[0] == ATT_HANDLE_BT_UUID_TYPE ) && ( dataLen % ( 2 + ATT_BT_UUID_SIZE ) == 0 ) )
@@ -502,7 +497,7 @@ bStatus_t ATT_ParseFindInfoRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
             pRsp->numInfo = numInfo;
 
             // Parse information data (handle-UUID pairs)
-            for ( uint8 i = 0; i < numInfo; i++ )
+            for ( uint8_t i = 0; i < numInfo; i++ )
             {
                 if ( pRsp->format == ATT_HANDLE_BT_UUID_TYPE )
                 {
@@ -510,7 +505,7 @@ bStatus_t ATT_ParseFindInfoRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
                     pRsp->info.btPair[i].handle = BUILD_UINT16( pParams[0], pParams[1] );
                     pParams += 2;
                     // 2-octet Bluetooth UUID
-                    VOID osal_memcpy( pRsp->info.btPair[i].uuid, pParams, ATT_BT_UUID_SIZE );
+                    osal_memcpy( pRsp->info.btPair[i].uuid, pParams, ATT_BT_UUID_SIZE );
                     pParams += ATT_BT_UUID_SIZE;
                 }
                 else // ATT_HANDLE_UUID_TYPE
@@ -519,7 +514,7 @@ bStatus_t ATT_ParseFindInfoRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
                     pRsp->info.pair[i].handle = BUILD_UINT16( pParams[0], pParams[1] );
                     pParams += 2;
                     // 16-octet Bluetooth UUID
-                    VOID osal_memcpy( pRsp->info.pair[i].uuid, pParams, ATT_UUID_SIZE );
+                    osal_memcpy( pRsp->info.pair[i].uuid, pParams, ATT_UUID_SIZE );
                     pParams += ATT_UUID_SIZE;
                 }
             } // for
@@ -539,7 +534,7 @@ bStatus_t ATT_ParseFindInfoRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     @return  length of the command data
 */
-uint16 ATT_BuildFindByTypeValueReq( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildFindByTypeValueReq( uint8_t* pBuf, uint8_t* pMsg )
 {
     attFindByTypeValueReq_t* pReq = (attFindByTypeValueReq_t*)pMsg;
     // First requested handle number
@@ -549,10 +544,10 @@ uint16 ATT_BuildFindByTypeValueReq( uint8* pBuf, uint8* pMsg )
     *pBuf++ = LO_UINT16( pReq->endHandle );
     *pBuf++ = HI_UINT16( pReq->endHandle );
     // Requested 2 octet UUID
-    VOID osal_memcpy( pBuf, pReq->type.uuid, pReq->type.len );
+    osal_memcpy( pBuf, pReq->type.uuid, pReq->type.len );
     pBuf += pReq->type.len;
     // Attribute value
-    VOID osal_memcpy( pBuf, pReq->value, pReq->len );
+    osal_memcpy( pBuf, pReq->value, pReq->len );
     return ( FIND_BY_TYPE_VALUE_REQ_FIXED_SIZE + pReq->type.len + pReq->len );
 }
 
@@ -569,10 +564,10 @@ uint16 ATT_BuildFindByTypeValueReq( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseFindByTypeValueReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseFindByTypeValueReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID sig; // Not applicable to this message
-    VOID cmd; // Not applicable to this message
+    UNUSED(sig); // Not applicable to this message
+    UNUSED(cmd); // Not applicable to this message
 
     if ( len >= FIND_BY_TYPE_VALUE_REQ_FIXED_SIZE + ATT_BT_UUID_SIZE )
     {
@@ -584,14 +579,14 @@ bStatus_t ATT_ParseFindByTypeValueReq( uint8 sig, uint8 cmd, uint8* pParams, uin
         // 2 octet UUID
         pReq->type.len = ATT_BT_UUID_SIZE;
         // Requested 2 octet UUID
-        VOID osal_memcpy( pReq->type.uuid, &pParams[4], pReq->type.len );
+        osal_memcpy( pReq->type.uuid, &pParams[4], pReq->type.len );
         // length of attribute value
         pReq->len = len - ( FIND_BY_TYPE_VALUE_REQ_FIXED_SIZE + ATT_BT_UUID_SIZE );
 
         // Requested attribute value
         if ( pReq->len <= ATT_MTU_SIZE - 7 )
         {
-            VOID osal_memcpy( pReq->value, &pParams[6], pReq->len );
+            osal_memcpy( pReq->value, &pParams[6], pReq->len );
             return ( SUCCESS);
         }
     }
@@ -609,11 +604,11 @@ bStatus_t ATT_ParseFindByTypeValueReq( uint8 sig, uint8 cmd, uint8* pParams, uin
 
     @return  length of the command data
 */
-uint16 ATT_BuildFindByTypeValueRsp( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildFindByTypeValueRsp( uint8_t* pBuf, uint8_t* pMsg )
 {
     attFindByTypeValueRsp_t* pRsp = (attFindByTypeValueRsp_t*)pMsg;
 
-    for ( uint8 i = 0; i < pRsp->numInfo; i++ )
+    for ( uint8_t i = 0; i < pRsp->numInfo; i++ )
     {
         // Attribute handle
         *pBuf++ = LO_UINT16( pRsp->handlesInfo[i].handle );
@@ -637,19 +632,19 @@ uint16 ATT_BuildFindByTypeValueRsp( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseFindByTypeValueRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseFindByTypeValueRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     // Make sure there's at least one handle range in the response
     if ( len % 4 == 0 )
     {
-        uint8 numInfo = len / 4; // Number of handle ranges
+        uint8_t numInfo = len / 4; // Number of handle ranges
 
         if ( ( numInfo > 0 ) && ( numInfo <= g_ATT_MAX_NUM_HANDLES_INFO ) )
         {
             attFindByTypeValueRsp_t* pRsp = &pMsg->findByTypeValueRsp;
             pRsp->numInfo = numInfo;
 
-            for ( uint8 i = 0; i < numInfo; i++ )
+            for ( uint8_t i = 0; i < numInfo; i++ )
             {
                 // First requested handle number
                 pRsp->handlesInfo[i].handle = BUILD_UINT16( pParams[0], pParams[1] );
@@ -676,9 +671,9 @@ bStatus_t ATT_ParseFindByTypeValueRsp( uint8* pParams, uint16 len, attMsg_t* pMs
 
     @return  length of the command data
 */
-uint16 ATT_BuildReadByTypeReq( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildReadByTypeReq( uint8_t* pBuf, uint8_t* pMsg )
 {
-    uint16 len = READ_BY_TYPE_REQ_FIXED_SIZE;
+    uint16_t len = READ_BY_TYPE_REQ_FIXED_SIZE;
     attReadByTypeReq_t* pReq = (attReadByTypeReq_t*)pMsg;
     // First requested handle number
     *pBuf++ = LO_UINT16( pReq->startHandle );
@@ -687,7 +682,7 @@ uint16 ATT_BuildReadByTypeReq( uint8* pBuf, uint8* pMsg )
     *pBuf++ = LO_UINT16( pReq->endHandle );
     *pBuf++ = HI_UINT16( pReq->endHandle );
     // Requested UUID (2 or 16 octect)
-    VOID osal_memcpy( pBuf, pReq->type.uuid, pReq->type.len );
+    osal_memcpy( pBuf, pReq->type.uuid, pReq->type.len );
     len += pReq->type.len;
     return ( len );
 }
@@ -705,11 +700,11 @@ uint16 ATT_BuildReadByTypeReq( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseReadByTypeReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseReadByTypeReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     attReadByTypeReq_t* pReq = &pMsg->readByTypeReq;
-    VOID sig; // Not applicable to this message
-    VOID cmd; // Not applicable to this message
+    UNUSED(sig); // Not applicable to this message
+    UNUSED(cmd); // Not applicable to this message
 
     if ( len == READ_BY_TYPE_REQ_FIXED_SIZE + ATT_BT_UUID_SIZE )
     {
@@ -731,7 +726,7 @@ bStatus_t ATT_ParseReadByTypeReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 l
     // Last requested handle number
     pReq->endHandle = BUILD_UINT16( pParams[2], pParams[3] );
     // Requested UUID
-    VOID osal_memcpy( pReq->type.uuid, &pParams[4], pReq->type.len );
+    osal_memcpy( pReq->type.uuid, &pParams[4], pReq->type.len );
     return ( SUCCESS);
 }
 
@@ -745,14 +740,14 @@ bStatus_t ATT_ParseReadByTypeReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 l
 
     @return  length of the command data
 */
-uint16 ATT_BuildReadByTypeRsp( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildReadByTypeRsp( uint8_t* pBuf, uint8_t* pMsg )
 {
     attReadByTypeRsp_t* pRsp = (attReadByTypeRsp_t*)pMsg;
-    uint8 dataLen = pRsp->numPairs * pRsp->len;
+    uint8_t dataLen = pRsp->numPairs * pRsp->len;
     // Length of each attribute handle-value pair
     *pBuf++ = pRsp->len;
     // List of 1 or more attribute handle-value pairs
-    VOID osal_memcpy( pBuf, pRsp->dataList, dataLen );
+    osal_memcpy( pBuf, pRsp->dataList, dataLen );
     return ( dataLen + 1 );
 }
 
@@ -767,13 +762,13 @@ uint16 ATT_BuildReadByTypeRsp( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseReadByTypeRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseReadByTypeRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     attReadByTypeRsp_t* pRsp = &pMsg->readByTypeRsp;
 
     if ( len >= READ_BY_TYPE_RSP_FIXED_SIZE )
     {
-        uint8 dataLen = len - 1;
+        uint8_t dataLen = len - 1;
         // Length of each attribute handle-value pair
         pRsp->len = pParams[0];
 
@@ -784,7 +779,7 @@ bStatus_t ATT_ParseReadByTypeRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
             // Total length of attribute handle-value pairs
             pRsp->numPairs = dataLen / pRsp->len;
             // List of 1 or more attribute handle-value pairs
-            VOID osal_memcpy( pRsp->dataList, &pParams[1], dataLen );
+            osal_memcpy( pRsp->dataList, &pParams[1], dataLen );
             return ( SUCCESS);
         }
     }
@@ -802,7 +797,7 @@ bStatus_t ATT_ParseReadByTypeRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     @return  length of the request data
 */
-uint16 ATT_BuildReadReq( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildReadReq( uint8_t* pBuf, uint8_t* pMsg )
 {
     attReadReq_t* pReq = (attReadReq_t*)pMsg;
     // Attribute handle
@@ -824,10 +819,10 @@ uint16 ATT_BuildReadReq( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseReadReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseReadReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID sig; // Not applicable to this message
-    VOID cmd; // Not applicable to this message
+    UNUSED(sig); // Not applicable to this message
+    UNUSED(cmd); // Not applicable to this message
 
     if ( len == READ_REQ_SIZE )
     {
@@ -850,11 +845,11 @@ bStatus_t ATT_ParseReadReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, at
 
     @return  length of the command data
 */
-uint16 ATT_BuildReadRsp( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildReadRsp( uint8_t* pBuf, uint8_t* pMsg )
 {
     attReadRsp_t* pRsp = (attReadRsp_t*)pMsg;
     // Attribute value
-    VOID osal_memcpy( pBuf, pRsp->value, pRsp->len );
+    osal_memcpy( pBuf, pRsp->value, pRsp->len );
     return ( pRsp->len );
 }
 
@@ -869,7 +864,7 @@ uint16 ATT_BuildReadRsp( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseReadRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseReadRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     attReadRsp_t* pRsp = &pMsg->readRsp;
 
@@ -877,7 +872,7 @@ bStatus_t ATT_ParseReadRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
     if ( len <= ATT_MTU_SIZE - 1 )
     {
         pRsp->len = len;
-        VOID osal_memcpy( pRsp->value, pParams, len );
+        osal_memcpy( pRsp->value, pParams, len );
         return ( SUCCESS);
     }
 
@@ -897,12 +892,12 @@ bStatus_t ATT_ParseReadRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseWriteReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     if ( len >= WRITE_REQ_FIXED_SIZE )
     {
         attWriteReq_t* pReq = &pMsg->writeReq;
-        uint16 maxLen;
+        uint16_t maxLen;
         // Attribute handle
         pReq->handle = BUILD_UINT16( pParams[0], pParams[1] );
         // Authentication signature
@@ -925,7 +920,7 @@ bStatus_t ATT_ParseWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, a
         // Attribute value
         if ( pReq->len <= maxLen )
         {
-            VOID osal_memcpy( pReq->value, &pParams[2], pReq->len );
+            osal_memcpy( pReq->value, &pParams[2], pReq->len );
             return ( SUCCESS);
         }
     }
@@ -943,14 +938,14 @@ bStatus_t ATT_ParseWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, a
 
     @return  length of the request data
 */
-uint16 ATT_BuildWriteReq( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildWriteReq( uint8_t* pBuf, uint8_t* pMsg )
 {
     attWriteReq_t* pReq = (attWriteReq_t*)pMsg;
     // Attribute handle
     *pBuf++ = LO_UINT16( pReq->handle );
     *pBuf++ = HI_UINT16( pReq->handle );
     // Attribute value
-    VOID osal_memcpy( pBuf, pReq->value, pReq->len );
+    osal_memcpy( pBuf, pReq->value, pReq->len );
     return ( WRITE_REQ_FIXED_SIZE + pReq->len );
 }
 
@@ -965,10 +960,10 @@ uint16 ATT_BuildWriteReq( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseWriteRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseWriteRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID pParams; // Not applicable to this message
-    VOID pMsg; // Not applicable to this message
+    UNUSED(pParams); // Not applicable to this message
+    UNUSED(pMsg); // Not applicable to this message
     return ( len == 0 ? SUCCESS : ATT_ERR_INVALID_PDU );
 }
 
@@ -982,7 +977,7 @@ bStatus_t ATT_ParseWriteRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     @return  length of the request data
 */
-uint16 ATT_BuildReadBlobReq( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildReadBlobReq( uint8_t* pBuf, uint8_t* pMsg )
 {
     attReadBlobReq_t* pReq = (attReadBlobReq_t*)pMsg;
     // Attribute handle
@@ -1007,10 +1002,10 @@ uint16 ATT_BuildReadBlobReq( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseReadBlobReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseReadBlobReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID sig; // Not applicable to this message
-    VOID cmd; // Not applicable to this message
+    UNUSED(sig); // Not applicable to this message
+    UNUSED(cmd); // Not applicable to this message
 
     if ( len == READ_BLOB_REQ_SIZE )
     {
@@ -1035,11 +1030,11 @@ bStatus_t ATT_ParseReadBlobReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len
 
     @return  length of the command data
 */
-uint16 ATT_BuildReadBlobRsp( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildReadBlobRsp( uint8_t* pBuf, uint8_t* pMsg )
 {
     attReadBlobRsp_t* pRsp = (attReadBlobRsp_t*)pMsg;
     // Part of attribute value
-    VOID osal_memcpy( pBuf, pRsp->value, pRsp->len );
+    osal_memcpy( pBuf, pRsp->value, pRsp->len );
     return ( pRsp->len );
 }
 
@@ -1054,7 +1049,7 @@ uint16 ATT_BuildReadBlobRsp( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseReadBlobRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseReadBlobRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     attReadBlobRsp_t* pRsp = &pMsg->readBlobRsp;
     // Part Attribute value
@@ -1062,7 +1057,7 @@ bStatus_t ATT_ParseReadBlobRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     if ( pRsp->len <= ATT_MTU_SIZE - 1 )
     {
-        VOID osal_memcpy( pRsp->value, pParams, pRsp->len );
+        osal_memcpy( pRsp->value, pParams, pRsp->len );
         return ( SUCCESS);
     }
 
@@ -1079,11 +1074,11 @@ bStatus_t ATT_ParseReadBlobRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     @return  length of the request data
 */
-uint16 ATT_BuildReadMultiReq( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildReadMultiReq( uint8_t* pBuf, uint8_t* pMsg )
 {
     attReadMultiReq_t* pReq = (attReadMultiReq_t*)pMsg;
 
-    for ( uint8 i = 0; i < pReq->numHandles; i++ )
+    for ( uint8_t i = 0; i < pReq->numHandles; i++ )
     {
         // Attribute handle
         *pBuf++ = LO_UINT16( pReq->handle[i] );
@@ -1106,15 +1101,15 @@ uint16 ATT_BuildReadMultiReq( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseReadMultiReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseReadMultiReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID sig; // Not applicable to this message
-    VOID cmd; // Not applicable to this message
+    UNUSED(sig); // Not applicable to this message
+    UNUSED(cmd); // Not applicable to this message
 
     // Make sure the length of attribute handles is even
     if ( len % 2 == 0 )
     {
-        uint8 numHandles = len / 2; // Number of attribute handles
+        uint8_t numHandles = len / 2; // Number of attribute handles
 
         // Make sure there're at least two attribute handles in the request
         if ( ( numHandles >= ATT_MIN_NUM_HANDLES ) && ( numHandles <= g_ATT_MAX_NUM_HANDLES ) )
@@ -1122,7 +1117,7 @@ bStatus_t ATT_ParseReadMultiReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 le
             attReadMultiReq_t* pReq = &pMsg->readMultiReq;
             pReq->numHandles = numHandles;
 
-            for ( uint8 i = 0; i < numHandles; i++ )
+            for ( uint8_t i = 0; i < numHandles; i++ )
             {
                 // Attribute handle
                 pReq->handle[i] = BUILD_UINT16( pParams[0], pParams[1] );
@@ -1147,11 +1142,11 @@ bStatus_t ATT_ParseReadMultiReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 le
 
     @return  length of the command data
 */
-uint16 ATT_BuildReadMultiRsp( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildReadMultiRsp( uint8_t* pBuf, uint8_t* pMsg )
 {
     attReadMultiRsp_t* pRsp = (attReadMultiRsp_t*)pMsg;
     // A set of two or more values
-    VOID osal_memcpy( pBuf, pRsp->values, pRsp->len );
+    osal_memcpy( pBuf, pRsp->values, pRsp->len );
     return ( pRsp->len );
 }
 
@@ -1166,7 +1161,7 @@ uint16 ATT_BuildReadMultiRsp( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseReadMultiRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseReadMultiRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     attReadMultiRsp_t* pRsp = &pMsg->readMultiRsp;
     pRsp->len = len;
@@ -1174,7 +1169,7 @@ bStatus_t ATT_ParseReadMultiRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
     // A set of two or more values
     if ( pRsp->len <= ATT_MTU_SIZE - 1 )
     {
-        VOID osal_memcpy( pRsp->values, &pParams[0], pRsp->len );
+        osal_memcpy( pRsp->values, &pParams[0], pRsp->len );
         return ( SUCCESS );
     }
 
@@ -1191,14 +1186,14 @@ bStatus_t ATT_ParseReadMultiRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     @return  length of the command data
 */
-uint16 ATT_BuildReadByGrpTypeRsp( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildReadByGrpTypeRsp( uint8_t* pBuf, uint8_t* pMsg )
 {
     attReadByGrpTypeRsp_t* pRsp = (attReadByGrpTypeRsp_t*)pMsg;
-    uint8 dataLen = pRsp->numGrps * pRsp->len;
+    uint8_t dataLen = pRsp->numGrps * pRsp->len;
     // Length of each attribute handle, group end handle and value set
     *pBuf++ = pRsp->len;
     // List of 1 or more attribute handle, group end handle and value
-    VOID osal_memcpy( pBuf, pRsp->dataList, dataLen );
+    osal_memcpy( pBuf, pRsp->dataList, dataLen );
     return ( dataLen + 1 );
 }
 
@@ -1213,13 +1208,13 @@ uint16 ATT_BuildReadByGrpTypeRsp( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseReadByGrpTypeRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseReadByGrpTypeRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     attReadByGrpTypeRsp_t* pRsp = &pMsg->readByGrpTypeRsp;
 
     if ( len >= READ_BY_TYPE_RSP_FIXED_SIZE )
     {
-        uint8 dataLen = len - 1;
+        uint8_t dataLen = len - 1;
         // Length of each attribute handle, group end handle and value set
         pRsp->len = pParams[0];
 
@@ -1230,7 +1225,7 @@ bStatus_t ATT_ParseReadByGrpTypeRsp( uint8* pParams, uint16 len, attMsg_t* pMsg 
             // Number of all attribute handle, group end handle and value sets found
             pRsp->numGrps = dataLen / pRsp->len;
             // List of 1 or more attribute handle, end group handle and value set
-            VOID osal_memcpy( pRsp->dataList, &pParams[1], dataLen );
+            osal_memcpy( pRsp->dataList, &pParams[1], dataLen );
             return ( SUCCESS);
         }
     }
@@ -1248,7 +1243,7 @@ bStatus_t ATT_ParseReadByGrpTypeRsp( uint8* pParams, uint16 len, attMsg_t* pMsg 
 
     @return  length of the request data
 */
-uint16 ATT_BuildPrepareWriteReq( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildPrepareWriteReq( uint8_t* pBuf, uint8_t* pMsg )
 {
     attPrepareWriteReq_t* pReq = (attPrepareWriteReq_t*)pMsg;
     // Attribute handle
@@ -1258,7 +1253,7 @@ uint16 ATT_BuildPrepareWriteReq( uint8* pBuf, uint8* pMsg )
     *pBuf++ = LO_UINT16( pReq->offset );
     *pBuf++ = HI_UINT16( pReq->offset );
     // Part Attribute value
-    VOID osal_memcpy( pBuf, pReq->value, pReq->len );
+    osal_memcpy( pBuf, pReq->value, pReq->len );
     return ( PREPARE_WRITE_REQ_FIXED_SIZE + pReq->len );
 }
 
@@ -1275,10 +1270,10 @@ uint16 ATT_BuildPrepareWriteReq( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParsePrepareWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParsePrepareWriteReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID sig; // Not applicable to this message
-    VOID cmd; // Not applicable to this message
+    UNUSED(sig); // Not applicable to this message
+    UNUSED(cmd); // Not applicable to this message
 
     if ( len >= PREPARE_WRITE_REQ_FIXED_SIZE )
     {
@@ -1292,7 +1287,7 @@ bStatus_t ATT_ParsePrepareWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16
 
         if ( pReq->len <= ATT_MTU_SIZE - 5 )
         {
-            VOID osal_memcpy( pReq->value, &pParams[4], pReq->len );
+            osal_memcpy( pReq->value, &pParams[4], pReq->len );
             return ( SUCCESS);
         }
     }
@@ -1310,7 +1305,7 @@ bStatus_t ATT_ParsePrepareWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16
 
     @return  length of the command data
 */
-uint16 ATT_BuildPrepareWriteRsp( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildPrepareWriteRsp( uint8_t* pBuf, uint8_t* pMsg )
 {
     attPrepareWriteRsp_t* pReq = (attPrepareWriteRsp_t*)pMsg;
     // Attribute handle
@@ -1320,7 +1315,7 @@ uint16 ATT_BuildPrepareWriteRsp( uint8* pBuf, uint8* pMsg )
     *pBuf++ = LO_UINT16( pReq->offset );
     *pBuf++ = HI_UINT16( pReq->offset );
     // Part Attribute value
-    VOID osal_memcpy( pBuf, pReq->value, pReq->len );
+    osal_memcpy( pBuf, pReq->value, pReq->len );
     return ( PREPARE_WRITE_RSP_FIXED_SIZE + pReq->len );
 }
 
@@ -1335,7 +1330,7 @@ uint16 ATT_BuildPrepareWriteRsp( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParsePrepareWriteRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParsePrepareWriteRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
     if ( len >= PREPARE_WRITE_RSP_FIXED_SIZE )
     {
@@ -1349,7 +1344,7 @@ bStatus_t ATT_ParsePrepareWriteRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
         if ( pRsp->len <= ATT_MTU_SIZE - 5 )
         {
-            VOID osal_memcpy( pRsp->value, &pParams[4], pRsp->len );
+            osal_memcpy( pRsp->value, &pParams[4], pRsp->len );
             return ( SUCCESS);
         }
     }
@@ -1367,7 +1362,7 @@ bStatus_t ATT_ParsePrepareWriteRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     @return  length of the request data
 */
-uint16 ATT_BuildExecuteWriteReq( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildExecuteWriteReq( uint8_t* pBuf, uint8_t* pMsg )
 {
     attExecuteWriteReq_t* pReq = (attExecuteWriteReq_t*)pMsg;
     // Flags
@@ -1388,10 +1383,10 @@ uint16 ATT_BuildExecuteWriteReq( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseExecuteWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseExecuteWriteReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID sig; // Not applicable to this message
-    VOID cmd; // Not applicable to this message
+    UNUSED(sig); // Not applicable to this message
+    UNUSED(cmd); // Not applicable to this message
 
     if ( len == EXECUTE_WRITE_REQ_SIZE )
     {
@@ -1415,10 +1410,10 @@ bStatus_t ATT_ParseExecuteWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseExecuteWriteRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseExecuteWriteRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID pParams; // Not applicable to this message
-    VOID pMsg; // Not applicable to this message
+    UNUSED(pParams); // Not applicable to this message
+    UNUSED(pMsg); // Not applicable to this message
     return ( len == 0 ? SUCCESS : ATT_ERR_INVALID_PDU );
 }
 
@@ -1432,14 +1427,14 @@ bStatus_t ATT_ParseExecuteWriteRsp( uint8* pParams, uint16 len, attMsg_t* pMsg )
 
     @return  length of the command data
 */
-uint16 ATT_BuildHandleValueInd( uint8* pBuf, uint8* pMsg )
+uint16_t ATT_BuildHandleValueInd( uint8_t* pBuf, uint8_t* pMsg )
 {
     attHandleValueInd_t* pReq = (attHandleValueInd_t*)pMsg;
     // Attribute handle
     *pBuf++ = LO_UINT16( pReq->handle );
     *pBuf++ = HI_UINT16( pReq->handle );
     // Attribute value
-    VOID osal_memcpy( pBuf, pReq->value, pReq->len );
+    osal_memcpy( pBuf, pReq->value, pReq->len );
     return ( HANDLE_VALUE_IND_FIXED_SIZE + pReq->len );
 }
 
@@ -1456,10 +1451,10 @@ uint16 ATT_BuildHandleValueInd( uint8* pBuf, uint8* pMsg )
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseHandleValueInd( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseHandleValueInd( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID sig; // Not applicable to this message
-    VOID cmd; // Not applicable to this message
+    UNUSED(sig); // Not applicable to this message
+    UNUSED(cmd); // Not applicable to this message
 
     if ( len >= HANDLE_VALUE_IND_FIXED_SIZE )
     {
@@ -1471,7 +1466,7 @@ bStatus_t ATT_ParseHandleValueInd( uint8 sig, uint8 cmd, uint8* pParams, uint16 
 
         if ( pInd->len <= ATT_MTU_SIZE - 3 )
         {
-            VOID osal_memcpy( pInd->value, &pParams[2], pInd->len );
+            osal_memcpy( pInd->value, &pParams[2], pInd->len );
             return ( SUCCESS);
         }
     }
@@ -1490,10 +1485,10 @@ bStatus_t ATT_ParseHandleValueInd( uint8 sig, uint8 cmd, uint8* pParams, uint16 
 
     @return  SUCCESS or ATT_ERR_INVALID_PDU
 */
-bStatus_t ATT_ParseHandleValueCfm( uint8* pParams, uint16 len, attMsg_t* pMsg )
+bStatus_t ATT_ParseHandleValueCfm( uint8_t* pParams, uint16_t len, attMsg_t* pMsg )
 {
-    VOID pParams; // Not applicable to this message
-    VOID pMsg; // Not applicable to this message
+    UNUSED(pParams); // Not applicable to this message
+    UNUSED(pMsg); // Not applicable to this message
     return ( len == 0 ? SUCCESS : ATT_ERR_INVALID_PDU );
 }
 
@@ -1513,17 +1508,17 @@ bStatus_t ATT_ParseHandleValueCfm( uint8* pParams, uint16 len, attMsg_t* pMsg )
             bleMemAllocError: Memory allocation error occurred.
             bleLinkEncrypted: Connection is already encrypted.
 */
-bStatus_t attSendMsg( uint16 connHandle, attBuildMsg_t pfnBuildMsg, uint8 opcode, uint8* pMsg )
+bStatus_t attSendMsg( uint16_t connHandle, attBuildMsg_t pfnBuildMsg, uint8_t opcode, uint8_t* pMsg )
 {
-    uint8* buf;
-    uint8 status;
+    uint8_t* buf;
+    uint8_t status;
     // Allocate space for the message
-    buf = (uint8*)L2CAP_bm_alloc( gAttMtuSize[connHandle] );
+    buf = (uint8_t*)L2CAP_bm_alloc( gAttMtuSize[connHandle] );
 
     if ( buf != NULL )
     {
-        uint8* pBuf = buf;
-        uint16 len = 1; // opcode
+        uint8_t* pBuf = buf;
+        uint16_t len = 1; // opcode
         // operation code
         *pBuf++ = opcode;
 
@@ -1603,10 +1598,10 @@ bStatus_t attSendMsg( uint16 connHandle, attBuildMsg_t pfnBuildMsg, uint8 opcode
 
     @return  TRUE if equal. FALSE, otherwise.
 */
-uint8 ATT_CompareUUID( const uint8* pUUID1, uint16 len1,
-                       const uint8* pUUID2, uint16 len2 )
+uint8_t ATT_CompareUUID( const uint8_t* pUUID1, uint16_t len1,
+                       const uint8_t* pUUID2, uint16_t len2 )
 {
-    uint8 longUUID[ATT_UUID_SIZE];
+    uint8_t longUUID[ATT_UUID_SIZE];
 
     // Make sure both of them have the right length
     if ( ( len1 != ATT_BT_UUID_SIZE ) && ( len1 != ATT_UUID_SIZE ) )
@@ -1630,13 +1625,13 @@ uint8 ATT_CompareUUID( const uint8* pUUID1, uint16 len1,
     if ( len1 == ATT_UUID_SIZE )
     {
         // The first UUID is 16 octets; convert the second one to 16 octets
-        VOID ATT_ConvertUUIDto128( pUUID2, longUUID );
+        ATT_ConvertUUIDto128( pUUID2, longUUID );
         // Compare them now
         return ( osal_memcmp( pUUID1, longUUID, ATT_UUID_SIZE ) );
     }
 
     // The second UUID is 16 octets; convert the first one to 16 octets
-    VOID ATT_ConvertUUIDto128( pUUID1, longUUID );
+    ATT_ConvertUUIDto128( pUUID1, longUUID );
     // Compare them now
     return ( osal_memcmp( pUUID2, longUUID, ATT_UUID_SIZE ) );
 }
@@ -1653,12 +1648,12 @@ uint8 ATT_CompareUUID( const uint8* pUUID1, uint16 len1,
 
     @return  TRUE if converted. FALSE, otherwise.
 */
-uint8 ATT_ConvertUUIDto128( const uint8* pUUID16, uint8* pUUID128 )
+uint8_t ATT_ConvertUUIDto128( const uint8_t* pUUID16, uint8_t* pUUID128 )
 {
     if ( ( pUUID16 != NULL ) && ( pUUID128 != NULL ) )
     {
         // Start off with the Bluetooth base UUID
-        VOID osal_memcpy( pUUID128, btBaseUUID, ATT_UUID_SIZE );
+        osal_memcpy( pUUID128, btBaseUUID, ATT_UUID_SIZE );
         // Copy the 2 byte UUID over
         pUUID128[12] = pUUID16[0];
         pUUID128[13] = pUUID16[1];
@@ -1680,13 +1675,13 @@ uint8 ATT_ConvertUUIDto128( const uint8* pUUID16, uint8* pUUID128 )
 
     @return  TRUE if converted. FALSE, otherwise.
 */
-uint8 ATT_ConvertUUIDto16( const uint8* pUUID128, uint8* pUUID16 )
+uint8_t ATT_ConvertUUIDto16( const uint8_t* pUUID128, uint8_t* pUUID16 )
 {
     if ( ( pUUID16 != NULL ) && ( pUUID128 != NULL ) )
     {
-        uint8 uuid[ATT_UUID_SIZE];
+        uint8_t uuid[ATT_UUID_SIZE];
         // First make sure the 128-bit UUID is a valid Bluetooth UUID
-        VOID osal_memcpy( uuid, pUUID128, ATT_UUID_SIZE );
+        osal_memcpy( uuid, pUUID128, ATT_UUID_SIZE );
         uuid[12] = 0x00;
         uuid[13] = 0x00;
 
@@ -1713,12 +1708,12 @@ uint8 ATT_ConvertUUIDto16( const uint8* pUUID128, uint8* pUUID16 )
 
     @return  void
 */
-void ATT_SetParamValue( uint16 value )
+void ATT_SetParamValue( uint16_t value )
 {
     #if defined ( TESTMODES )
     paramValue = value;
     #else
-    VOID value;
+    UNUSED(value);
     #endif
 }
 
@@ -1731,7 +1726,7 @@ void ATT_SetParamValue( uint16 value )
 
     @return  ATT Parameter value
 */
-uint16 ATT_GetParamValue( void )
+uint16_t ATT_GetParamValue( void )
 {
     #if defined ( TESTMODES )
     return ( paramValue );
@@ -1740,7 +1735,7 @@ uint16 ATT_GetParamValue( void )
     #endif
 }
 
-void ATT_SetMTUSizeMax(uint16 mtuSize)
+void ATT_SetMTUSizeMax(uint16_t mtuSize)
 {
     g_ATT_MTU_SIZE_MAX           = mtuSize > ATT_MTU_SIZE ? ATT_MTU_SIZE : mtuSize;
     g_ATT_MAX_NUM_HANDLES_INFO   =   ( ( g_ATT_MTU_SIZE_MAX - 1 ) / 4 );
@@ -1748,7 +1743,7 @@ void ATT_SetMTUSizeMax(uint16 mtuSize)
     return ;
 }
 
-void ATT_UpdateMtuSize(uint16 connHandle, uint16 mtuSize)
+void ATT_UpdateMtuSize(uint16_t connHandle, uint16_t mtuSize)
 {
     if (mtuSize > g_ATT_MTU_SIZE_MAX)
         return;
@@ -1757,7 +1752,7 @@ void ATT_UpdateMtuSize(uint16 connHandle, uint16 mtuSize)
     LOG("[ATT_MTU] %d \n", gAttMtuSize[connHandle]);
 }
 
-uint16 ATT_GetCurrentMTUSize(uint16 connHandle)
+uint16_t ATT_GetCurrentMTUSize(uint16_t connHandle)
 {
     return gAttMtuSize[connHandle];
 }
@@ -1771,12 +1766,12 @@ void ATT_InitMtuSize(void)
 }
 
 #if 0
-uint16 ATT_GetCurrentMTUSize(void)
+uint16_t ATT_GetCurrentMTUSize(void)
 {
     return g_ATT_MTU_SIZE;
 }
 
-void ATT_MTU_SIZE_UPDATE(uint8 mtuSize)
+void ATT_MTU_SIZE_UPDATE(uint8_t mtuSize)
 {
     g_ATT_MTU_SIZE                  =   mtuSize;
     LOG("[ATT_MTU] %d \n",g_ATT_MTU_SIZE);

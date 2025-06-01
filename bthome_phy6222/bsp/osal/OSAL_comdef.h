@@ -25,46 +25,16 @@ extern "C"
 
 /* HAL */
 
-#include "types.h"
+#include <types.h>
 
 
 /*********************************************************************
     Lint Keywords
 */
-#define VOID (void)
-
-#define NULL_OK
-#define INP
-#define OUTP
-#define UNUSED(x) (void)(x)
-#define ONLY
-#define READONLY
-#define SHARED
-#define KEEP
-#define RELAX
-
-
-
 
 /*********************************************************************
     CONSTANTS
 */
-
-#ifndef false
-#define false 0
-#endif
-
-#ifndef true
-#define true 1
-#endif
-
-#ifndef CONST
-#define CONST const
-#endif
-
-#ifndef GENERIC
-#define GENERIC
-#endif
 
 /*** Generic Status Return Values ***/
 #define SUCCESS                   0x00
@@ -86,11 +56,11 @@ extern "C"
 */
 
 // Generic Status return
-typedef uint8 Status_t;
+typedef uint8_t Status_t;
 
 // Data types
-typedef int32   int24;
-typedef uint32  uint24;
+typedef int32_t   int24;
+typedef uint32_t  uint24;
 
 /*********************************************************************
     Global System Events

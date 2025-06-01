@@ -15,13 +15,16 @@
     INCLUDES
 */
 
-#include "bcomdef.h"
-#include "osal_bufmgr.h"
-#include "osal_cbtimer.h"
-
-#include "hci.h"
-
+//#include "bcomdef.h"
+//#include "osal_bufmgr.h"
+//#include "osal_cbtimer.h"
+//#include "hci.h"
+//#include "l2cap_internal.h"
+#include <ble/include/bcomdef.h>
+#include <ble/include/hci.h>
+//#include <ble/include/l2cap.h>
 #include "l2cap_internal.h"
+#include <osal/osal_cbtimer.h>
 
 /*********************************************************************
     MACROS
@@ -39,7 +42,7 @@
     GLOBAL VARIABLES
 */
 // L2CAP task id
-uint8 l2capTaskID;
+uint8_t l2capTaskID;
 
 // L2CAP Fixed Channels table
 l2capFixedChannel_t l2capFixedChannels[L2CAP_NUM_FIXED_CHANNELS];
@@ -63,9 +66,9 @@ l2capChannel_t l2capChannels[L2CAP_NUM_CHANNELS];
 */
 static void l2capProcessOSALMsg( osal_event_hdr_t* pMsg );
 static void l2capProcessRxData( hciDataEvent_t* pHciMsg );
-static void l2capProcessSignal( uint16 connHandle, l2capPacket_t* pPkt );
-static bStatus_t l2capProcessRsp( uint16 connHandle, l2capSignalHdr_t* pHdr, uint8* pData );
-static bStatus_t l2capProcessReq( uint16 connHandle, l2capSignalHdr_t* pHdr, uint8* pData );
+static void l2capProcessSignal( uint16_t connHandle, l2capPacket_t* pPkt );
+static bStatus_t l2capProcessRsp( uint16_t connHandle, l2capSignalHdr_t* pHdr, uint8_t* pData );
+static bStatus_t l2capProcessReq( uint16_t connHandle, l2capSignalHdr_t* pHdr, uint8_t* pData );
 
 /*********************************************************************
     API FUNCTIONS
@@ -80,9 +83,9 @@ static bStatus_t l2capProcessReq( uint16 connHandle, l2capSignalHdr_t* pHdr, uin
 
     @return  none
 */
-void L2CAP_Init( uint8 taskId )
+void L2CAP_Init( uint8_t taskId )
 {
-    uint8 i;
+    uint8_t i;
     l2capTaskID = taskId;
 
     // Initialize all fixed channel structures
@@ -118,10 +121,10 @@ void L2CAP_Init( uint8 taskId )
 
     @return  none
 */
-uint16 L2CAP_ProcessEvent( uint8 taskId, uint16 events )
+uint16_t L2CAP_ProcessEvent( uint8_t taskId, uint16_t events )
 {
-    uint8* pMsg;
-    VOID taskId; // required by OSAL but not used here
+    uint8_t* pMsg;
+    UNUSED(taskId); // required by OSAL but not used here
 
     if ( events & SYS_EVENT_MSG )
     {
@@ -129,7 +132,7 @@ uint16 L2CAP_ProcessEvent( uint8 taskId, uint16 events )
         {
             l2capProcessOSALMsg( (osal_event_hdr_t*)pMsg );
             // Release the OSAL message
-            VOID osal_msg_deallocate( pMsg );
+            osal_msg_deallocate( pMsg );
         }
 
         // Return unprocessed events
@@ -176,8 +179,8 @@ static void l2capProcessOSALMsg( osal_event_hdr_t* pMsg )
 static void l2capProcessRxData( hciDataEvent_t* pHciMsg )
 {
     l2capPacket_t pkt;
-    uint8 free;
-    uint16 connHandle = pHciMsg->connHandle;
+    uint8_t free;
+    uint16_t connHandle = pHciMsg->connHandle;
     // First parse the packet
     free = l2capParsePacket( &pkt, pHciMsg );
 
@@ -251,7 +254,7 @@ static void l2capProcessRxData( hciDataEvent_t* pHciMsg )
 
     @return  none
 */
-static void l2capProcessSignal( uint16 connHandle, l2capPacket_t* pPkt )
+static void l2capProcessSignal( uint16_t connHandle, l2capPacket_t* pPkt )
 {
     bStatus_t status = SUCCESS;
 
@@ -292,7 +295,7 @@ static void l2capProcessSignal( uint16 connHandle, l2capPacket_t* pPkt )
             // Send a Command Reject containing the supported Signaling MTU
             cmdReject.reason = L2CAP_REJECT_SIGNAL_MTU_EXCEED;
             cmdReject.maxSignalMTU = L2CAP_SIG_MTU_SIZE;
-            VOID L2CAP_CmdReject( connHandle, hdr.id, &cmdReject );
+            L2CAP_CmdReject( connHandle, hdr.id, &cmdReject );
         }
     }
 
@@ -315,7 +318,7 @@ static void l2capProcessSignal( uint16 connHandle, l2capPacket_t* pPkt )
     @return  SUCCESS: Command was processed successfully.
             INVALIDPARAMETER: Command length is invalid.
 */
-static bStatus_t l2capProcessRsp( uint16 connHandle, l2capSignalHdr_t* pHdr, uint8* pData )
+static bStatus_t l2capProcessRsp( uint16_t connHandle, l2capSignalHdr_t* pHdr, uint8_t* pData )
 {
     l2capSignalCmd_t cmd;
     l2capChannel_t* pChannel;
@@ -401,7 +404,7 @@ static bStatus_t l2capProcessRsp( uint16 connHandle, l2capSignalHdr_t* pHdr, uin
     @return  SUCCESS: Command was processed successfully.
             INVALIDPARAMETER: Command length is invalid.
 */
-static bStatus_t l2capProcessReq( uint16 connHandle, l2capSignalHdr_t* pHdr, uint8* pData )
+static bStatus_t l2capProcessReq( uint16_t connHandle, l2capSignalHdr_t* pHdr, uint8_t* pData )
 {
     bStatus_t status = SUCCESS;
 
@@ -480,7 +483,7 @@ static bStatus_t l2capProcessReq( uint16 connHandle, l2capSignalHdr_t* pHdr, uin
     {
         l2capCmdReject_t cmdReject;
         cmdReject.reason = L2CAP_REJECT_CMD_NOT_UNDERSTOOD;
-        VOID L2CAP_CmdReject( connHandle, pHdr->id, &cmdReject );
+        L2CAP_CmdReject( connHandle, pHdr->id, &cmdReject );
     }
     break;
     }

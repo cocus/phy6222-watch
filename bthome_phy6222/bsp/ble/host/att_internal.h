@@ -14,10 +14,8 @@ extern "C"
 /*********************************************************************
     INCLUDES
 */
-#include "osal_cbtimer.h"
-
-#include "l2cap.h"
-#include "att.h"
+#include <ble/include/l2cap.h>
+#include <ble/include/att.h>
 
 /*********************************************************************
     MACROS
@@ -32,7 +30,7 @@ extern "C"
 */
 
 // Function prototype to build an attribute protocol message
-typedef uint16 (*attBuildMsg_t)( uint8* pBuf, uint8* pMsg );
+typedef uint16_t (*attBuildMsg_t)( uint8_t* pBuf, uint8_t* pMsg );
 
 /*********************************************************************
     VARIABLES
@@ -42,12 +40,12 @@ typedef uint16 (*attBuildMsg_t)( uint8* pBuf, uint8* pMsg );
     FUNCTIONS
 */
 
-extern uint16 attBuildExecuteWriteRsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t attBuildExecuteWriteRsp( uint8_t* pBuf, uint8_t* pMsg );
 
-extern uint16 attBuildHandleValueCfm( uint8* pBuf, uint8* pMsg );
+extern uint16_t attBuildHandleValueCfm( uint8_t* pBuf, uint8_t* pMsg );
 
-extern bStatus_t attSendMsg( uint16 connHandle, attBuildMsg_t pfnBuildMsg,
-                             uint8 opcode, uint8* pMsg );
+extern bStatus_t attSendMsg( uint16_t connHandle, attBuildMsg_t pfnBuildMsg,
+                             uint8_t opcode, uint8_t* pMsg );
 
 /*********************************************************************
 *********************************************************************/

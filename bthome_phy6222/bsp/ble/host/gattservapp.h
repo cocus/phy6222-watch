@@ -24,9 +24,7 @@ extern "C"
 /*********************************************************************
  * INCLUDES
  */
-#include "bcomdef.h"
-#include "OSAL.h"
-
+#include <ble/include/gatt.h>
 /*********************************************************************
  * CONSTANTS
  */
@@ -150,7 +148,7 @@ extern "C"
 #endif
 
 // GATT Server Parameters
-#define GATT_PARAM_NUM_PREPARE_WRITES    0 // RW  uint8
+#define GATT_PARAM_NUM_PREPARE_WRITES    0 // RW  uint8_t
 
 /*********************************************************************
  * VARIABLES
@@ -167,7 +165,7 @@ extern "C"
 #define GATT_SERVICE_HANDLE( attrs )     ( (attrs)[0].handle )
 
 // The handle of the first included service (i = 1) is the value of the second attribute
-#define GATT_INCLUDED_HANDLE( attrs, i ) ( *((uint16 *)((attrs)[(i)].pValue)) )
+#define GATT_INCLUDED_HANDLE( attrs, i ) ( *((uint16_t *)((attrs)[(i)].pValue)) )
 
 /*********************************************************************
  * TYPEDEFS
@@ -192,9 +190,9 @@ extern "C"
  * @return  SUCCESS: Read was successfully.<BR>
  *          Error, otherwise: ref ATT_ERR_CODE_DEFINES.<BR>
  */
-typedef bStatus_t (*pfnGATTReadAttrCB_t)( uint16 connHandle, gattAttribute_t* pAttr,
-                                          uint8* pValue, uint16* pLen, uint16 offset,
-                                          uint8 maxLen );
+typedef bStatus_t (*pfnGATTReadAttrCB_t)( uint16_t connHandle, gattAttribute_t* pAttr,
+                                          uint8_t* pValue, uint16_t* pLen, uint16_t offset,
+                                          uint8_t maxLen );
 /**
  * @brief   Callback function prototype to write an attribute value.
  *
@@ -207,8 +205,8 @@ typedef bStatus_t (*pfnGATTReadAttrCB_t)( uint16 connHandle, gattAttribute_t* pA
  * @return  SUCCESS: Write was successfully.<BR>
  *          Error, otherwise: ref ATT_ERR_CODE_DEFINES.<BR>
  */
-typedef bStatus_t (*pfnGATTWriteAttrCB_t)( uint16 connHandle, gattAttribute_t* pAttr,
-                                           uint8* pValue, uint16 len, uint16 offset );
+typedef bStatus_t (*pfnGATTWriteAttrCB_t)( uint16_t connHandle, gattAttribute_t* pAttr,
+                                           uint8_t* pValue, uint16_t len, uint16_t offset );
 /**
  * @brief   Callback function prototype to authorize a Read or Write operation
  *          on a given attribute.
@@ -220,8 +218,8 @@ typedef bStatus_t (*pfnGATTWriteAttrCB_t)( uint16 connHandle, gattAttribute_t* p
  * @return  SUCCESS: Operation authorized.<BR>
  *          ATT_ERR_INSUFFICIENT_AUTHOR: Authorization required.<BR>
  */
-typedef bStatus_t (*pfnGATTAuthorizeAttrCB_t)( uint16 connHandle, gattAttribute_t *pAttr,
-                                               uint8 opcode );
+typedef bStatus_t (*pfnGATTAuthorizeAttrCB_t)( uint16_t connHandle, gattAttribute_t *pAttr,
+                                               uint8_t opcode );
 /**
  * @}
  */
@@ -231,11 +229,11 @@ typedef bStatus_t (*pfnGATTAuthorizeAttrCB_t)( uint16 connHandle, gattAttribute_
  */
 typedef struct
 {
-  uint8 format;    //!< Format of the value of this characteristic
-  int8 exponent;   //!< A sign integer which represents the exponent of an integer
-  uint16 unit;     //!< Unit of this attribute as defined in the data dictionary
-  uint8 nameSpace; //!< Name space of the description
-  uint16 desc;     //!< Description of this attribute as defined in a higher layer profile
+  uint8_t format;    //!< Format of the value of this characteristic
+  int8_t exponent;   //!< A sign integer which represents the exponent of an integer
+  uint16_t unit;     //!< Unit of this attribute as defined in the data dictionary
+  uint8_t nameSpace; //!< Name space of the description
+  uint16_t desc;     //!< Description of this attribute as defined in a higher layer profile
 } gattCharFormat_t;
 
 /**
@@ -243,8 +241,8 @@ typedef struct
  */
 typedef struct
 {
-  uint16 connHandle; //!< Client connection handle
-  uint8  value;      //!< Characteristic configuration value for this client
+  uint16_t connHandle; //!< Client connection handle
+  uint8_t  value;      //!< Characteristic configuration value for this client
 } gattCharCfg_t;
 
 /**
@@ -264,8 +262,8 @@ typedef struct
 typedef struct
 {
   osal_event_hdr_t  hdr;           //!< GATT_SERV_MSG_EVENT and status
-  uint16 connHandle;               //!< Connection message was received on
-  uint8 method;                    //!< GATT type of command. Ref: @ref GATT_SERV_MSG_EVENT_DEFINES
+  uint16_t connHandle;               //!< Connection message was received on
+  uint8_t method;                    //!< GATT type of command. Ref: @ref GATT_SERV_MSG_EVENT_DEFINES
 } gattEventHdr_t;
 
 /**
@@ -275,10 +273,10 @@ typedef struct
 typedef struct
 {
   osal_event_hdr_t hdr; //!< GATT_SERV_MSG_EVENT and status
-  uint16 connHandle;    //!< Connection message was received on
-  uint8 method;         //!< GATT_CLIENT_CHAR_CFG_UPDATED_EVENT
-  uint16 attrHandle;    //!< attribute handle
-  uint16 value;         //!< attribute new value
+  uint16_t connHandle;    //!< Connection message was received on
+  uint8_t method;         //!< GATT_CLIENT_CHAR_CFG_UPDATED_EVENT
+  uint16_t attrHandle;    //!< attribute handle
+  uint16_t value;         //!< attribute new value
 } gattClientCharCfgUpdatedEvent_t;
 
 
@@ -307,7 +305,7 @@ typedef void (*gattServMsgCB_t)( gattMsgEvent_t*pMsg);
  *
  * @return  none
  */
-extern void GATTServApp_RegisterForMsg( uint8 taskID );
+extern void GATTServApp_RegisterForMsg( uint8_t taskID );
 
 /**
  * @brief   Register a service's attribute list and callback functions with
@@ -322,7 +320,7 @@ extern void GATTServApp_RegisterForMsg( uint8 taskID );
  *          FAILURE: Not enough attribute handles available.<BR>
  *          bleMemAllocError: Memory allocation error occurred.<BR>
  */
-extern bStatus_t GATTServApp_RegisterService( gattAttribute_t *pAttrs, uint16 numAttrs,
+extern bStatus_t GATTServApp_RegisterService( gattAttribute_t *pAttrs, uint16_t numAttrs,
                                               CONST gattServiceCBs_t *pServiceCBs );
 /**
  * @brief   Deregister a service's attribute list and callback functions from
@@ -337,7 +335,7 @@ extern bStatus_t GATTServApp_RegisterService( gattAttribute_t *pAttrs, uint16 nu
  * @return  SUCCESS: Service deregistered successfully.
  *          FAILURE: Service not found.
  */
-bStatus_t GATTServApp_DeregisterService( uint16 handle, gattAttribute_t **p2pAttrs );
+bStatus_t GATTServApp_DeregisterService( uint16_t handle, gattAttribute_t **p2pAttrs );
 
 /**
  * @brief       Find the attribute record within a service attribute
@@ -350,7 +348,7 @@ bStatus_t GATTServApp_DeregisterService( uint16 handle, gattAttribute_t **p2pAtt
  * @return      Pointer to attribute record. NULL, if not found.
  */
 extern gattAttribute_t *GATTServApp_FindAttr( gattAttribute_t *pAttrTbl,
-                                              uint16 numAttrs, uint8 *pValue );
+                                              uint16_t numAttrs, uint8_t *pValue );
 /**
  * @brief   Add function for the GATT Service.
  *
@@ -362,7 +360,7 @@ extern gattAttribute_t *GATTServApp_FindAttr( gattAttribute_t *pAttrTbl,
  *          FAILURE: Not enough attribute handles available.<BR>
  *          bleMemAllocError: Memory allocation error occurred.<BR>
  */
-extern bStatus_t GATTServApp_AddService( uint32 services );
+extern bStatus_t GATTServApp_AddService( uint32_t services );
 
 /**
  * @brief   Delete function for the GATT Service.
@@ -373,7 +371,7 @@ extern bStatus_t GATTServApp_AddService( uint32 services );
  * @return  SUCCESS: Service deleted successfully.<BR>
  *          FAILURE: Service not found.<BR>
  */
-extern bStatus_t GATTServApp_DelService( uint32 services );
+extern bStatus_t GATTServApp_DelService( uint32_t services );
 
 /**
  * @brief   Set a GATT Server parameter.
@@ -382,8 +380,8 @@ extern bStatus_t GATTServApp_DelService( uint32 services );
  * @param   len - length of data to right
  * @param   pValue - pointer to data to write. This is dependent on the
  *                   parameter ID and WILL be cast to the appropriate
- *                   data type (example: data type of uint16 will be cast
- *                   to uint16 pointer).
+ *                   data type (example: data type of uint16_t will be cast
+ *                   to uint16_t pointer).
  *
  * @return  SUCCESS: Parameter set successful
  *          FAILURE: Parameter in use
@@ -391,7 +389,7 @@ extern bStatus_t GATTServApp_DelService( uint32 services );
  *          bleInvalidRange: Invalid value
  *          bleMemAllocError: Memory allocation failed
  */
-extern bStatus_t GATTServApp_SetParameter( uint8 param, uint8 len, void *pValue );
+extern bStatus_t GATTServApp_SetParameter( uint8_t param, uint8_t len, void *pValue );
 
 /**
  * @brief   Get a GATT Server parameter.
@@ -399,13 +397,13 @@ extern bStatus_t GATTServApp_SetParameter( uint8 param, uint8 len, void *pValue 
  * @param   param - Profile parameter ID
  * @param   pValue - pointer to data to put. This is dependent on the
  *                   parameter ID and WILL be cast to the appropriate
- *                   data type (example: data type of uint16 will be
- *                   cast to uint16 pointer).
+ *                   data type (example: data type of uint16_t will be
+ *                   cast to uint16_t pointer).
  *
  * @return  SUCCESS: Parameter get successful
  *          INVALIDPARAMETER: Invalid parameter
  */
-extern bStatus_t GATTServApp_GetParameter( uint8 param, void *pValue );
+extern bStatus_t GATTServApp_GetParameter( uint8_t param, void *pValue );
 
 /**
  * @brief   Update the Client Characteristic Configuration for a given
@@ -420,7 +418,7 @@ extern bStatus_t GATTServApp_GetParameter( uint8 param, void *pValue );
  * @return  SUCCESS: Parameter get successful
  *          INVALIDPARAMETER: Invalid parameter
  */
-extern bStatus_t GATTServApp_UpdateCharCfg( uint16 connHandle, uint16 attrHandle, uint16 value );
+extern bStatus_t GATTServApp_UpdateCharCfg( uint16_t connHandle, uint16_t attrHandle, uint16_t value );
 
 /**
  * @brief   Initialize the client characteristic configuration table.
@@ -435,7 +433,7 @@ extern bStatus_t GATTServApp_UpdateCharCfg( uint16 connHandle, uint16 attrHandle
  *
  * @return  none
  */
-extern void GATTServApp_InitCharCfg( uint16 connHandle, gattCharCfg_t *charCfgTbl );
+extern void GATTServApp_InitCharCfg( uint16_t connHandle, gattCharCfg_t *charCfgTbl );
 
 /**
  * @brief   Read the client characteristic configuration for a given
@@ -451,7 +449,7 @@ extern void GATTServApp_InitCharCfg( uint16 connHandle, gattCharCfg_t *charCfgTb
  *
  * @return  attribute value
  */
-extern uint16 GATTServApp_ReadCharCfg( uint16 connHandle, gattCharCfg_t *charCfgTbl );
+extern uint16_t GATTServApp_ReadCharCfg( uint16_t connHandle, gattCharCfg_t *charCfgTbl );
 
 /**
  * @brief   Write the client characteristic configuration for a given
@@ -468,7 +466,7 @@ extern uint16 GATTServApp_ReadCharCfg( uint16 connHandle, gattCharCfg_t *charCfg
  *
  * @return  Success or Failure
  */
-extern uint8 GATTServApp_WriteCharCfg( uint16 connHandle, gattCharCfg_t *charCfgTbl, uint16 value );
+extern uint8_t GATTServApp_WriteCharCfg( uint16_t connHandle, gattCharCfg_t *charCfgTbl, uint16_t value );
 
 /**
  * @brief   Process the client characteristic configuration
@@ -483,9 +481,9 @@ extern uint8 GATTServApp_WriteCharCfg( uint16 connHandle, gattCharCfg_t *charCfg
  *
  * @return  Success or Failure
  */
-extern bStatus_t GATTServApp_ProcessCCCWriteReq( uint16 connHandle, gattAttribute_t *pAttr,
-                                          uint8 *pValue, uint8 len, uint16 offset,
-                                          uint16 validCfg );
+extern bStatus_t GATTServApp_ProcessCCCWriteReq( uint16_t connHandle, gattAttribute_t *pAttr,
+                                          uint8_t *pValue, uint8_t len, uint16_t offset,
+                                          uint16_t validCfg );
 
 /**
  * @brief   Process Client Charateristic Configuration change.
@@ -499,9 +497,9 @@ extern bStatus_t GATTServApp_ProcessCCCWriteReq( uint16 connHandle, gattAttribut
  *
  * @return  Success or Failure
  */
-extern bStatus_t GATTServApp_ProcessCharCfg( gattCharCfg_t *charCfgTbl, uint8 *pValue,
-                                        uint8 authenticated, gattAttribute_t *attrTbl,
-                                        uint16 numAttrs, uint8 taskId );
+extern bStatus_t GATTServApp_ProcessCharCfg( gattCharCfg_t *charCfgTbl, uint8_t *pValue,
+                                        uint8_t authenticated, gattAttribute_t *attrTbl,
+                                        uint16_t numAttrs, uint8_t taskId );
 
 /**
  * @brief   Build and send the GATT_CLIENT_CHAR_CFG_UPDATED_EVENT to
@@ -513,7 +511,7 @@ extern bStatus_t GATTServApp_ProcessCharCfg( gattCharCfg_t *charCfgTbl, uint8 *p
  *
  * @return  none
  */
-extern void GATTServApp_SendCCCUpdatedEvent( uint16 connHandle, uint16 attrHandle, uint16 value );
+extern void GATTServApp_SendCCCUpdatedEvent( uint16_t connHandle, uint16_t attrHandle, uint16_t value );
 
 /**
  * @brief   Send out a Service Changed Indication.
@@ -528,7 +526,7 @@ extern void GATTServApp_SendCCCUpdatedEvent( uint16 connHandle, uint16 attrHandl
  *          bleNotConnected: Connection is down.<BR>
  *          blePending: A confirmation is pending with this client.<BR>
  */
-extern bStatus_t GATTServApp_SendServiceChangedInd( uint16 connHandle, uint8 taskId );
+extern bStatus_t GATTServApp_SendServiceChangedInd( uint16_t connHandle, uint8_t taskId );
 
 /**
  * @brief       Read an attribute. If the format of the attribute value
@@ -545,9 +543,9 @@ extern bStatus_t GATTServApp_SendServiceChangedInd( uint16 connHandle, uint8 tas
  *
  * @return      Success or Failure
  */
-extern uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
-                                   uint16 service, uint8* pValue, uint16* pLen,
-                                   uint16 offset, uint8 maxLen );
+extern uint8_t GATTServApp_ReadAttr( uint16_t connHandle, gattAttribute_t* pAttr,
+                                   uint16_t service, uint8_t* pValue, uint16_t* pLen,
+                                   uint16_t offset, uint8_t maxLen );
 
 /**
  * @brief   Write attribute data
@@ -560,8 +558,8 @@ extern uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
  *
  * @return  Success or Failure
  */
-extern uint8 GATTServApp_WriteAttr( uint16 connHandle, uint16 handle,
-                                    uint8 *pValue, uint16 len, uint16 offset );
+extern uint8_t GATTServApp_WriteAttr( uint16_t connHandle, uint16_t handle,
+                                    uint8_t *pValue, uint16_t len, uint16_t offset );
 
 /**
  * @}
@@ -575,7 +573,7 @@ extern uint8 GATTServApp_WriteAttr( uint16 connHandle, uint16 handle,
  *
  * @return  void
  */
-extern void GATTServApp_SetParamValue( uint16 value );
+extern void GATTServApp_SetParamValue( uint16_t value );
 
 /**
  * @brief   Get a GATT Server Application Parameter value.
@@ -584,7 +582,7 @@ extern void GATTServApp_SetParamValue( uint16 value );
  *
  * @return  GATT Parameter value
  */
-extern uint16 GATTServApp_GetParamValue( void );
+extern uint16_t GATTServApp_GetParamValue( void );
 
 /*-------------------------------------------------------------------
  * TASK API - These functions must only be called by OSAL.
@@ -600,7 +598,7 @@ extern uint16 GATTServApp_GetParamValue( void );
  * @return  void
  *
  */
-extern void GATTServApp_Init( uint8 taskId );
+extern void GATTServApp_Init( uint8_t taskId );
 
 /**
  * @internal
@@ -615,7 +613,7 @@ extern void GATTServApp_Init( uint8 taskId );
  *
  * @return  none
  */
-extern uint16 GATTServApp_ProcessEvent( uint8 taskId, uint16 events );
+extern uint16_t GATTServApp_ProcessEvent( uint8_t taskId, uint16_t events );
 
 bStatus_t gattServApp_RegisterCB(gattServMsgCB_t cb);
 

@@ -13,16 +13,11 @@
 /*********************************************************************
     INCLUDES
 */
-#include "comdef.h"
-#include "OSAL.h"
-#include "osal_bufmgr.h"
-//#include "OnBoard.h"
-#include "bus_dev.h"
-#include "mcu.h"
-
-#include "gatt.h"
+#include <ble/include/bcomdef.h>
+#include <ble/include/hci.h>
+#include <ble/include/l2cap.h>
+#include <ble/hci/hci_tl.h>
 #include "gatt_internal.h"
-
 
 /*********************************************************************
     MACROS
@@ -48,7 +43,7 @@
 /*********************************************************************
     LOCAL VARIABLES
 */
-uint8 gattTaskID;
+uint8_t gattTaskID;
 
 // Function to call to process the Attribute Server messages.
 static gattProcessMsg_t pfnServerProcessMsgCB = NULL;
@@ -108,7 +103,7 @@ void gattRegisterClient( gattProcessMsg_t pfnProcessMsg )
 
     @return  none
 */
-void GATT_SetHostToAppFlowCtrl( uint16_t hostBufSize,uint8 flowCtrlMode )
+void GATT_SetHostToAppFlowCtrl( uint16_t hostBufSize,uint8_t flowCtrlMode )
 {
     // The Host buffer size is constrained to 1/3 the maximum heap size
     L2CAP_SetControllerToHostFlowCtrl_DLE( hostBufSize/3, flowCtrlMode );
@@ -149,14 +144,14 @@ void GATT_AppCompletedMsg( gattMsgEvent_t* pMsg )
 
     @return  none
 */
-void GATT_Init( uint8 taskId )
+void GATT_Init( uint8_t taskId )
 {
     gattTaskID = taskId;
     // Register with L2CAP
-    VOID L2CAP_RegisterApp( gattTaskID, L2CAP_CID_ATT );
+    L2CAP_RegisterApp( gattTaskID, L2CAP_CID_ATT );
     // Initialize GATT Server; it's mandatory on every device
-    VOID GATT_InitServer();
-    VOID ATT_InitMtuSize();
+    GATT_InitServer();
+    ATT_InitMtuSize();
 }
 
 /*********************************************************************
@@ -169,10 +164,10 @@ void GATT_Init( uint8 taskId )
 
     @return  events not processed
 */
-uint16 GATT_ProcessEvent( uint8 taskId, uint16 events )
+uint16_t GATT_ProcessEvent( uint8_t taskId, uint16_t events )
 {
-    uint8* pMsg;
-    VOID taskId; // OSAL required parameter that isn't used in this function
+    uint8_t* pMsg;
+    UNUSED(taskId); // OSAL required parameter that isn't used in this function
 
     if ( events & SYS_EVENT_MSG )
     {
@@ -180,7 +175,7 @@ uint16 GATT_ProcessEvent( uint8 taskId, uint16 events )
         {
             gattProcessOSALMsg( (osal_event_hdr_t*)pMsg );
             // Release the OSAL message
-            VOID osal_msg_deallocate( pMsg );
+            osal_msg_deallocate( pMsg );
         }
 
         // Return unprocessed events
@@ -227,7 +222,7 @@ static void gattProcessOSALMsg( osal_event_hdr_t* pMsg )
 static void gattProcessRxData( l2capDataEvent_t* pL2capMsg )
 {
     attPacket_t pkt;
-    uint8 status;
+    uint8_t status;
     // First parse the packet
     status = ATT_ParsePacket( pL2capMsg, &pkt );
 
@@ -269,7 +264,7 @@ static void gattProcessRxData( l2capDataEvent_t* pL2capMsg )
                 errorRsp.handle = GATT_INVALID_HANDLE;
                 // Status should be either Invalid PDU or Unsupported request
                 errorRsp.errCode = status;
-                VOID ATT_ErrorRsp( pL2capMsg->connHandle, &errorRsp );
+                ATT_ErrorRsp( pL2capMsg->connHandle, &errorRsp );
             }
         }
     }
@@ -306,8 +301,8 @@ static void gattProcessRxData( l2capDataEvent_t* pL2capMsg )
 
     @return      SUCCESS or bleMemAllocError
 */
-bStatus_t gattNotifyEvent( uint8 taskId, uint16 connHandle, uint8 status,
-                           uint8 method, gattMsg_t* pMsg )
+bStatus_t gattNotifyEvent( uint8_t taskId, uint16_t connHandle, uint8_t status,
+                           uint8_t method, gattMsg_t* pMsg )
 {
     gattMsgEvent_t* pEvent;
     pEvent = (gattMsgEvent_t*)osal_msg_allocate( sizeof( gattMsgEvent_t ) );
@@ -322,15 +317,15 @@ bStatus_t gattNotifyEvent( uint8 taskId, uint16 connHandle, uint8 status,
 
         if ( pMsg != NULL )
         {
-            VOID osal_memcpy( &(pEvent->msg), pMsg, sizeof( gattMsg_t ) );
+            osal_memcpy( &(pEvent->msg), pMsg, sizeof( gattMsg_t ) );
         }
         else
         {
-            VOID osal_memset( &(pEvent->msg), 0, sizeof( gattMsg_t ) );
+            osal_memset( &(pEvent->msg), 0, sizeof( gattMsg_t ) );
         }
 
         // send message through task message
-        VOID osal_msg_send( taskId, (uint8*)pEvent );
+        osal_msg_send( taskId, (uint8_t*)pEvent );
         return ( SUCCESS );
     }
 
@@ -349,10 +344,10 @@ bStatus_t gattNotifyEvent( uint8 taskId, uint16 connHandle, uint8 status,
 
     @return  none
 */
-void gattStartTimer( pfnCbTimer_t pfnCbTimer, uint8* pData, uint16 timeout, uint8* pTimerId )
+void gattStartTimer( pfnCbTimer_t pfnCbTimer, uint8_t* pData, uint16_t timeout, uint8_t* pTimerId )
 {
     // Timeout is in msec
-    VOID osal_CbTimerStart( pfnCbTimer, pData, (timeout * 1000), pTimerId );
+    osal_CbTimerStart( pfnCbTimer, pData, (timeout * 1000), pTimerId );
 }
 
 /*********************************************************************
@@ -364,12 +359,12 @@ void gattStartTimer( pfnCbTimer_t pfnCbTimer, uint8* pData, uint16 timeout, uint
 
     @return  none
 */
-void gattStopTimer( uint8* pTimerId )
+void gattStopTimer( uint8_t* pTimerId )
 {
     if ( ( pTimerId != NULL ) && TIMER_VALID( *pTimerId ) )
     {
         // Stop the timer
-        VOID osal_CbTimerStop( *pTimerId );
+        osal_CbTimerStop( *pTimerId );
         // Reset timer id
         *pTimerId = INVALID_TIMER_ID;
     }

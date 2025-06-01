@@ -21,6 +21,7 @@ extern "C"
 /*********************************************************************
     INCLUDES
 */
+#include <stdint.h>
 
 /*********************************************************************
     CONSTANTS
@@ -84,47 +85,47 @@ extern "C"
 /**
     GATT Services
 */
-extern CONST uint8 gapServiceUUID[];
-extern CONST uint8 gattServiceUUID[];
+extern const uint8_t gapServiceUUID[];
+extern const uint8_t gattServiceUUID[];
 
 /**
     GATT Attribute Types
 */
-extern CONST uint8 primaryServiceUUID[];
-extern CONST uint8 secondaryServiceUUID[];
-extern CONST uint8 includeUUID[];
-extern CONST uint8 characterUUID[];
+extern const uint8_t primaryServiceUUID[];
+extern const uint8_t secondaryServiceUUID[];
+extern const uint8_t includeUUID[];
+extern const uint8_t characterUUID[];
 
 /**
     GATT Characteristic Descriptors
 */
-extern CONST uint8 charExtPropsUUID[];
-extern CONST uint8 charUserDescUUID[];
-extern CONST uint8 clientCharCfgUUID[];
-extern CONST uint8 servCharCfgUUID[];
-extern CONST uint8 charFormatUUID[];
-extern CONST uint8 charAggFormatUUID[];
-extern CONST uint8 validRangeUUID[];
-extern CONST uint8 extReportRefUUID[];
-extern CONST uint8 reportRefUUID[];
+extern const uint8_t charExtPropsUUID[];
+extern const uint8_t charUserDescUUID[];
+extern const uint8_t clientCharCfgUUID[];
+extern const uint8_t servCharCfgUUID[];
+extern const uint8_t charFormatUUID[];
+extern const uint8_t charAggFormatUUID[];
+extern const uint8_t validRangeUUID[];
+extern const uint8_t extReportRefUUID[];
+extern const uint8_t reportRefUUID[];
 
 /**
     GATT Characteristic Types
 */
-extern CONST uint8 deviceNameUUID[];
-extern CONST uint8 appearanceUUID[];
-extern CONST uint8 periPrivacyFlagUUID[];
-extern CONST uint8 reconnectAddrUUID[];
-extern CONST uint8 periConnParamUUID[];
-extern CONST uint8 serviceChangedUUID[];
-extern CONST uint8 manuNameUUID[];
-extern CONST uint8 serialNumUUID[];
-extern CONST uint8 manuAddrUUID[];
+extern const uint8_t deviceNameUUID[];
+extern const uint8_t appearanceUUID[];
+extern const uint8_t periPrivacyFlagUUID[];
+extern const uint8_t reconnectAddrUUID[];
+extern const uint8_t periConnParamUUID[];
+extern const uint8_t serviceChangedUUID[];
+extern const uint8_t manuNameUUID[];
+extern const uint8_t serialNumUUID[];
+extern const uint8_t manuAddrUUID[];
 
 /*********************************************************************
     FUNCTIONS
 */
-extern const uint8* GATT_FindUUIDRec( const uint8* pUUID, uint8 len );
+extern const uint8_t* GATT_FindUUIDRec( const uint8_t* pUUID, uint8_t len );
 
 /*********************************************************************
 *********************************************************************/

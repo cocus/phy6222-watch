@@ -9,12 +9,11 @@
 	SDK_LICENSE
 
 **************************************************************************************************/
-#include "bcomdef.h"
-#include "gap.h"
+#include <ble/include/bcomdef.h>
+#include <ble/include/gap.h>
+#include <ble/include/hci.h>
 #include "gap_internal.h"
 #include "linkdb.h"
-#include "sm.h"
-#include "sm_internal.h"
 
 /*********************************************************************
     MACROS
@@ -122,12 +121,12 @@ typedef enum
 typedef struct
 {
     gapLLParamsStates_t state;              // Holds the state during initialization
-    uint8*  pIRK;                            // Pointer to the device's IRK, this space is actually allocated in the controlling application
-    uint8*  pSRK;                            // Pointer to the device's SRK, this space is actually allocated in the controlling application
-    uint32* pSignCounter;                    // Pointer to the device's sign counter, this space is actually allocated in the controlling application
-    uint8  BD_ADDR[B_ADDR_LEN];             // The device's public address, this value is read from HCI
-    uint16 HC_LE_Data_Packet_Lenth;         // Maximum HCI packet length
-    uint8  HC_Total_Num_LE_Data_Packets;    // Total number of data packets that can be sent, read from HCI
+    uint8_t*  pIRK;                            // Pointer to the device's IRK, this space is actually allocated in the controlling application
+    uint8_t*  pSRK;                            // Pointer to the device's SRK, this space is actually allocated in the controlling application
+    uint32_t* pSignCounter;                    // Pointer to the device's sign counter, this space is actually allocated in the controlling application
+    uint8_t  BD_ADDR[B_ADDR_LEN];             // The device's public address, this value is read from HCI
+    uint16_t HC_LE_Data_Packet_Lenth;         // Maximum HCI packet length
+    uint8_t  HC_Total_Num_LE_Data_Packets;    // Total number of data packets that can be sent, read from HCI
 } gapConfigLLParams_t;
 
 /*********************************************************************
@@ -135,18 +134,18 @@ typedef struct
                   (gap_internal.h), not part of the public API (gap.h)
 */
 
-uint8 gapAppTaskID = INVALID_TASK_ID; // default task ID to send events
-uint8 gapProfileRole = NULL;          // device GAP Profile Role(s)
+uint8_t gapAppTaskID = INVALID_TASK_ID; // default task ID to send events
+uint8_t gapProfileRole = NULL;          // device GAP Profile Role(s)
 
 
-uint8 gapDeviceAddrMode = ADDRTYPE_PUBLIC;   // Current device's address mode
+uint8_t gapDeviceAddrMode = ADDRTYPE_PUBLIC;   // Current device's address mode
 
 // Address change timeout, should only be non-0 if using ADDRTYPE_PRIVATE_RESOLVE
 // Also, this timeout is in minutes.
-uint16 gapPrivateAddrChangeTimeout = 0;
+uint16_t gapPrivateAddrChangeTimeout = 0;
 
 // Flag to control auto private resolvable address changes.
-uint8 gapAutoAdvPrivateAddrChange = FALSE;
+uint8_t gapAutoAdvPrivateAddrChange = FALSE;
 
 /*********************************************************************
     EXTERNAL VARIABLES
@@ -165,7 +164,7 @@ static gapConfigLLParams_t gapParams;
 
 // GAP settable parameters, these can be accessed through GAP_SetParamValue() and
 // GAP_GetParamValue() public APIs.
-uint16 gapParameters[] =
+uint16_t gapParameters[] =
 {
     // Default Timer values
     TGAP_GEN_DISC_ADV_MIN_DEFAULT,
@@ -208,7 +207,7 @@ uint16 gapParameters[] =
     TGAP_SM_MIN_KEY_LEN_DEFAULT,
     TGAP_SM_MAX_KEY_LEN_DEFAULT,
     TGAP_FILTER_ADV_REPORTS_DEFAULT,
-    (uint16)TGAP_SCAN_RSP_RSSI_MIN_DEFAULT,
+    (uint16_t)TGAP_SCAN_RSP_RSSI_MIN_DEFAULT,
     TGAP_REJECT_CONN_PARAMS_DEFAULT,
 #if defined ( TESTMODES )
     TGAP_GAP_TESTCODE_DEFAULT,
@@ -218,15 +217,15 @@ uint16 gapParameters[] =
 };
 
 // Storage for the current Random address (not Public).
-static uint8 gapCurrentRandomAddr[B_ADDR_LEN] = {0,0,0,0,0,0};
+static uint8_t gapCurrentRandomAddr[B_ADDR_LEN] = {0,0,0,0,0,0};
 
 /*********************************************************************
     LOCAL FUNCTION PROTOTYPES
 */
-static void gapSendDeviceInitDoneEvent( uint8 status );
-static void gapSendRandomAddrChangeEvent( uint8 status, uint8* pNewAddr );
-static void gapSendSignUpdateEvent( uint8 taskID, uint8 addrType,
-                                    uint8* pDevAddr, uint32 signCounter );
+static void gapSendDeviceInitDoneEvent( uint8_t status );
+static void gapSendRandomAddrChangeEvent( uint8_t status, uint8_t* pNewAddr );
+static void gapSendSignUpdateEvent( uint8_t taskID, uint8_t addrType,
+                                    uint8_t* pDevAddr, uint32_t signCounter );
 
 /*********************************************************************
     API FUNCTIONS
@@ -238,7 +237,7 @@ static void gapSendSignUpdateEvent( uint8 taskID, uint8 addrType,
 
     Public function defined in gap.h.
 */
-bStatus_t GAP_SetParamValue( gapParamIDs_t paramID, uint16 paramValue )
+bStatus_t GAP_SetParamValue( gapParamIDs_t paramID, uint16_t paramValue )
 {
     // Check for invalid parameters
     if ( (paramID < TGAP_PARAMID_MAX) && (paramValue != 0xFFFF) )
@@ -249,7 +248,7 @@ bStatus_t GAP_SetParamValue( gapParamIDs_t paramID, uint16 paramValue )
         {
             smpPairingConfirm_t confirmMsg; // Parameters to build message
             // Clear the confirm
-            VOID osal_memset( confirmMsg.confirmValue,  0, SMP_CONFIRM_LEN );
+            osal_memset( confirmMsg.confirmValue,  0, SMP_CONFIRM_LEN );
             // Send confirm message
             return ( smSendPairingConfirm( 0, &confirmMsg ) );
         }
@@ -270,7 +269,7 @@ bStatus_t GAP_SetParamValue( gapParamIDs_t paramID, uint16 paramValue )
 
     Public function defined in gap.h.
 */
-uint16 GAP_GetParamValue( gapParamIDs_t paramID )
+uint16_t GAP_GetParamValue( gapParamIDs_t paramID )
 {
     // Check for invalid parameter
     if ( paramID < TGAP_PARAMID_MAX )
@@ -297,11 +296,11 @@ uint16 GAP_GetParamValue( gapParamIDs_t paramID )
 
     @return      SUCCESS or bleIncorrectMode
 */
-bStatus_t GAP_ParamsInit( uint8 taskID, uint8 profileRole )
+bStatus_t GAP_ParamsInit( uint8_t taskID, uint8_t profileRole )
 {
     bStatus_t stat;   // Return status
     // Initialize the GAP Parameters
-    VOID osal_memset( &gapParams, 0, (int)(sizeof ( gapConfigLLParams_t )) );
+    osal_memset( &gapParams, 0, (int)(sizeof ( gapConfigLLParams_t )) );
     gapAppTaskID = taskID;
     gapProfileRole = profileRole;
     // Start gathering LL (HCI) parameters
@@ -338,7 +337,7 @@ bStatus_t GAP_ParamsInit( uint8 taskID, uint8 profileRole )
 
     @return      none
 */
-void GAP_SecParamsInit( uint8* pIRK, uint8* pSRK, uint32* pSignCounter )
+void GAP_SecParamsInit( uint8_t* pIRK, uint8_t* pSRK, uint32_t* pSignCounter )
 {
     gapParams.pSignCounter = pSignCounter;
     // Copy the key pointers
@@ -368,11 +367,11 @@ void GAP_SecParamsInit( uint8* pIRK, uint8* pSRK, uint32* pSignCounter )
 
     Public function defined in gap.h.
 */
-bStatus_t GAP_ConfigDeviceAddr( uint8 addrType, uint8* pStaticAddr )
+bStatus_t GAP_ConfigDeviceAddr( uint8_t addrType, uint8_t* pStaticAddr )
 {
-    uint8 currentAddrMode = gapDeviceAddrMode; // Save current address mode, before changing it
+    uint8_t currentAddrMode = gapDeviceAddrMode; // Save current address mode, before changing it
     bStatus_t stat = SUCCESS;   // Assume a successful return
-    uint8 newAddr[B_ADDR_LEN];
+    uint8_t newAddr[B_ADDR_LEN];
 
     // Check for valid address type.
     if ( (addrType > ADDRTYPE_PRIVATE_RESOLVE) )
@@ -398,7 +397,7 @@ bStatus_t GAP_ConfigDeviceAddr( uint8 addrType, uint8* pStaticAddr )
         if ( pStaticAddr )
         {
             // Make sure the not all zeros
-            VOID osal_memset( newAddr, 0, B_ADDR_LEN );
+            osal_memset( newAddr, 0, B_ADDR_LEN );
 
             if ( osal_memcmp( pStaticAddr, newAddr, B_ADDR_LEN ) )
             {
@@ -406,7 +405,7 @@ bStatus_t GAP_ConfigDeviceAddr( uint8 addrType, uint8* pStaticAddr )
             }
 
             // Make sure the not all ones
-            VOID osal_memset( newAddr, 0xFF, B_ADDR_LEN );
+            osal_memset( newAddr, 0xFF, B_ADDR_LEN );
 
             if ( osal_memcmp( pStaticAddr, newAddr, B_ADDR_LEN ) )
             {
@@ -414,7 +413,7 @@ bStatus_t GAP_ConfigDeviceAddr( uint8 addrType, uint8* pStaticAddr )
             }
 
             // Use the passed in address
-            VOID osal_memcpy( newAddr, pStaticAddr, B_ADDR_LEN );
+            osal_memcpy( newAddr, pStaticAddr, B_ADDR_LEN );
         }
         else
         {
@@ -431,7 +430,7 @@ bStatus_t GAP_ConfigDeviceAddr( uint8 addrType, uint8* pStaticAddr )
     // Save off the new address type
     gapDeviceAddrMode = addrType;
     // Default the Resolvable Private Address Change timer
-    VOID osal_stop_timerEx( gapTaskID, GAP_CHANGE_RESOLVABLE_PRIVATE_ADDR_EVT );
+    osal_stop_timerEx( gapTaskID, GAP_CHANGE_RESOLVABLE_PRIVATE_ADDR_EVT );
     gapPrivateAddrChangeTimeout = 0;
 
     if ( (stat == SUCCESS) && (addrType != ADDRTYPE_PUBLIC) )
@@ -448,8 +447,8 @@ bStatus_t GAP_ConfigDeviceAddr( uint8 addrType, uint8* pStaticAddr )
             // Start a timer
             if ( gapPrivateAddrChangeTimeout )
             {
-                VOID osal_start_reload_timer( gapTaskID, GAP_CHANGE_RESOLVABLE_PRIVATE_ADDR_EVT,
-                                              (uint32)GAP_PRIVATE_ADDR_CHANGE_RESOLUTION );
+                osal_start_reload_timer( gapTaskID, GAP_CHANGE_RESOLVABLE_PRIVATE_ADDR_EVT,
+                                              (uint32_t)GAP_PRIVATE_ADDR_CHANGE_RESOLUTION );
             }
         }
     }
@@ -474,13 +473,13 @@ bStatus_t GAP_ConfigDeviceAddr( uint8 addrType, uint8* pStaticAddr )
 
     @return      TRUE if expected, FALSE if not.
 */
-uint8 gapReadBD_ADDRStatus( uint8 status, uint8* pBdAddr )
+uint8_t gapReadBD_ADDRStatus( uint8_t status, uint8_t* pBdAddr )
 {
-    uint8 expected = FALSE; // Assume we aren't expecting this HCI message
+    uint8_t expected = FALSE; // Assume we aren't expecting this HCI message
 
     if ( (status == SUCCESS) && (pBdAddr != NULL) )
     {
-        VOID osal_memcpy( gapParams.BD_ADDR, pBdAddr, B_ADDR_LEN );
+        osal_memcpy( gapParams.BD_ADDR, pBdAddr, B_ADDR_LEN );
     }
 
     // Are we expecting this message?
@@ -492,7 +491,7 @@ uint8 gapReadBD_ADDRStatus( uint8 status, uint8* pBdAddr )
         {
             // Get the LL HCI Buffer size
             gapParams.state = GAP_INITSTATE_BUFFERSIZE;
-            VOID HCI_LE_ReadBufSizeCmd();
+            HCI_LE_ReadBufSizeCmd();
         }
         else
         {
@@ -515,9 +514,9 @@ uint8 gapReadBD_ADDRStatus( uint8 status, uint8* pBdAddr )
 
     @return      TRUE if expected, FALSE if not.
 */
-uint8 gapReadBufSizeCmdStatus( hciRetParam_LeReadBufSize_t* pCmdStat )
+uint8_t gapReadBufSizeCmdStatus( hciRetParam_LeReadBufSize_t* pCmdStat )
 {
-    uint8 expected = FALSE; // Assume we aren't expecting this HCI message
+    uint8_t expected = FALSE; // Assume we aren't expecting this HCI message
 
     if ( pCmdStat )
     {
@@ -556,12 +555,12 @@ uint8 gapReadBufSizeCmdStatus( hciRetParam_LeReadBufSize_t* pCmdStat )
 
     @return      SUCCESS
 */
-bStatus_t gapProcessNewAddr( uint8* pNewAddr )
+bStatus_t gapProcessNewAddr( uint8_t* pNewAddr )
 {
     if ( gapDeviceAddrMode != ADDRTYPE_PUBLIC )
     {
-        VOID osal_memcpy( gapCurrentRandomAddr, pNewAddr, B_ADDR_LEN );
-        VOID gapAddAddrAdj( gapDeviceAddrMode, gapCurrentRandomAddr );
+        osal_memcpy( gapCurrentRandomAddr, pNewAddr, B_ADDR_LEN );
+        gapAddAddrAdj( gapDeviceAddrMode, gapCurrentRandomAddr );
         return ( HCI_LE_SetRandomAddressCmd( gapCurrentRandomAddr ) );
     }
     else
@@ -579,10 +578,10 @@ bStatus_t gapProcessNewAddr( uint8* pNewAddr )
 
     @return      the LL address type ADDRTYPE_PUBLIC or ADDRTYPE_RANDOM
 */
-uint8 gapAddAddrAdj( uint8 addrType, uint8* pAddr )
+uint8_t gapAddAddrAdj( uint8_t addrType, uint8_t* pAddr )
 {
     // Assume public address
-    uint8 llAddrType = ADDRTYPE_PUBLIC;
+    uint8_t llAddrType = ADDRTYPE_PUBLIC;
 
     if ( (pAddr) && (addrType != ADDRTYPE_PUBLIC) )
     {
@@ -623,14 +622,14 @@ uint8 gapAddAddrAdj( uint8 addrType, uint8* pAddr )
                 ADDRTYPE_STATIC, ADDRTYPE_PRIVATE_NONRESOLVE
                 or ADDRTYPE_PRIVATE_RESOLVE
 */
-uint8 gapDetermineAddrType( uint8 addrType, uint8* pAddr )    // TODO
+uint8_t gapDetermineAddrType( uint8_t addrType, uint8_t* pAddr )    // TODO
 {
     // Don't need to convert if no address or type is already public
     if ( (pAddr) && (addrType == 0x01)/*(addrType != ADDRTYPE_PUBLIC)*/ )     // HZF: HCI will report public or Random(static or private) for BLE4.0.
     {
         // BLE4.2 add 2 types: RPA_public(0x02) + RPA_static(0x03)
         // Get just the random address header bits
-        uint8 addrTypeMask = (uint8)(pAddr[B_ADDR_LEN-1] & RANDOM_ADDR_HDR);
+        uint8_t addrTypeMask = (uint8_t)(pAddr[B_ADDR_LEN-1] & RANDOM_ADDR_HDR);
 
         // Get the address type from the address header
         if ( addrTypeMask == STATIC_ADDR_HDR )
@@ -660,7 +659,7 @@ uint8 gapDetermineAddrType( uint8 addrType, uint8* pAddr )    // TODO
 
     @return      none
 */
-void gapProcessRandomAddrComplete( uint8 status )
+void gapProcessRandomAddrComplete( uint8_t status )
 {
     // Inform the application
     gapSendRandomAddrChangeEvent( status, gapCurrentRandomAddr );
@@ -670,12 +669,12 @@ void gapProcessRandomAddrComplete( uint8 status )
         if ( pfnPeripheralCBs && pfnPeripheralCBs->pfnSetAdvParams )
         {
             // Force an advertisement parameter update.
-            VOID pfnPeripheralCBs->pfnSetAdvParams();
+            pfnPeripheralCBs->pfnSetAdvParams();
         }
 
         // Start up the timer again
-        VOID osal_start_reload_timer( gapTaskID, GAP_CHANGE_RESOLVABLE_PRIVATE_ADDR_EVT,
-                                      (uint32)GAP_PRIVATE_ADDR_CHANGE_RESOLUTION );
+        osal_start_reload_timer( gapTaskID, GAP_CHANGE_RESOLVABLE_PRIVATE_ADDR_EVT,
+                                      (uint32_t)GAP_PRIVATE_ADDR_CHANGE_RESOLUTION );
     }
 }
 
@@ -688,7 +687,7 @@ void gapProcessRandomAddrComplete( uint8 status )
 
     @return      pointer to the device's Signature Resolving Key
 */
-uint8* gapGetSRK( void )
+uint8_t* gapGetSRK( void )
 {
     return ( gapParams.pSRK );
 }
@@ -702,7 +701,7 @@ uint8* gapGetSRK( void )
 
     @return      the device's Signature counter
 */
-uint32 gapGetSignCounter( void )
+uint32_t gapGetSignCounter( void )
 {
     return ( *gapParams.pSignCounter );
 }
@@ -724,7 +723,7 @@ void gapIncSignCounter( void )
     // Tell the app
     if ( gapAppTaskID != INVALID_TASK_ID )
     {
-        VOID osal_set_event( gapAppTaskID, GAP_EVENT_SIGN_COUNTER_CHANGED );
+        osal_set_event( gapAppTaskID, GAP_EVENT_SIGN_COUNTER_CHANGED );
     }
 }
 
@@ -737,16 +736,16 @@ void gapIncSignCounter( void )
 
     @return      none
 */
-void gapUpdateConnSignCounter( uint16 connHandle, uint32 newSignCounter )
+void gapUpdateConnSignCounter( uint16_t connHandle, uint32_t newSignCounter )
 {
     linkDBItem_t* pConnItem;
     pConnItem = linkDB_Find( connHandle );
 
     if ( pConnItem )
     {
-        uint8 taskID;
+        uint8_t taskID;
         pConnItem->sec.signCounter = newSignCounter;
-        taskID = (uint8)GAP_GetParamValue( TGAP_AUTH_TASK_ID );
+        taskID = (uint8_t)GAP_GetParamValue( TGAP_AUTH_TASK_ID );
 
         if ( taskID == 0 )
         {
@@ -768,7 +767,7 @@ void gapUpdateConnSignCounter( uint16 connHandle, uint32 newSignCounter )
 
     @return      address mode
 */
-uint8 gapGetDevAddressMode( void )
+uint8_t gapGetDevAddressMode( void )
 {
     return ( gapDeviceAddrMode );
 }
@@ -783,9 +782,9 @@ uint8 gapGetDevAddressMode( void )
 
     @return      pointer to device address.
 */
-uint8* gapGetDevAddress( uint8 real )
+uint8_t* gapGetDevAddress( uint8_t real )
 {
-    uint8* pAddr = gapParams.BD_ADDR;
+    uint8_t* pAddr = gapParams.BD_ADDR;
 
     if ( real == FALSE )
     {
@@ -807,7 +806,7 @@ uint8* gapGetDevAddress( uint8 real )
 
     @return      pointer to IRK
 */
-uint8* gapGetIRK( void )
+uint8_t* gapGetIRK( void )
 {
     return ( gapParams.pIRK );
 }
@@ -825,22 +824,22 @@ uint8* gapGetIRK( void )
 
     @return      none
 */
-static void gapSendDeviceInitDoneEvent( uint8 status )
+static void gapSendDeviceInitDoneEvent( uint8_t status )
 {
     if ( gapAppTaskID != INVALID_TASK_ID )
     {
         gapDeviceInitDoneEvent_t* pRsp;
-        pRsp = (gapDeviceInitDoneEvent_t*)osal_msg_allocate( (uint16)(sizeof ( gapDeviceInitDoneEvent_t )) );
+        pRsp = (gapDeviceInitDoneEvent_t*)osal_msg_allocate( (uint16_t)(sizeof ( gapDeviceInitDoneEvent_t )) );
 
         if ( pRsp )
         {
             pRsp->hdr.event = GAP_MSG_EVENT;
             pRsp->hdr.status = status;
             pRsp->opcode = GAP_DEVICE_INIT_DONE_EVENT;
-            VOID osal_memcpy( pRsp->devAddr, gapParams.BD_ADDR, B_ADDR_LEN );
+            osal_memcpy( pRsp->devAddr, gapParams.BD_ADDR, B_ADDR_LEN );
             pRsp->dataPktLen = gapParams.HC_LE_Data_Packet_Lenth;
             pRsp->numDataPkts = gapParams.HC_Total_Num_LE_Data_Packets;
-            VOID osal_msg_send( gapAppTaskID, (uint8*)pRsp );
+            osal_msg_send( gapAppTaskID, (uint8_t*)pRsp );
         }
     }
 }
@@ -855,12 +854,12 @@ static void gapSendDeviceInitDoneEvent( uint8 status )
 
     @return      none
 */
-static void gapSendRandomAddrChangeEvent( uint8 status, uint8* pNewAddr )
+static void gapSendRandomAddrChangeEvent( uint8_t status, uint8_t* pNewAddr )
 {
     if ( gapAppTaskID != INVALID_TASK_ID )
     {
         gapRandomAddrEvent_t* pRsp;
-        pRsp = (gapRandomAddrEvent_t*)osal_msg_allocate( (uint16)(sizeof ( gapRandomAddrEvent_t )) );
+        pRsp = (gapRandomAddrEvent_t*)osal_msg_allocate( (uint16_t)(sizeof ( gapRandomAddrEvent_t )) );
 
         if ( pRsp )
         {
@@ -868,8 +867,8 @@ static void gapSendRandomAddrChangeEvent( uint8 status, uint8* pNewAddr )
             pRsp->hdr.status = status;
             pRsp->opcode = GAP_RANDOM_ADDR_CHANGED_EVENT;
             pRsp->addrType = gapDeviceAddrMode;
-            VOID osal_memcpy( pRsp->newRandomAddr, pNewAddr, B_ADDR_LEN );
-            VOID osal_msg_send( gapAppTaskID, (uint8*)pRsp );
+            osal_memcpy( pRsp->newRandomAddr, pNewAddr, B_ADDR_LEN );
+            osal_msg_send( gapAppTaskID, (uint8_t*)pRsp );
         }
     }
 }
@@ -886,10 +885,10 @@ static void gapSendRandomAddrChangeEvent( uint8 status, uint8* pNewAddr )
 
     @return      none
 */
-static void gapSendSignUpdateEvent( uint8 taskID, uint8 addrType, uint8* pDevAddr, uint32 signCounter )
+static void gapSendSignUpdateEvent( uint8_t taskID, uint8_t addrType, uint8_t* pDevAddr, uint32_t signCounter )
 {
     gapSignUpdateEvent_t* pRsp;
-    pRsp = (gapSignUpdateEvent_t*)osal_msg_allocate( (uint16)(sizeof ( gapSignUpdateEvent_t )) );
+    pRsp = (gapSignUpdateEvent_t*)osal_msg_allocate( (uint16_t)(sizeof ( gapSignUpdateEvent_t )) );
 
     if ( pRsp )
     {
@@ -897,9 +896,9 @@ static void gapSendSignUpdateEvent( uint8 taskID, uint8 addrType, uint8* pDevAdd
         pRsp->hdr.status = SUCCESS;
         pRsp->opcode = GAP_SIGNATURE_UPDATED_EVENT;
         pRsp->addrType = addrType;
-        VOID osal_memcpy( pRsp->devAddr, pDevAddr, B_ADDR_LEN );
+        osal_memcpy( pRsp->devAddr, pDevAddr, B_ADDR_LEN );
         pRsp->signCounter = signCounter;
-        VOID osal_msg_send( taskID, (uint8*)pRsp );
+        osal_msg_send( taskID, (uint8_t*)pRsp );
     }
 }
 
@@ -915,10 +914,10 @@ static void gapSendSignUpdateEvent( uint8 taskID, uint8 addrType, uint8* pDevAdd
 
     @return      none
 */
-void gapSendSlaveSecurityReqEvent( uint8 taskID, uint16 connHandle, uint8* pDevAddr, uint8 authReq )
+void gapSendSlaveSecurityReqEvent( uint8_t taskID, uint16_t connHandle, uint8_t* pDevAddr, uint8_t authReq )
 {
     gapSlaveSecurityReqEvent_t* pRsp;
-    pRsp = (gapSlaveSecurityReqEvent_t*)osal_msg_allocate( (uint16)(sizeof ( gapSlaveSecurityReqEvent_t )) );
+    pRsp = (gapSlaveSecurityReqEvent_t*)osal_msg_allocate( (uint16_t)(sizeof ( gapSlaveSecurityReqEvent_t )) );
 
     if ( pRsp )
     {
@@ -926,9 +925,9 @@ void gapSendSlaveSecurityReqEvent( uint8 taskID, uint16 connHandle, uint8* pDevA
         pRsp->hdr.status = SUCCESS;
         pRsp->opcode = GAP_SLAVE_REQUESTED_SECURITY_EVENT;
         pRsp->connectionHandle = connHandle;
-        VOID osal_memcpy( pRsp->deviceAddr, pDevAddr, B_ADDR_LEN );
+        osal_memcpy( pRsp->deviceAddr, pDevAddr, B_ADDR_LEN );
         pRsp->authReq = authReq;
-        VOID osal_msg_send( taskID, (uint8*)pRsp );
+        osal_msg_send( taskID, (uint8_t*)pRsp );
     }
 }
 

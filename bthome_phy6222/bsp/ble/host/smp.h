@@ -14,9 +14,10 @@ extern "C"
 /*********************************************************************
     INCLUDES
 */
-#include "bcomdef.h"
-
-#include "sm_internal.h"
+//#include "bcomdef.h"
+//#include "sm_internal.h"
+#include <ble/include/bcomdef.h>
+#include <ble/include/sm.h>
 
 /*********************************************************************
     MACROS
@@ -149,10 +150,10 @@ extern "C"
 // Pairing Request
 typedef struct
 {
-    uint8 ioCapability;   // ex. SMP_IO_CAP_DISPLAY_YES_NO
-    uint8 oobDataFlag;    // Out of Bound data flag
+    uint8_t ioCapability;   // ex. SMP_IO_CAP_DISPLAY_YES_NO
+    uint8_t oobDataFlag;    // Out of Bound data flag
     authReq_t authReq;    // Authentication fields
-    uint8 maxEncKeySize;  // Encryption Key size max bytes (7 - 16)
+    uint8_t maxEncKeySize;  // Encryption Key size max bytes (7 - 16)
     keyDist_t keyDist;    // Key Distribution Field - bit struct
 } smpPairingReq_t;
 
@@ -162,51 +163,51 @@ typedef smpPairingReq_t smpPairingRsp_t;
 // Pairing Confirm
 typedef struct
 {
-    uint8 confirmValue[SMP_CONFIRM_LEN];
+    uint8_t confirmValue[SMP_CONFIRM_LEN];
 } smpPairingConfirm_t;
 
 // Pairing Random
 typedef struct
 {
-    uint8 randomValue[SMP_RANDOM_LEN];
+    uint8_t randomValue[SMP_RANDOM_LEN];
 } smpPairingRandom_t;
 
 // Pairing Failed
 typedef struct
 {
-    uint8 reason;
+    uint8_t reason;
 } smpPairingFailed_t;
 
 // Encryption Information
 typedef struct
 {
-    uint8  ltk[KEYLEN];
+    uint8_t  ltk[KEYLEN];
 } smpEncInfo_t;
 
 // Master Identification
 typedef struct
 {
-    uint16  ediv;
-    uint16  rand[B_RANDOM_NUM_SIZE];
+    uint16_t  ediv;
+    uint16_t  rand[B_RANDOM_NUM_SIZE];
 } smpMasterID_t;
 
 // Identity Information
 typedef struct
 {
-    uint8 irk[KEYLEN];
+    uint8_t irk[KEYLEN];
 } smpIdentityInfo_t;
 
 // Identity Address Information
 typedef struct
 {
-    uint8 addrType;
-    uint8 bdAddr[B_ADDR_LEN];
+    uint8_t addrType;
+    uint8_t bdAddr[B_ADDR_LEN];
 } smpIdentityAddrInfo_t;
 
 // Signing Information
 typedef struct
 {
-    uint8 signature[KEYLEN];
+    uint8_t signature[KEYLEN];
 } smpSigningInfo_t;
 
 // Slave Security Request
@@ -231,7 +232,7 @@ typedef union
     smpSecurityReq_t      secReq;
 } smpMsgs_t;
 
-typedef uint8 (*pfnSMBuildCmd_t)( smpMsgs_t* pMsgStruct, uint8* pBuf );
+typedef uint8_t (*pfnSMBuildCmd_t)( smpMsgs_t* pMsgStruct, uint8_t* pBuf );
 
 /*********************************************************************
     GLOBAL VARIABLES
@@ -245,22 +246,22 @@ extern smpPairingReq_t pairingReg;
 /*
     smpBuildPairingReq - Build an SM Pairing Request
 */
-extern bStatus_t smpBuildPairingReq( smpPairingReq_t* pPairingReq, uint8* pBuf );
+extern bStatus_t smpBuildPairingReq( smpPairingReq_t* pPairingReq, uint8_t* pBuf );
 
 /*
     smpBuildPairingRsp - Build an SM Pairing Response
 */
-extern bStatus_t smpBuildPairingRsp( smpPairingRsp_t* pPairingRsp, uint8* pBuf );
+extern bStatus_t smpBuildPairingRsp( smpPairingRsp_t* pPairingRsp, uint8_t* pBuf );
 
 /*
     smpBuildPairingReqRsp - Build an SM Pairing Request or Response
 */
-extern bStatus_t smpBuildPairingReqRsp( uint8 opCode, smpPairingReq_t* pPairingReq, uint8* pBuf );
+extern bStatus_t smpBuildPairingReqRsp( uint8_t opCode, smpPairingReq_t* pPairingReq, uint8_t* pBuf );
 
 /*
     smpParsePairingReq - Parse an SM Pairing Request
 */
-extern bStatus_t smpParsePairingReq( uint8* pBuf, smpPairingReq_t* pPairingReq );
+extern bStatus_t smpParsePairingReq( uint8_t* pBuf, smpPairingReq_t* pPairingReq );
 
 /*
     smpParsePairingRsp - Parse an SM Pairing Response
@@ -271,102 +272,102 @@ extern bStatus_t smpParsePairingReq( uint8* pBuf, smpPairingReq_t* pPairingReq )
     smpBuildPairingConfirm - Build an SM Pairing Confirm
 */
 extern bStatus_t smpBuildPairingConfirm( smpPairingConfirm_t* pPairingConfirm,
-                                         uint8* pBuf );
+                                         uint8_t* pBuf );
 
 /*
     smpParsePairingConfirm - Parse an SM Pairing Confirm
 */
-extern bStatus_t smpParsePairingConfirm( uint8* pBuf,
+extern bStatus_t smpParsePairingConfirm( uint8_t* pBuf,
                                          smpPairingConfirm_t* pPairingConfirm );
 
 /*
     smpBuildPairingRandom - Build an SM Pairing Random
 */
 extern bStatus_t smpBuildPairingRandom( smpPairingRandom_t* pPairingRandom,
-                                        uint8* pBuf );
+                                        uint8_t* pBuf );
 
 /*
     smpParsePairingRandom - Parse an SM Pairing Random
 */
-extern bStatus_t smpParsePairingRandom( uint8* pBuf,
+extern bStatus_t smpParsePairingRandom( uint8_t* pBuf,
                                         smpPairingRandom_t* pPairingRandom );
 
 /*
     smpBuildPairingFailed - Build an SM Pairing Failed
 */
 extern bStatus_t smpBuildPairingFailed( smpPairingFailed_t* pPairingFailed,
-                                        uint8* pBuf );
+                                        uint8_t* pBuf );
 
 /*
     smpParsePairingFailed - Parse an SM Pairing Failed
 */
-extern bStatus_t smpParsePairingFailed( uint8* pBuf,
+extern bStatus_t smpParsePairingFailed( uint8_t* pBuf,
                                         smpPairingFailed_t* pPairingFailed );
 
 /*
     smpBuildEncInfo - Build an SM Encryption Information
 */
-extern bStatus_t smpBuildEncInfo( smpEncInfo_t* pEncInfo, uint8* pBuf );
+extern bStatus_t smpBuildEncInfo( smpEncInfo_t* pEncInfo, uint8_t* pBuf );
 
 /*
     smpParseEncInfo - Parse an SM Encryption Information
 */
-extern bStatus_t smpParseEncInfo( uint8* buf, smpEncInfo_t* encInfo );
+extern bStatus_t smpParseEncInfo( uint8_t* buf, smpEncInfo_t* encInfo );
 
 /*
     smpBuildMasterID - Build an SM Master Identification
 */
-extern bStatus_t smpBuildMasterID( smpMasterID_t* pMasterID, uint8* pBuf );
+extern bStatus_t smpBuildMasterID( smpMasterID_t* pMasterID, uint8_t* pBuf );
 
 /*
     smpParseMasterID - Parse an SM Master Identification
 */
-extern bStatus_t smpParseMasterID( uint8* pBuf, smpMasterID_t* pMasterID );
+extern bStatus_t smpParseMasterID( uint8_t* pBuf, smpMasterID_t* pMasterID );
 
 /*
     smpBuildIdentityInfo - Build an SM Identity Information
 */
-extern bStatus_t smpBuildIdentityInfo( smpIdentityInfo_t* pIdInfo, uint8* pBuf );
+extern bStatus_t smpBuildIdentityInfo( smpIdentityInfo_t* pIdInfo, uint8_t* pBuf );
 
 /*
     smpBuildIdentityAddrInfo - Build an SM Identity Address Information
 */
-extern bStatus_t smpBuildIdentityAddrInfo( smpIdentityAddrInfo_t* pIdInfo, uint8* pBuf );
+extern bStatus_t smpBuildIdentityAddrInfo( smpIdentityAddrInfo_t* pIdInfo, uint8_t* pBuf );
 
 /*
     smpParseIdentityInfo - Parse an SM Identity Information
 */
-extern bStatus_t smpParseIdentityInfo( uint8* pBuf, smpIdentityInfo_t* pIdInfo );
+extern bStatus_t smpParseIdentityInfo( uint8_t* pBuf, smpIdentityInfo_t* pIdInfo );
 
 /*
     smpParseIdentityAddrInfo - Parse an SM Identity Address Information
 */
-extern bStatus_t smpParseIdentityAddrInfo( uint8* pBuf, smpIdentityAddrInfo_t* pIdInfo );
+extern bStatus_t smpParseIdentityAddrInfo( uint8_t* pBuf, smpIdentityAddrInfo_t* pIdInfo );
 
 /*
     smpBuildSigningInfo - Build an SM Signing Information
 */
-extern bStatus_t smpBuildSigningInfo( smpSigningInfo_t* pSigningInfo, uint8* pBuf );
+extern bStatus_t smpBuildSigningInfo( smpSigningInfo_t* pSigningInfo, uint8_t* pBuf );
 
 /*
     smpParseSigningInfo - Parse an SM Signing Information
 */
-extern bStatus_t smpParseSigningInfo( uint8* pBuf, smpSigningInfo_t* pSigningInfo );
+extern bStatus_t smpParseSigningInfo( uint8_t* pBuf, smpSigningInfo_t* pSigningInfo );
 
 /*
     smpBuildSecurityReq - Build an SM Slave Security Request
 */
-extern bStatus_t smpBuildSecurityReq( smpSecurityReq_t* pSecReq, uint8* pBuf );
+extern bStatus_t smpBuildSecurityReq( smpSecurityReq_t* pSecReq, uint8_t* pBuf );
 
 /*
     smpParseSecurityReq - Parse an SM Slave Security Request
 */
-extern bStatus_t smpParseSecurityReq( uint8* pBuf, smpSecurityReq_t* pSecReq );
+extern bStatus_t smpParseSecurityReq( uint8_t* pBuf, smpSecurityReq_t* pSecReq );
 
 /*
     smSendSMMsg - Generic Send L2CAP SM message function
 */
-extern bStatus_t smSendSMMsg( uint16 connHandle, uint8 bufLen, smpMsgs_t* pMsg, pfnSMBuildCmd_t buildFn );
+extern bStatus_t smSendSMMsg( uint16_t connHandle, uint8_t bufLen, smpMsgs_t* pMsg, pfnSMBuildCmd_t buildFn );
 
 /*********************************************************************
 *********************************************************************/

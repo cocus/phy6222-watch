@@ -19,7 +19,6 @@ extern "C"
     INCLUDES
 */
 #include "bcomdef.h"
-#include "OSAL.h"
 #include "sm.h"
 
 /*  -------------------------------------------------------------------
@@ -291,7 +290,7 @@ extern "C"
 /**
     GAP Parameters IDs: @ref GAP_PARAMETER_ID_DEFINES
 */
-typedef uint16 gapParamIDs_t;
+typedef uint16_t gapParamIDs_t;
 
 /**
     GAP event header format.
@@ -299,7 +298,7 @@ typedef uint16 gapParamIDs_t;
 typedef struct
 {
     osal_event_hdr_t  hdr;           //!< GAP_MSG_EVENT and status
-    uint8 opcode;                    //!< GAP type of command. Ref: @ref GAP_MSG_EVENT_DEFINES
+    uint8_t opcode;                    //!< GAP type of command. Ref: @ref GAP_MSG_EVENT_DEFINES
 } gapEventHdr_t;
 
 /**
@@ -309,9 +308,9 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;              //!< GAP_MSG_EVENT and status
-    uint8 opcode;                       //!< GAP_RANDOM_ADDR_CHANGED_EVENT
-    uint8 addrType;                     //!< Address type: @ref GAP_ADDR_TYPE_DEFINES
-    uint8 newRandomAddr[B_ADDR_LEN];    //!< the new calculated private addr
+    uint8_t opcode;                       //!< GAP_RANDOM_ADDR_CHANGED_EVENT
+    uint8_t addrType;                     //!< Address type: @ref GAP_ADDR_TYPE_DEFINES
+    uint8_t newRandomAddr[B_ADDR_LEN];    //!< the new calculated private addr
 } gapRandomAddrEvent_t;
 
 /**
@@ -322,13 +321,13 @@ typedef struct
 typedef struct
 {
     /** Minimum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
-    uint16 intervalMin;
+    uint16_t intervalMin;
     /** Maximum value for the connection event (interval. 0x0006 - 0x0C80 * 1.25 ms) */
-    uint16 intervalMax;
+    uint16_t intervalMax;
     /** Number of LL latency connection events (0x0000 - 0x03e8) */
-    uint16 latency;
+    uint16_t latency;
     /** Connection Timeout (0x000A - 0x0C80 * 10 ms) */
-    uint16 timeout;
+    uint16_t timeout;
 } gapPeriConnectParams_t;
 
 /**
@@ -339,10 +338,10 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;              //!< GAP_MSG_EVENT and status
-    uint8 opcode;                       //!< GAP_DEVICE_INIT_DONE_EVENT
-    uint8 devAddr[B_ADDR_LEN];          //!< Device's BD_ADDR
-    uint16 dataPktLen;                  //!< HC_LE_Data_Packet_Length
-    uint8 numDataPkts;                  //!< HC_Total_Num_LE_Data_Packets
+    uint8_t opcode;                       //!< GAP_DEVICE_INIT_DONE_EVENT
+    uint8_t devAddr[B_ADDR_LEN];          //!< Device's BD_ADDR
+    uint16_t dataPktLen;                  //!< HC_LE_Data_Packet_Length
+    uint8_t numDataPkts;                  //!< HC_Total_Num_LE_Data_Packets
 } gapDeviceInitDoneEvent_t;
 
 /**
@@ -356,10 +355,10 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;              //!< GAP_MSG_EVENT and status
-    uint8 opcode;                       //!< GAP_SIGNATURE_UPDATED_EVENT
-    uint8 addrType;                     //!< Device's address type for devAddr
-    uint8 devAddr[B_ADDR_LEN];          //!< Device's BD_ADDR, could be own address
-    uint32 signCounter;                 //!< new Signed Counter
+    uint8_t opcode;                       //!< GAP_SIGNATURE_UPDATED_EVENT
+    uint8_t addrType;                     //!< Device's address type for devAddr
+    uint8_t devAddr[B_ADDR_LEN];          //!< Device's BD_ADDR, could be own address
+    uint32_t signCounter;                 //!< new Signed Counter
 } gapSignUpdateEvent_t;
 
 /**
@@ -370,13 +369,13 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;    //!< GAP_MSG_EVENT and status
-    uint8 opcode;             //!< GAP_DEVICE_INFO_EVENT
-    uint8 eventType;          //!< Advertisement Type: @ref GAP_ADVERTISEMENT_REPORT_TYPE_DEFINES
-    uint8 addrType;           //!< address type: @ref GAP_ADDR_TYPE_DEFINES
-    uint8 addr[B_ADDR_LEN];   //!< Address of the advertisement or SCAN_RSP
-    int8 rssi;                //!< Advertisement or SCAN_RSP RSSI
-    uint8 dataLen;            //!< Length (in bytes) of the data field (evtData)
-    uint8* pEvtData;          //!< Data field of advertisement or SCAN_RSP
+    uint8_t opcode;             //!< GAP_DEVICE_INFO_EVENT
+    uint8_t eventType;          //!< Advertisement Type: @ref GAP_ADVERTISEMENT_REPORT_TYPE_DEFINES
+    uint8_t addrType;           //!< address type: @ref GAP_ADDR_TYPE_DEFINES
+    uint8_t addr[B_ADDR_LEN];   //!< Address of the advertisement or SCAN_RSP
+    int8_t rssi;                //!< Advertisement or SCAN_RSP RSSI
+    uint8_t dataLen;            //!< Length (in bytes) of the data field (evtData)
+    uint8_t* pEvtData;          //!< Data field of advertisement or SCAN_RSP
 } gapDeviceInfoEvent_t;
 
 /*  -------------------------------------------------------------------
@@ -388,10 +387,10 @@ typedef struct
 */
 typedef struct
 {
-    uint8 taskID;       //!< Requesting App's Task ID, used to return results
-    uint8 mode;         //!< Discovery Mode: @ref GAP_DEVDISC_MODE_DEFINES
-    uint8 activeScan;   //!< TRUE for active scanning
-    uint8 whiteList;    //!< TRUE to only allow advertisements from devices in the white list.
+    uint8_t taskID;       //!< Requesting App's Task ID, used to return results
+    uint8_t mode;         //!< Discovery Mode: @ref GAP_DEVDISC_MODE_DEFINES
+    uint8_t activeScan;   //!< TRUE for active scanning
+    uint8_t whiteList;    //!< TRUE to only allow advertisements from devices in the white list.
 } gapDevDiscReq_t;
 
 /**
@@ -399,9 +398,9 @@ typedef struct
 */
 typedef struct
 {
-    uint8 eventType;        //!< Indicates advertising event type used by the advertiser: @ref GAP_ADVERTISEMENT_REPORT_TYPE_DEFINES
-    uint8 addrType;         //!< Address Type: @ref GAP_ADDR_TYPE_DEFINES
-    uint8 addr[B_ADDR_LEN]; //!< Device's Address
+    uint8_t eventType;        //!< Indicates advertising event type used by the advertiser: @ref GAP_ADVERTISEMENT_REPORT_TYPE_DEFINES
+    uint8_t addrType;         //!< Address Type: @ref GAP_ADDR_TYPE_DEFINES
+    uint8_t addr[B_ADDR_LEN]; //!< Device's Address
 } gapDevRec_t;
 
 /**
@@ -411,8 +410,8 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr; //!< GAP_MSG_EVENT and status
-    uint8 opcode;          //!< GAP_DEVICE_DISCOVERY_EVENT
-    uint8 numDevs;         //!< Number of devices found during scan
+    uint8_t opcode;          //!< GAP_DEVICE_DISCOVERY_EVENT
+    uint8_t numDevs;         //!< Number of devices found during scan
     gapDevRec_t* pDevList; //!< array of device records
 } gapDevDiscEvent_t;
 
@@ -421,11 +420,11 @@ typedef struct
 */
 typedef struct
 {
-    uint8 eventType;          //!< Advertise Event Type: @ref GAP_ADVERTISEMENT_TYPE_DEFINES
-    uint8 initiatorAddrType;  //!< Initiator's address type: @ref GAP_ADDR_TYPE_DEFINES
-    uint8 initiatorAddr[B_ADDR_LEN];  //!< Initiator's addr - used only with connectable directed eventType (ADV_EVTTYPE_CONNECTABLE_DIRECTED).
-    uint8 channelMap;         //!< Channel Map: Bit mask @ref GAP_ADVCHAN_DEFINES
-    uint8 filterPolicy;       //!< Filer Policy: @ref GAP_FILTER_POLICY_DEFINES. Ignored when directed advertising is used.
+    uint8_t eventType;          //!< Advertise Event Type: @ref GAP_ADVERTISEMENT_TYPE_DEFINES
+    uint8_t initiatorAddrType;  //!< Initiator's address type: @ref GAP_ADDR_TYPE_DEFINES
+    uint8_t initiatorAddr[B_ADDR_LEN];  //!< Initiator's addr - used only with connectable directed eventType (ADV_EVTTYPE_CONNECTABLE_DIRECTED).
+    uint8_t channelMap;         //!< Channel Map: Bit mask @ref GAP_ADVCHAN_DEFINES
+    uint8_t filterPolicy;       //!< Filer Policy: @ref GAP_FILTER_POLICY_DEFINES. Ignored when directed advertising is used.
 } gapAdvertisingParams_t;
 
 /**
@@ -435,8 +434,8 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr; //!< GAP_MSG_EVENT and status
-    uint8 opcode;          //!< GAP_MAKE_DISCOVERABLE_DONE_EVENT
-    uint16 interval;       //!< actual advertising interval selected by controller
+    uint8_t opcode;          //!< GAP_MAKE_DISCOVERABLE_DONE_EVENT
+    uint16_t interval;       //!< actual advertising interval selected by controller
 } gapMakeDiscoverableRspEvent_t;
 
 /**
@@ -446,7 +445,7 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr; //!< GAP_MSG_EVENT and status
-    uint8 opcode;          //!< GAP_END_DISCOVERABLE_DONE_EVENT
+    uint8_t opcode;          //!< GAP_END_DISCOVERABLE_DONE_EVENT
 } gapEndDiscoverableRspEvent_t;
 
 /**
@@ -456,8 +455,8 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr; //!< GAP_MSG_EVENT and status
-    uint8 opcode;          //!< GAP_ADV_DATA_UPDATE_DONE_EVENT
-    uint8 adType;          //!< TRUE if advertising data, FALSE if SCAN_RSP
+    uint8_t opcode;          //!< GAP_ADV_DATA_UPDATE_DONE_EVENT
+    uint8_t adType;          //!< TRUE if advertising data, FALSE if SCAN_RSP
 } gapAdvDataUpdateEvent_t;
 
 /*  -------------------------------------------------------------------
@@ -469,11 +468,11 @@ typedef struct
 */
 typedef struct
 {
-    uint8 taskID;               //!< Requesting App/Profile's Task ID
-    uint8 highDutyCycle;        //!< TRUE to high duty cycle scan, FALSE if not.
-    uint8 whiteList;            //!< Determines use of the white list: @ref GAP_WHITELIST_DEFINES
-    uint8 addrTypePeer;         //!< Address type of the advertiser: @ref GAP_ADDR_TYPE_DEFINES
-    uint8 peerAddr[B_ADDR_LEN]; //!< Advertiser's address
+    uint8_t taskID;               //!< Requesting App/Profile's Task ID
+    uint8_t highDutyCycle;        //!< TRUE to high duty cycle scan, FALSE if not.
+    uint8_t whiteList;            //!< Determines use of the white list: @ref GAP_WHITELIST_DEFINES
+    uint8_t addrTypePeer;         //!< Address type of the advertiser: @ref GAP_ADDR_TYPE_DEFINES
+    uint8_t peerAddr[B_ADDR_LEN]; //!< Advertiser's address
 } gapEstLinkReq_t;
 
 /**
@@ -481,11 +480,11 @@ typedef struct
 */
 typedef struct
 {
-    uint16 connectionHandle; //!< Connection handle of the update
-    uint16 intervalMin;      //!< Minimum Connection Interval
-    uint16 intervalMax;      //!< Maximum Connection Interval
-    uint16 connLatency;      //!< Connection Latency
-    uint16 connTimeout;      //!< Connection Timeout
+    uint16_t connectionHandle; //!< Connection handle of the update
+    uint16_t intervalMin;      //!< Minimum Connection Interval
+    uint16_t intervalMax;      //!< Maximum Connection Interval
+    uint16_t connLatency;      //!< Connection Latency
+    uint16_t connTimeout;      //!< Connection Timeout
 } gapUpdateLinkParamReq_t;
 
 /**
@@ -498,14 +497,14 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;     //!< GAP_MSG_EVENT and status
-    uint8 opcode;              //!< GAP_LINK_ESTABLISHED_EVENT
-    uint8 devAddrType;         //!< Device address type: @ref GAP_ADDR_TYPE_DEFINES
-    uint8 devAddr[B_ADDR_LEN]; //!< Device address of link
-    uint16 connectionHandle;   //!< Connection Handle from controller used to ref the device
-    uint16 connInterval;       //!< Connection Interval
-    uint16 connLatency;        //!< Conenction Latency
-    uint16 connTimeout;        //!< Connection Timeout
-    uint8 clockAccuracy;       //!< Clock Accuracy
+    uint8_t opcode;              //!< GAP_LINK_ESTABLISHED_EVENT
+    uint8_t devAddrType;         //!< Device address type: @ref GAP_ADDR_TYPE_DEFINES
+    uint8_t devAddr[B_ADDR_LEN]; //!< Device address of link
+    uint16_t connectionHandle;   //!< Connection Handle from controller used to ref the device
+    uint16_t connInterval;       //!< Connection Interval
+    uint16_t connLatency;        //!< Conenction Latency
+    uint16_t connTimeout;        //!< Connection Timeout
+    uint8_t clockAccuracy;       //!< Clock Accuracy
 } gapEstLinkReqEvent_t;
 
 /**
@@ -515,12 +514,12 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t hdr;     //!< GAP_MSG_EVENT and status
-    uint8 opcode;             //!< GAP_LINK_PARAM_UPDATE_EVENT
-    uint8 status;             //!< bStatus_t
-    uint16 connectionHandle;  //!< Connection handle of the update
-    uint16 connInterval;      //!< Requested connection interval
-    uint16 connLatency;       //!< Requested connection latency
-    uint16 connTimeout;       //!< Requested connection timeout
+    uint8_t opcode;             //!< GAP_LINK_PARAM_UPDATE_EVENT
+    uint8_t status;             //!< bStatus_t
+    uint16_t connectionHandle;  //!< Connection handle of the update
+    uint16_t connInterval;      //!< Requested connection interval
+    uint16_t connLatency;       //!< Requested connection latency
+    uint16_t connTimeout;       //!< Requested connection timeout
 } gapLinkUpdateEvent_t;
 
 /**
@@ -530,9 +529,9 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;   //!< GAP_MSG_EVENT and status
-    uint8 opcode;            //!< GAP_LINK_TERMINATED_EVENT
-    uint16 connectionHandle; //!< connection Handle
-    uint8 reason;            //!< termination reason from LL
+    uint8_t opcode;            //!< GAP_LINK_TERMINATED_EVENT
+    uint16_t connectionHandle; //!< connection Handle
+    uint8_t reason;            //!< termination reason from LL
 } gapTerminateLinkEvent_t;
 
 /*  -------------------------------------------------------------------
@@ -546,11 +545,11 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;        //!< GAP_MSG_EVENT and status
-    uint8 opcode;                 //!< GAP_PASSKEY_NEEDED_EVENT
-    uint8 deviceAddr[B_ADDR_LEN]; //!< address of device to pair with, and could be either public or random.
-    uint16 connectionHandle;      //!< Connection handle
-    uint8 uiInputs;               //!< Pairing User Interface Inputs - Ask user to input passcode
-    uint8 uiOutputs;              //!< Pairing User Interface Outputs - Display passcode
+    uint8_t opcode;                 //!< GAP_PASSKEY_NEEDED_EVENT
+    uint8_t deviceAddr[B_ADDR_LEN]; //!< address of device to pair with, and could be either public or random.
+    uint16_t connectionHandle;      //!< Connection handle
+    uint8_t uiInputs;               //!< Pairing User Interface Inputs - Ask user to input passcode
+    uint8_t uiOutputs;              //!< Pairing User Interface Outputs - Display passcode
 } gapPasskeyNeededEvent_t;
 
 /**
@@ -560,9 +559,9 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;           //!< GAP_MSG_EVENT and status
-    uint8 opcode;                    //!< GAP_AUTHENTICATION_COMPLETE_EVENT
-    uint16 connectionHandle;         //!< Connection Handle from controller used to ref the device
-    uint8 authState;                 //!< TRUE if the pairing was authenticated (MITM)
+    uint8_t opcode;                    //!< GAP_AUTHENTICATION_COMPLETE_EVENT
+    uint16_t connectionHandle;         //!< Connection Handle from controller used to ref the device
+    uint8_t authState;                 //!< TRUE if the pairing was authenticated (MITM)
     smSecurityInfo_t* pSecurityInfo; //!< BOUND - security information from this device
     smSigningInfo_t* pSigningInfo;   //!< Signing information
     smSecurityInfo_t* pDevSecInfo;   //!< BOUND - security information from connected device
@@ -575,7 +574,7 @@ typedef struct
 */
 typedef struct
 {
-    uint16 connectionHandle;      //!< Connection Handle from controller,
+    uint16_t connectionHandle;      //!< Connection Handle from controller,
     smLinkSecurityReq_t  secReqs; //!< Pairing Control info
 } gapAuthParams_t;
 
@@ -586,10 +585,10 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;        //!< GAP_MSG_EVENT and status
-    uint8 opcode;                 //!< GAP_SLAVE_REQUESTED_SECURITY_EVENT
-    uint16 connectionHandle;      //!< Connection Handle
-    uint8 deviceAddr[B_ADDR_LEN]; //!< address of device requesting security
-    uint8 authReq;                //!< Authentication Requirements: Bit 2: MITM, Bits 0-1: bonding (0 - no bonding, 1 - bonding)
+    uint8_t opcode;                 //!< GAP_SLAVE_REQUESTED_SECURITY_EVENT
+    uint16_t connectionHandle;      //!< Connection Handle
+    uint8_t deviceAddr[B_ADDR_LEN]; //!< address of device requesting security
+    uint8_t authReq;                //!< Authentication Requirements: Bit 2: MITM, Bits 0-1: bonding (0 - no bonding, 1 - bonding)
 
 } gapSlaveSecurityReqEvent_t;
 
@@ -600,8 +599,8 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t  hdr;   //!< GAP_MSG_EVENT and status
-    uint8 opcode;            //!< GAP_BOND_COMPLETE_EVENT
-    uint16 connectionHandle; //!< connection Handle
+    uint8_t opcode;            //!< GAP_BOND_COMPLETE_EVENT
+    uint16_t connectionHandle; //!< connection Handle
 } gapBondCompleteEvent_t;
 
 /**
@@ -609,10 +608,10 @@ typedef struct
 */
 typedef struct
 {
-    uint8 ioCap;         //!< Pairing Request ioCap field
-    uint8 oobDataFlag;   //!< Pairing Request OOB Data Flag field
-    uint8 authReq;       //!< Pairing Request Auth Req field
-    uint8 maxEncKeySize; //!< Pairing Request Maximum Encryption Key Size field
+    uint8_t ioCap;         //!< Pairing Request ioCap field
+    uint8_t oobDataFlag;   //!< Pairing Request OOB Data Flag field
+    uint8_t authReq;       //!< Pairing Request Auth Req field
+    uint8_t maxEncKeySize; //!< Pairing Request Maximum Encryption Key Size field
     keyDist_t keyDist;   //!< Pairing Request Key Distribution field
 } gapPairingReq_t;
 
@@ -630,8 +629,8 @@ typedef struct
 typedef struct
 {
     osal_event_hdr_t hdr;    //!< GAP_MSG_EVENT and status
-    uint8 opcode;            //!< GAP_PAIRING_REQ_EVENT
-    uint16 connectionHandle; //!< connection Handle
+    uint8_t opcode;            //!< GAP_PAIRING_REQ_EVENT
+    uint16_t connectionHandle; //!< connection Handle
     gapPairingReq_t pairReq; //!< The Pairing Request fields received.
 } gapPairingReqEvent_t;
 
@@ -642,9 +641,9 @@ typedef struct
 */
 typedef struct
 {
-    uint8 adType;     //!< ADTYPE value: @ref GAP_ADTYPE_DEFINES
-    uint8 attrLen;    //!< Number of bytes in the attribute data
-    uint8* pAttrData; //!< pointer to Attribute data
+    uint8_t adType;     //!< ADTYPE value: @ref GAP_ADTYPE_DEFINES
+    uint8_t attrLen;    //!< Number of bytes in the attribute data
+    uint8_t* pAttrData; //!< pointer to Attribute data
 } gapAdvDataToken_t;
 
 /** @} End BLE_GAP_DEFINES */
@@ -686,12 +685,12 @@ typedef struct
                 INVALIDPARAMETER - for invalid profile role or role combination, <BR>
                 bleIncorrectMode - trouble communicating with HCI
 */
-extern bStatus_t GAP_DeviceInit(  uint8 taskID,
-                                  uint8 profileRole,
-                                  uint8 maxScanResponses,
-                                  uint8* pIRK,
-                                  uint8* pSRK,
-                                  uint32* pSignCounter );
+extern bStatus_t GAP_DeviceInit(  uint8_t taskID,
+                                  uint8_t profileRole,
+                                  uint8_t maxScanResponses,
+                                  uint8_t* pIRK,
+                                  uint8_t* pSRK,
+                                  uint32_t* pSignCounter );
 
 /**
     @brief       Called to setup a GAP Advertisement/Scan Response data token.
@@ -718,7 +717,7 @@ extern bStatus_t GAP_SetAdvToken( gapAdvDataToken_t* pToken );
 
     @return      pointer to the advertisement data token structure, NULL if not found.
 */
-extern gapAdvDataToken_t* GAP_GetAdvToken( uint8 adType );
+extern gapAdvDataToken_t* GAP_GetAdvToken( uint8_t adType );
 
 /**
     @brief       Called to remove a GAP Advertisement/Scan Response data token.
@@ -728,7 +727,7 @@ extern gapAdvDataToken_t* GAP_GetAdvToken( uint8 adType );
     @return      pointer to the token structure removed from the GAP ADType list
                 NULL if the requested adType wasn't found.
 */
-extern gapAdvDataToken_t* GAP_RemoveAdvToken( uint8 adType );
+extern gapAdvDataToken_t* GAP_RemoveAdvToken( uint8_t adType );
 
 /**
     @brief       Called to rebuild and load Advertisement and Scan Response data from existing
@@ -747,7 +746,7 @@ extern bStatus_t GAP_UpdateAdvTokens( void );
 
     @return      SUCCESS or INVALIDPARAMETER (invalid paramID)
 */
-extern bStatus_t GAP_SetParamValue( gapParamIDs_t paramID, uint16 paramValue );
+extern bStatus_t GAP_SetParamValue( gapParamIDs_t paramID, uint16_t paramValue );
 
 /**
     @brief       Get a GAP Parameter value.
@@ -756,7 +755,7 @@ extern bStatus_t GAP_SetParamValue( gapParamIDs_t paramID, uint16 paramValue );
 
     @return      GAP Parameter value or 0xFFFF if invalid
 */
-extern uint16 GAP_GetParamValue( gapParamIDs_t paramID );
+extern uint16_t GAP_GetParamValue( gapParamIDs_t paramID );
 
 /**
     @brief       Setup the device's address type.  If ADDRTYPE_PRIVATE_RESOLVE
@@ -777,7 +776,7 @@ extern uint16 GAP_GetParamValue( gapParamIDs_t paramID );
                 If return value isn't SUCCESS, the address type remains
                 the same as before this call.
 */
-extern bStatus_t GAP_ConfigDeviceAddr( uint8 addrType, uint8* pStaticAddr );
+extern bStatus_t GAP_ConfigDeviceAddr( uint8_t addrType, uint8_t* pStaticAddr );
 
 /**
     @brief       Register your task ID to receive extra (unwanted)
@@ -787,7 +786,7 @@ extern bStatus_t GAP_ConfigDeviceAddr( uint8 addrType, uint8* pStaticAddr );
 
     @return      none
 */
-extern void GAP_RegisterForHCIMsgs( uint8 taskID );
+extern void GAP_RegisterForHCIMsgs( uint8_t taskID );
 
 /*  -------------------------------------------------------------------
     FUNCTIONS - Device Discovery
@@ -813,7 +812,7 @@ extern bStatus_t GAP_DeviceDiscoveryRequest( gapDevDiscReq_t* pParams );
                 bleInvalidTaskID: Not the task that started discovery,<BR>
                 bleIncorrectMode: not in discovery mode<BR>
 */
-extern bStatus_t GAP_DeviceDiscoveryCancel( uint8 taskID );
+extern bStatus_t GAP_DeviceDiscoveryCancel( uint8_t taskID );
 
 /**
     @brief       Setup or change advertising.  Also starts advertising.
@@ -826,7 +825,7 @@ extern bStatus_t GAP_DeviceDiscoveryCancel( uint8 taskID );
                 bleAlreadyInRequestedMode: not available at this time,<BR>
                 bleNotReady: advertising data isn't set up yet.<BR>
 */
-extern bStatus_t GAP_MakeDiscoverable( uint8 taskID, gapAdvertisingParams_t* pParams );
+extern bStatus_t GAP_MakeDiscoverable( uint8_t taskID, gapAdvertisingParams_t* pParams );
 
 /**
     @brief       Setup or change advertising and scan response data.
@@ -843,8 +842,8 @@ extern bStatus_t GAP_MakeDiscoverable( uint8 taskID, gapAdvertisingParams_t* pPa
     @return      SUCCESS: data accepted,<BR>
                 bleIncorrectMode: invalid profile role,<BR>
 */
-extern bStatus_t GAP_UpdateAdvertisingData( uint8 taskID, uint8 adType,
-                                            uint8 dataLen, uint8* pAdvertData );
+extern bStatus_t GAP_UpdateAdvertisingData( uint8_t taskID, uint8_t adType,
+                                            uint8_t dataLen, uint8_t* pAdvertData );
 
 /**
     @brief       Stops advertising.
@@ -855,7 +854,7 @@ extern bStatus_t GAP_UpdateAdvertisingData( uint8 taskID, uint8 adType,
                 bleIncorrectMode: not in discoverable mode,<BR>
                 bleInvalidTaskID: not correct task<BR>
 */
-extern bStatus_t GAP_EndDiscoverable( uint8 taskID );
+extern bStatus_t GAP_EndDiscoverable( uint8_t taskID );
 
 /**
     @brief       Resolves a private address against an IRK.
@@ -867,7 +866,7 @@ extern bStatus_t GAP_EndDiscoverable( uint8 taskID );
                 FAILURE: don't match,<BR>
                 INVALIDPARAMETER: parameters invalid<BR>
 */
-extern bStatus_t GAP_ResolvePrivateAddr( uint8* pIRK, uint8* pAddr );
+extern bStatus_t GAP_ResolvePrivateAddr( uint8_t* pIRK, uint8_t* pAddr );
 
 /*  -------------------------------------------------------------------
     FUNCTIONS - Link Establishment
@@ -881,7 +880,7 @@ extern bStatus_t GAP_ResolvePrivateAddr( uint8* pIRK, uint8* pAddr );
     @return      SUCCESS: started establish link process,<BR>
                 bleIncorrectMode: invalid profile role,<BR>
                 bleNotReady: a scan is in progress,<BR>
-                bleAlreadyInRequestedMode: can’t process now,<BR>
+                bleAlreadyInRequestedMode: canï¿½t process now,<BR>
                 bleNoResources: Too many links<BR>
 */
 extern bStatus_t GAP_EstablishLinkReq( gapEstLinkReq_t* pParams );
@@ -898,7 +897,7 @@ extern bStatus_t GAP_EstablishLinkReq( gapEstLinkReq_t* pParams );
                 bleIncorrectMode: No Link to terminate,<BR>
                 bleInvalidTaskID: not app that established link<BR>
 */
-extern bStatus_t GAP_TerminateLinkReq( uint8 taskID, uint16 connectionHandle, uint8 reason );
+extern bStatus_t GAP_TerminateLinkReq( uint8_t taskID, uint16_t connectionHandle, uint8_t reason );
 
 /**
     @brief       Update the link parameters to a slave device.
@@ -917,7 +916,7 @@ extern bStatus_t GAP_UpdateLinkParamReq( gapUpdateLinkParamReq_t* pParams );
 
     @return      Number of active connections.
 */
-extern uint8 GAP_NumActiveConnections( void );
+extern uint8_t GAP_NumActiveConnections( void );
 
 /*  -------------------------------------------------------------------
     FUNCTIONS - Pairing
@@ -955,7 +954,7 @@ extern bStatus_t GAP_Authenticate( gapAuthParams_t* pParams, gapPairingReq_t* pP
                 bleNotConnected - link not found,<BR>
                 bleInvalidRange - one of the parameters were not within range.
 */
-extern bStatus_t GAP_TerminateAuth( uint16 connectionHandle, uint8 reason );
+extern bStatus_t GAP_TerminateAuth( uint16_t connectionHandle, uint8_t reason );
 
 /**
     @brief       Update the passkey in string format.  This function is called by the
@@ -973,7 +972,7 @@ extern bStatus_t GAP_TerminateAuth( uint16 connectionHandle, uint8 reason );
                 bleIncorrectMode: Link not found,<BR>
                 INVALIDPARAMETER: passkey == NULL or passkey isn't formatted properly.<BR>
 */
-extern bStatus_t GAP_PasskeyUpdate( uint8* pPasskey, uint16 connectionHandle );
+extern bStatus_t GAP_PasskeyUpdate( uint8_t* pPasskey, uint16_t connectionHandle );
 
 /**
     @brief       Update the passkey in a numeric value (not string).
@@ -990,7 +989,7 @@ extern bStatus_t GAP_PasskeyUpdate( uint8* pPasskey, uint16 connectionHandle );
                 bleIncorrectMode: Link not found,<BR>
                 INVALIDPARAMETER: passkey == NULL or passkey isn't formatted properly.<BR>
 */
-extern bStatus_t GAP_PasscodeUpdate( uint32 passcode, uint16 connectionHandle );
+extern bStatus_t GAP_PasscodeUpdate( uint32_t passcode, uint16_t connectionHandle );
 
 /**
     @brief       Generate a Slave Requested Security message to the master.
@@ -1002,7 +1001,7 @@ extern bStatus_t GAP_PasscodeUpdate( uint32 passcode, uint16 connectionHandle );
                 bleNotConnected: Link not found,<BR>
                 bleIncorrectMode: wrong GAP role, must be a Peripheral Role<BR>
 */
-extern bStatus_t GAP_SendSlaveSecurityRequest( uint16 connectionHandle, uint8 authReq );
+extern bStatus_t GAP_SendSlaveSecurityRequest( uint16_t connectionHandle, uint8_t authReq );
 
 /**
     @brief       Set up the connection to accept signed data.
@@ -1019,7 +1018,7 @@ extern bStatus_t GAP_SendSlaveSecurityRequest( uint16 connectionHandle, uint8 au
                 bleNotConnected,<BR>
                 FAILURE: not workable.<BR>
 */
-extern bStatus_t GAP_Signable( uint16 connectionHandle, uint8 authenticated, smSigningInfo_t* pParams );
+extern bStatus_t GAP_Signable( uint16_t connectionHandle, uint8_t authenticated, smSigningInfo_t* pParams );
 
 /**
     @brief       Set up the connection's bound paramaters.
@@ -1037,8 +1036,8 @@ extern bStatus_t GAP_Signable( uint16 connectionHandle, uint8 authenticated, smS
                 bleNotConnected,<BR>
                 FAILURE: not workable.<BR>
 */
-extern bStatus_t GAP_Bond( uint16 connectionHandle, uint8 authenticated,
-                           smSecurityInfo_t* pParams, uint8 startEncryption );
+extern bStatus_t GAP_Bond( uint16_t connectionHandle, uint8_t authenticated,
+                           smSecurityInfo_t* pParams, uint8_t startEncryption );
 
 /**
     @} End GAP_API
@@ -1058,7 +1057,7 @@ extern bStatus_t GAP_Bond( uint16 connectionHandle, uint8 authenticated,
 
     @return      SUCCESS or bleIncorrectMode
 */
-extern bStatus_t GAP_ParamsInit( uint8 taskID, uint8 profileRole );
+extern bStatus_t GAP_ParamsInit( uint8_t taskID, uint8_t profileRole );
 
 /**
     @internal
@@ -1076,7 +1075,7 @@ extern bStatus_t GAP_ParamsInit( uint8 taskID, uint8 profileRole );
 
     @return      none
 */
-extern void GAP_SecParamsInit( uint8* pIRK, uint8* pSRK, uint32* pSignCounter );
+extern void GAP_SecParamsInit( uint8_t* pIRK, uint8_t* pSRK, uint32_t* pSignCounter );
 
 /**
     @internal
@@ -1099,7 +1098,7 @@ extern bStatus_t GAP_PeriDevMgrInit( void );
 
     @return      SUCCESS or bleMemAllocError
 */
-extern bStatus_t GAP_CentDevMgrInit( uint8 maxScanResponses );
+extern bStatus_t GAP_CentDevMgrInit( uint8_t maxScanResponses );
 
 /**
     @internal
@@ -1126,7 +1125,7 @@ extern void GAP_CentConnRegister( void );
 
     @return      void
 */
-extern void GAP_Init( uint8 task_id );
+extern void GAP_Init( uint8_t task_id );
 
 /**
     @internal
@@ -1138,7 +1137,7 @@ extern void GAP_Init( uint8 task_id );
 
     @return      events not processed
 */
-extern uint16 GAP_ProcessEvent( uint8 task_id, uint16 events );
+extern uint16_t GAP_ProcessEvent( uint8_t task_id, uint16_t events );
 
 
 /*  -------------------------------------------------------------------

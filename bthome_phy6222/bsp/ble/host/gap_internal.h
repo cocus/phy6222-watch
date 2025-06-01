@@ -14,10 +14,15 @@ extern "C"
 /*********************************************************************
  * INCLUDES
  */
-#include "bcomdef.h"
-#include "hci.h"
-#include "l2cap.h"
-#include "gap.h"
+//#include "bcomdef.h"
+//#include "hci.h"
+//#include "l2cap.h"
+//#include "gap.h"
+//#include <stdint.h>
+#include <ble/include/bcomdef.h>
+#include <ble/include/gap.h>
+#include <ble/include/l2cap.h>
+#include <ble/include/hci.h>
 
 /*********************************************************************
  * MACROS
@@ -65,23 +70,23 @@ typedef struct gapAdvToken
 /** Advertising and Scan Response Data **/
 typedef struct
 {
-  uint8   dataLen;                  // Number of bytes used in "dataField"
-  uint8   dataField[B_MAX_ADV_LEN]; // Data field of the advertisement or SCAN_RSP
+  uint8_t   dataLen;                  // Number of bytes used in "dataField"
+  uint8_t   dataField[B_MAX_ADV_LEN]; // Data field of the advertisement or SCAN_RSP
 } gapAdvertisingData_t;
 
 typedef struct
 {
-  uint8   dataLen;       // length (in bytes) of "dataField"
-  uint8   dataField[1];  // This is just a place holder size
+  uint8_t   dataLen;       // length (in bytes) of "dataField"
+  uint8_t   dataField[1];  // This is just a place holder size
                          // The dataField will be allocated bigger
 } gapAdvertRecData_t;
 
 // Temporary advertising record
 typedef struct
 {
-  uint8  eventType;               // Avertisement or SCAN_RSP
-  uint8  addrType;                // Advertiser's address type
-  uint8  addr[B_ADDR_LEN];        // Advertiser's address
+  uint8_t  eventType;               // Avertisement or SCAN_RSP
+  uint8_t  addrType;                // Advertiser's address type
+  uint8_t  addr[B_ADDR_LEN];        // Advertiser's address
   gapAdvertRecData_t *pAdData;    // Advertising data field. This space is allocated.
   gapAdvertRecData_t *pScanData;  // SCAN_RSP data field. This space is allocated.
 } gapAdvertRec_t;
@@ -97,15 +102,15 @@ typedef enum
 // Advertising State Information
 typedef struct
 {
-  uint8 taskID;                   // App that started an advertising period
+  uint8_t taskID;                   // App that started an advertising period
   gapAdvertStatesIDs_t state;     // Make Discoverable state
   gapAdvertisingParams_t params;  // Advertisement parameters
 } gapAdvertState_t;
 
 typedef struct
 {
-  uint8                state;            // Authentication states
-  uint16               connectionHandle; // Connection Handle from controller,
+  uint8_t                state;            // Authentication states
+  uint16_t               connectionHandle; // Connection Handle from controller,
   smLinkSecurityReq_t  secReqs;          // Pairing Control info
 
   // The following are only used if secReqs.bondable == BOUND, which means that
@@ -117,22 +122,22 @@ typedef struct
 } gapAuthStateParams_t;
 
 // Callback when an HCI Command Event has been received on the Central.
-typedef uint8 (*gapProcessHCICmdEvt_t)( uint16 cmdOpcode, hciEvt_CmdComplete_t *pMsg );
+typedef uint8_t (*gapProcessHCICmdEvt_t)( uint16_t cmdOpcode, hciEvt_CmdComplete_t *pMsg );
 
 // Callback when an Scanning Report has been received on the Central.
 typedef void (*gapProcessScanningEvt_t)( hciEvt_BLEAdvPktReport_t *pMsg );
 
 // Callback to cancel a connection initiation on the Central.
-typedef bStatus_t (*gapCancelLinkReq_t)( uint8 taskID, uint16 connectionHandle );
+typedef bStatus_t (*gapCancelLinkReq_t)( uint8_t taskID, uint16_t connectionHandle );
 
 // Callback when a connection-related event has been received on the Central.
-typedef uint8(*gapProcessConnEvt_t)( uint16 cmdOpcode, hciEvt_CommandStatus_t *pMsg );
+typedef uint8_t(*gapProcessConnEvt_t)( uint16_t cmdOpcode, hciEvt_CommandStatus_t *pMsg );
 
 // Callback when an HCI Command Command Event on the Peripheral.
-typedef uint8 (*gapProcessHCICmdCompleteEvt_t)( hciEvt_CmdComplete_t *pMsg );
+typedef uint8_t (*gapProcessHCICmdCompleteEvt_t)( hciEvt_CmdComplete_t *pMsg );
 
 // Callback when an Advertising Event has been received on the Peripheral.
-typedef void (*gapProcessAdvertisingEvt_t)( uint8 timeout );
+typedef void (*gapProcessAdvertisingEvt_t)( uint8_t timeout );
 
 // Callback when a Set Advertising Params has been received on the Peripheral.
 typedef bStatus_t (*gapSetAdvParams_t)( void );
@@ -163,13 +168,13 @@ typedef struct
  * GLOBAL VARIABLES
  */
 
-extern uint8 gapTaskID;
-extern uint8 gapUnwantedTaskID;
+extern uint8_t gapTaskID;
+extern uint8_t gapUnwantedTaskID;
 
-extern uint8 gapAppTaskID;         // default task ID to send events
-extern uint8 gapProfileRole;       // device GAP Profile Role(s)
+extern uint8_t gapAppTaskID;         // default task ID to send events
+extern uint8_t gapProfileRole;       // device GAP Profile Role(s)
 
-extern uint8 gapDeviceAddrMode;   //  ADDRTYPE_PUBLIC, ADDRTYPE_STATIC,
+extern uint8_t gapDeviceAddrMode;   //  ADDRTYPE_PUBLIC, ADDRTYPE_STATIC,
                                   //  ADDRTYPE_PRIVATE_NONRESOLVE
                                   //  or ADDRTYPE_PRIVATE_RESOLVE
 
@@ -184,8 +189,8 @@ extern gapPeripheralCBs_t *pfnPeripheralCBs;
 
 // Common variables
 extern gapAuthStateParams_t* pAuthLink[];
-extern uint16 gapPrivateAddrChangeTimeout;
-extern uint8 gapAutoAdvPrivateAddrChange;
+extern uint16_t gapPrivateAddrChangeTimeout;
+extern uint8_t gapAutoAdvPrivateAddrChange;
 
 /*********************************************************************
  * FUNCTIONS - API
@@ -199,38 +204,38 @@ extern uint8 gapAutoAdvPrivateAddrChange;
    * gapSetScanParamStatus - Process HCI Command Complete Event status for
    *              the call to HCI_BLESetScanParamCmd().
    */
-  extern uint8 gapSetScanParamStatus( uint8 status );
+  extern uint8_t gapSetScanParamStatus( uint8_t status );
 
   /*
    * gapSetAdvParamsStatus - Process HCI Command Complete Event status for
    *              the call to HCI_BLESetAdvParamCmd().
    */
-  extern uint8 gapSetAdvParamsStatus( uint8 status );
+  extern uint8_t gapSetAdvParamsStatus( uint8_t status );
 
   /*
    * gapWriteAdvEnableStatus - Process HCI Command Complete Event status for
    *              the call to HCI_BLEWriteAdvEnableCmd().
    */
-  extern uint8 gapWriteAdvEnableStatus( uint8 status, uint16 interval );
+  extern uint8_t gapWriteAdvEnableStatus( uint8_t status, uint16_t interval );
 
   /*
    * gapWriteAdvDataStatus - Process HCI Command Complete Event status for
    *              the call to HCI_BLEWriteAdvDataCmd() or
    *              HCI_BLEWriteScanRspDataCmd().
    */
-  extern void gapWriteAdvDataStatus( uint8 adType, uint8 status );
+  extern void gapWriteAdvDataStatus( uint8_t adType, uint8_t status );
 
   /*
    * gapReadBD_ADDRStatus - Process the HCI Command Complete Event for the
    *              call to HCI_ReadBDADDRCmd().
    */
-  extern uint8 gapReadBD_ADDRStatus( uint8 status, uint8 *pBdAddr );
+  extern uint8_t gapReadBD_ADDRStatus( uint8_t status, uint8_t *pBdAddr );
 
   /*
    * gapReadBufSizeCmdStatus - Process the HCI Command Complete Event for the
    *              call to HCI_BLEReadBufSizeCmd().
    */
-  extern uint8 gapReadBufSizeCmdStatus( hciRetParam_LeReadBufSize_t *pCmdStat );
+  extern uint8_t gapReadBufSizeCmdStatus( hciRetParam_LeReadBufSize_t *pCmdStat );
 
   /*
    * gapProcessConnectionCompleteEvt - Process the HCI Connection Complete
@@ -253,42 +258,42 @@ extern uint8 gapAutoAdvPrivateAddrChange;
   /*
    * gapProcessCreateLLConnCmdStatus - Process the status for the HCI_BLECreateLLConnCmd().
    */
-  extern void gapProcessCreateLLConnCmdStatus( uint8 status );
+  extern void gapProcessCreateLLConnCmdStatus( uint8_t status );
 
   /*
    * gapProcessConnUpdateCmdStatus - Process the status for the HCI_LE_ConnUpdateCmd().
    */
-  extern void gapProcessConnUpdateCmdStatus( uint8 status );
+  extern void gapProcessConnUpdateCmdStatus( uint8_t status );
 
   /*
    * gapProcessNewAddr - Process message SM
    */
-  extern bStatus_t gapProcessNewAddr( uint8 *pNewAddr );
+  extern bStatus_t gapProcessNewAddr( uint8_t *pNewAddr );
 
   /*
    * gapAddAddrAdj - Add the top two bits based on the address type.
    */
-  extern uint8 gapAddAddrAdj( uint8 addrType, uint8 *pAddr );
+  extern uint8_t gapAddAddrAdj( uint8_t addrType, uint8_t *pAddr );
 
   /*
    * gapDetermineAddrType - Convert from LL address type to host address type.
    */
-  extern uint8 gapDetermineAddrType( uint8 addrType, uint8 *pAddr );
+  extern uint8_t gapDetermineAddrType( uint8_t addrType, uint8_t *pAddr );
 
   /*
    * gapProcessRandomAddrComplete - Process message HCI
    */
-  extern void gapProcessRandomAddrComplete( uint8 status );
+  extern void gapProcessRandomAddrComplete( uint8_t status );
 
   /*
    * gapGetSRK - Get pointer to the SRK
    */
-  extern uint8 *gapGetSRK( void );
+  extern uint8_t *gapGetSRK( void );
 
   /*
    * gapGetSignCounter - Get the signature counter
    */
-  extern uint32 gapGetSignCounter( void );
+  extern uint32_t gapGetSignCounter( void );
 
   /*
    * gapIncSignCounter - Increment the signature counter
@@ -298,40 +303,40 @@ extern uint8 gapAutoAdvPrivateAddrChange;
   /*
    * gapUpdateConnSignCounter - Update a connection's signature's counter
    */
-  extern  void gapUpdateConnSignCounter( uint16 connHandle, uint32 newSignCounter );
+  extern  void gapUpdateConnSignCounter( uint16_t connHandle, uint32_t newSignCounter );
 
   /*
    * gapLinkCheck - linkDB callback function
    */
-  extern void gapLinkCheck( uint16 connectionHandle, uint8 changeType );
+  extern void gapLinkCheck( uint16_t connectionHandle, uint8_t changeType );
 
   /*
    * gapGetDevAddressMode - Get the device address mode.
    */
-  extern uint8 gapGetDevAddressMode( void );
+  extern uint8_t gapGetDevAddressMode( void );
 
   /*
    * gapGetDevAddress - Get the device address.
    *      real - TRUE if you always want BD_ADDR, FALSE will allow random addresses.
    */
-  extern uint8 *gapGetDevAddress( uint8 real );
+  extern uint8_t *gapGetDevAddress( uint8_t real );
 
   /*
    * gapGetIRK - Get the device's IRK.
    */
-  extern uint8 *gapGetIRK( void );
+  extern uint8_t *gapGetIRK( void );
 
   /*
    * gapPasskeyNeededCB - Callback function to ask for passkey
    */
-  extern void gapPasskeyNeededCB( uint16 connectionHandle, uint8 type );
+  extern void gapPasskeyNeededCB( uint16_t connectionHandle, uint8_t type );
 
   /*
    * gapPairingCompleteCB - Callback function to inform pairing process complete.
    */
-  extern void gapPairingCompleteCB( uint8 status, uint8 initiatorRole,
-                          uint16 connectionHandle,
-                          uint8 authState,
+  extern void gapPairingCompleteCB( uint8_t status, uint8_t initiatorRole,
+                          uint16_t connectionHandle,
+                          uint8_t authState,
                           smSecurityInfo_t *pEncParams,
                           smSecurityInfo_t *pDevEncParams,
                           smIdentityInfo_t *pIdInfo,
@@ -345,7 +350,7 @@ extern uint8 gapAutoAdvPrivateAddrChange;
   /*
    * gapSendSlaveSecurityReqEvent - Generate a Slave Security Request event to the app.
    */
-  extern void gapSendSlaveSecurityReqEvent( uint8 taskID, uint16 connHandle, uint8 *pDevAddr, uint8 authReq );
+  extern void gapSendSlaveSecurityReqEvent( uint8_t taskID, uint16_t connHandle, uint8_t *pDevAddr, uint8_t authReq );
 
   /*
    * gapSetAdvParams - Send the advertisement parameters to the LL.
@@ -360,22 +365,22 @@ extern uint8 gapAutoAdvPrivateAddrChange;
   /*
    * gapDeleteAdvToken - Remove a token from the list.
    */
-  extern gapAdvDataToken_t *gapDeleteAdvToken( uint8 ADType );
+  extern gapAdvDataToken_t *gapDeleteAdvToken( uint8_t ADType );
 
   /*
    * gapFindAdvToken - Find a Advertisement data token from the advertisement type.
    */
-  extern gapAdvToken_t *gapFindAdvToken( uint8 ADType );
+  extern gapAdvToken_t *gapFindAdvToken( uint8_t ADType );
 
   /*
    * gapCalcAdvTokenDataLen - Find a Advertisement data token from the advertisement type.
    */
-  extern void gapCalcAdvTokenDataLen( uint8 *pAdLen, uint8 *pSrLen );
+  extern void gapCalcAdvTokenDataLen( uint8_t *pAdLen, uint8_t *pSrLen );
 
   /*
    * gapValidADType - Is a Advertisement Data Type valid.
    */
-  extern uint8 gapValidADType( uint8 adType );
+  extern uint8_t gapValidADType( uint8_t adType );
 
   /*
    * gapBuildADTokens - Is a Advertisement Data Type valid.
@@ -385,24 +390,24 @@ extern uint8 gapAutoAdvPrivateAddrChange;
   /*
    * gapSendBondCompleteEvent - Indicate that a bond has occurred.
    */
-  extern void gapSendBondCompleteEvent( uint8 status, uint16 connectionHandle );
+  extern void gapSendBondCompleteEvent( uint8_t status, uint16_t connectionHandle );
 
   /*
    * gapSendPairingReqEvent - Indicate that an unexpected Pairing Request was received.
    */
-  extern void gapSendPairingReqEvent( uint8 status, uint16 connectionHandle,
-                             uint8 ioCap,
-                             uint8 oobDataFlag,
-                             uint8 authReq,
-                             uint8 maxEncKeySize,
+  extern void gapSendPairingReqEvent( uint8_t status, uint16_t connectionHandle,
+                             uint8_t ioCap,
+                             uint8_t oobDataFlag,
+                             uint8_t authReq,
+                             uint8_t maxEncKeySize,
                              keyDist_t keyDist );
 
   /*
    * gapFindADType - Find Advertisement Data Type field in advertising data
    *                 field.
    */
-  extern uint8 *gapFindADType( uint8 adType, uint8 *pAdLen,
-                               uint8 dataLen, uint8 *pDataField );
+  extern uint8_t *gapFindADType( uint8_t adType, uint8_t *pAdLen,
+                               uint8_t dataLen, uint8_t *pDataField );
 
   /*
    * gapRegisterCentral - Register Central's processing function with GAP task
@@ -422,17 +427,17 @@ extern uint8 gapAutoAdvPrivateAddrChange;
   /*
    * gapIsAdvertising - Check if we are currently advertising.
    */
-  extern uint8 gapIsAdvertising( void );
+  extern uint8_t gapIsAdvertising( void );
 
   /*
    * gapIsScanning - Check if we are currently scanning.
    */
-  extern uint8 gapIsScanning( void );
+  extern uint8_t gapIsScanning( void );
 
   /*
    * gapCancelLinkReq - Cancel a connection create request.
    */
-  extern bStatus_t gapCancelLinkReq( uint8 taskID, uint16 connectionHandle );
+  extern bStatus_t gapCancelLinkReq( uint8_t taskID, uint16_t connectionHandle );
 
   /*
    * gapFreeEstLink - Free the establish link memory.
@@ -442,18 +447,18 @@ extern uint8 gapAutoAdvPrivateAddrChange;
   /*
    * sendEstLinkEvent - Build and send the GAP_LINK_ESTABLISHED_EVENT to the app.
    */
-  extern void sendEstLinkEvent( uint8 status, uint8 taskID, uint8 devAddrType,
-                                uint8 *pDevAddr, uint16 connectionHandle,
-                                uint16 connInterval, uint16 connLatency,
-                                uint16 connTimeout, uint16 clockAccuracy );
+  extern void sendEstLinkEvent( uint8_t status, uint8_t taskID, uint8_t devAddrType,
+                                uint8_t *pDevAddr, uint16_t connectionHandle,
+                                uint16_t connInterval, uint16_t connLatency,
+                                uint16_t connTimeout, uint16_t clockAccuracy );
 
   /*
    * gapSendLinkUpdateEvent - Build and send the GAP_LINK_PARAM_UPDATE_EVENT to the app.
    *
    */
-  extern void gapSendLinkUpdateEvent( uint8 status, uint16 connectionHandle,
-                                      uint16 connInterval, uint16 connLatency,
-                                      uint16 connTimeout );
+  extern void gapSendLinkUpdateEvent( uint8_t status, uint16_t connectionHandle,
+                                      uint16_t connInterval, uint16_t connLatency,
+                                      uint16_t connTimeout );
 
   /*
    * gapProcessL2CAPSignalEvt - Process L2CAP Signaling messages.

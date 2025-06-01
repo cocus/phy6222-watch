@@ -15,8 +15,6 @@
 /*******************************************************************************
     INCLUDES
 */
-#include "bcomdef.h"
-#include "OSAL.h"
 #include "linkdb.h"
 
 /*********************************************************************
@@ -62,7 +60,7 @@ static pfnLinkDBCB_t linkCBs[LINKDB_MAX_CBS];
     LOCAL FUNCTIONS
 */
 
-static void reportStatusChange( uint16 connectionHandle, uint8 changeType );
+static void reportStatusChange( uint16_t connectionHandle, uint8_t changeType );
 
 /*********************************************************************
     FUNCTIONS
@@ -79,7 +77,7 @@ static void reportStatusChange( uint16 connectionHandle, uint8 changeType );
 */
 void linkDB_Init( void )
 {
-    uint8 x; // loop counter
+    uint8_t x; // loop counter
 
     // Initialize the table
     for ( x = 0; x < MAX_NUM_LL_CONN; x++ )
@@ -111,10 +109,10 @@ void linkDB_Init( void )
                 bleMemAllocError if not table space available
 
 */
-uint8 linkDB_Register( pfnLinkDBCB_t pFunc )
+uint8_t linkDB_Register( pfnLinkDBCB_t pFunc )
 {
     // Find an empty slot
-    for ( uint8 x = 0; x < LINKDB_MAX_CBS; x++ )
+    for ( uint8_t x = 0; x < LINKDB_MAX_CBS; x++ )
     {
         if ( linkCBs[x] == NULL )
         {
@@ -144,8 +142,8 @@ uint8 linkDB_Register( pfnLinkDBCB_t pFunc )
                 bleAlreadyInRequestedMode - already exist connectionHandle
 
 */
-uint8 linkDB_Add( uint8 taskID, uint16 connectionHandle, uint8  stateFlags,uint8 role,
-                  uint8 addrType, uint8* pAddr, uint16 connInterval )
+uint8_t linkDB_Add( uint8_t taskID, uint16_t connectionHandle, uint8_t  stateFlags,uint8_t role,
+                  uint8_t addrType, uint8_t* pAddr, uint16_t connInterval )
 {
     // Check for existing record
     linkDBItem_t* pItem = linkDB_Find( connectionHandle );
@@ -163,7 +161,7 @@ uint8 linkDB_Add( uint8 taskID, uint16 connectionHandle, uint8  stateFlags,uint8
         {
             // Copy link info
             pItem->addrType = addrType;
-            VOID osal_memcpy( pItem->addr, pAddr, B_ADDR_LEN );
+            osal_memcpy( pItem->addr, pAddr, B_ADDR_LEN );
             pItem->connectionHandle = connectionHandle;
             pItem->stateFlags = stateFlags;
             pItem->role = role;
@@ -192,7 +190,7 @@ uint8 linkDB_Add( uint8 taskID, uint16 connectionHandle, uint8  stateFlags,uint8
                 INVALIDPARAMETER - connectionHandle not found.
 
 */
-uint8 linkDB_Remove( uint16 connectionHandle )
+uint8_t linkDB_Remove( uint16_t connectionHandle )
 {
     // Get record
     linkDBItem_t* pItem = linkDB_Find( connectionHandle );
@@ -208,7 +206,7 @@ uint8 linkDB_Remove( uint16 connectionHandle )
         }
 
         // Clear the entire entry
-        VOID osal_memset( pItem, 0, (int)(sizeof( linkDBItem_t )) );
+        osal_memset( pItem, 0, (int)(sizeof( linkDBItem_t )) );
         // Mark the record as unused.
         pItem->connectionHandle = INVALID_CONNHANDLE;
         pItem->stateFlags = LINK_NOT_CONNECTED;
@@ -236,7 +234,7 @@ uint8 linkDB_Remove( uint16 connectionHandle )
                 bleNoResources - connectionHandle not found.
 
 */
-uint8 linkDB_Update( uint16 connectionHandle, uint8 newState )
+uint8_t linkDB_Update( uint16_t connectionHandle, uint8_t newState )
 {
     linkDBItem_t* pItem = linkDB_Find( connectionHandle );
 
@@ -264,10 +262,10 @@ uint8 linkDB_Update( uint16 connectionHandle, uint8 newState )
 
     @return      a pointer to the found link item, NULL if not found
 */
-linkDBItem_t* linkDB_Find( uint16 connectionHandle )
+linkDBItem_t* linkDB_Find( uint16_t connectionHandle )
 {
     // Find link record
-    for ( uint8 x = 0; x < MAX_NUM_LL_CONN; x++ )
+    for ( uint8_t x = 0; x < MAX_NUM_LL_CONN; x++ )
     {
         if ( linkDB[x].connectionHandle == connectionHandle )
         {
@@ -289,10 +287,10 @@ linkDBItem_t* linkDB_Find( uint16 connectionHandle )
 
     @return      a pointer to the found link item, NULL if not found
 */
-linkDBItem_t* linkDB_FindFirst( uint8 taskID )
+linkDBItem_t* linkDB_FindFirst( uint8_t taskID )
 {
     // Find link record
-    for ( uint8 x = 0; x < MAX_NUM_LL_CONN; x++ )
+    for ( uint8_t x = 0; x < MAX_NUM_LL_CONN; x++ )
     {
         if ( (linkDB[x].connectionHandle != INVALID_CONNHANDLE)
                 && (linkDB[x].taskID == taskID) )
@@ -317,7 +315,7 @@ linkDBItem_t* linkDB_FindFirst( uint8 taskID )
     @return      TRUE if the link is found and state is set in
                 state flags. FALSE, otherwise.
 */
-uint8 linkDB_State( uint16 connectionHandle, uint8 state )
+uint8_t linkDB_State( uint16_t connectionHandle, uint8_t state )
 {
     linkDBItem_t* pLink;
 
@@ -347,12 +345,12 @@ uint8 linkDB_State( uint16 connectionHandle, uint8 state )
 
     @return      number of active connections
 */
-uint8 linkDB_NumActive( void )
+uint8_t linkDB_NumActive( void )
 {
-    uint8 count = 0;
+    uint8_t count = 0;
 
     // Find link record
-    for ( uint8 x = 0; x < MAX_NUM_LL_CONN; x++ )
+    for ( uint8_t x = 0; x < MAX_NUM_LL_CONN; x++ )
     {
         if ( linkDB[x].stateFlags )
         {
@@ -379,7 +377,7 @@ uint8 linkDB_NumActive( void )
                 LINBDB_ERR_INSUFFICIENT_KEYSIZE - key size encrypted is not large enough
                 LINKDB_ERR_INSUFFICIENT_ENCRYPTION - link is encrypted, but not authenticated
 */
-uint8 linkDB_Authen( uint16 connectionHandle, uint8 keySize, uint8 mitmRequired )
+uint8_t linkDB_Authen( uint16_t connectionHandle, uint8_t keySize, uint8_t mitmRequired )
 {
     linkDBItem_t* pItem = linkDB_Find( connectionHandle );
 
@@ -422,14 +420,14 @@ uint8 linkDB_Authen( uint16 connectionHandle, uint8 keySize, uint8 mitmRequired 
 
     // If an LTK is available and encryption is required (LE security mode 1) but
     // encryption is not enabled, the service request shall be rejected with the
-    // error code “Insufficient Encryption?.
+    // error code ï¿½Insufficient Encryption?.
     if ( (pItem->stateFlags & LINK_ENCRYPTED) == 0 )
     {
         return ( LINKDB_ERR_INSUFFICIENT_ENCRYPTION );
     }
 
     // If the encryption is enabled with insufficient key size then the service
-    // request shall be rejected with the error code “Insufficient Encryption Key
+    // request shall be rejected with the error code ï¿½Insufficient Encryption Key
     // Size.?
     if ( pItem->pEncParams->keySize < keySize )
     {
@@ -452,7 +450,7 @@ void linkDB_PerformFunc( pfnPerformFuncCB_t cb )
 {
     if ( cb )
     {
-        for ( uint8 x = 0; x < MAX_NUM_LL_CONN; x++ )
+        for ( uint8_t x = 0; x < MAX_NUM_LL_CONN; x++ )
         {
             if ( linkDB[x].connectionHandle != INVALID_CONNHANDLE )
             {
@@ -475,9 +473,9 @@ void linkDB_PerformFunc( pfnPerformFuncCB_t cb )
 
     @return      void
 */
-static void reportStatusChange( uint16 connectionHandle, uint8 changeType )
+static void reportStatusChange( uint16_t connectionHandle, uint8_t changeType )
 {
-    for ( uint8 x = 0; x < LINKDB_MAX_CBS; x++ )
+    for ( uint8_t x = 0; x < LINKDB_MAX_CBS; x++ )
     {
         if ( linkCBs[x] )
         {

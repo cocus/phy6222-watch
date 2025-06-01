@@ -9,16 +9,24 @@
 
 **************************************************************************************************/
 
-#include "bcomdef.h"
-#include "hci_tl.h"
-#include "osal_bufmgr.h"
-#include "gap_internal.h"
-#include "linkdb.h"
-#include "l2cap.h"
-#include "sm.h"
+///#include "bcomdef.h"
+///#include "hci_tl.h"
+///#include "osal_bufmgr.h"
+///#include "gap_internal.h"
+///#include "linkdb.h"
+///#include "l2cap.h"
+///#include "sm.h"
+///#include "sm_internal.h"
+///#include "smp.h"
+///#include "jump_function.h"
+
+#include <ble/include/bcomdef.h>
+#include <ble/include/hci.h>
+#include <ble/include/l2cap.h>
+#include <ble/hci/hci_tl.h>
+#include <osal/osal_cbtimer.h>
 #include "sm_internal.h"
-#include "smp.h"
-#include "jump_function.h"
+#include "gap_internal.h"
 
 /*********************************************************************
     MACROS
@@ -35,7 +43,7 @@
 /*********************************************************************
     GLOBAL VARIABLES
 */
-uint8 smTaskID;  // SM task ID
+uint8_t smTaskID;  // SM task ID
 
 /*********************************************************************
     EXTERNAL VARIABLES
@@ -52,9 +60,9 @@ uint8 smTaskID;  // SM task ID
 /*********************************************************************
     LOCAL FUNCTIONS
 */
-static uint8 smProcessOSALMsg( osal_event_hdr_t* pMsg );
-static uint8 smProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg );
-static uint8 smProcessHCIBLEEventCode( hciEvt_CmdComplete_t* pMsg );
+static uint8_t smProcessOSALMsg( osal_event_hdr_t* pMsg );
+static uint8_t smProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg );
+static uint8_t smProcessHCIBLEEventCode( hciEvt_CmdComplete_t* pMsg );
 
 /*********************************************************************
     API FUNCTIONS
@@ -69,15 +77,15 @@ static uint8 smProcessHCIBLEEventCode( hciEvt_CmdComplete_t* pMsg );
 
     @return      void
 */
-void SM_Init( uint8 task_id )
+void SM_Init( uint8_t task_id )
 {
     smTaskID = task_id;
     // Register to receive all security related HCI events
     HCI_SMPTaskRegister( smTaskID );
     // Register with L2CAP SMP channel
-    VOID L2CAP_RegisterApp( smTaskID, L2CAP_CID_SMP );
+    L2CAP_RegisterApp( smTaskID, L2CAP_CID_SMP );
     // link database callback
-    VOID linkDB_Register( smLinkCheck );
+    linkDB_Register( smLinkCheck );
 }
 
 /*********************************************************************
@@ -90,17 +98,17 @@ void SM_Init( uint8 task_id )
 
     @return      events not processed
 */
-uint16 SM_ProcessEvent( uint8 task_id, uint16 events )
+uint16_t SM_ProcessEvent( uint8_t task_id, uint16_t events )
 {
 	(void) task_id;
     if ( events & SYS_EVENT_MSG )
     {
-        uint8* pMsg;  // pointer to incoming message
+        uint8_t* pMsg;  // pointer to incoming message
 
         // Process incoming OSAL SM messages
         if ( (pMsg = osal_msg_receive( smTaskID )) != NULL )
         {
-            uint8 dealloc = TRUE;
+            uint8_t dealloc = TRUE;
 
             if ( !smProcessOSALMsg( (osal_event_hdr_t*)pMsg ) )
             {
@@ -118,7 +126,7 @@ uint16 SM_ProcessEvent( uint8 task_id, uint16 events )
             if ( dealloc )
             {
                 // Release the OSAL message
-                VOID osal_msg_deallocate( pMsg );
+                osal_msg_deallocate( pMsg );
             }
         }
 
@@ -157,9 +165,9 @@ uint16 SM_ProcessEvent( uint8 task_id, uint16 events )
     @return  TRUE if processed and safe to deallocate, FALSE if passed
             off to another task.
 */
-static uint8 smProcessOSALMsg( osal_event_hdr_t* pMsg )
+static uint8_t smProcessOSALMsg( osal_event_hdr_t* pMsg )
 {
-    uint8 safeToDealloc = TRUE;   // Assume that we are expecting the message
+    uint8_t safeToDealloc = TRUE;   // Assume that we are expecting the message
 
     switch ( pMsg->event )
     {
@@ -213,9 +221,9 @@ static uint8 smProcessOSALMsg( osal_event_hdr_t* pMsg )
     @return  TRUE if processed and safe to deallocate, FALSE if passed
             off to another task.
 */
-static uint8 smProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg )
+static uint8_t smProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg )
 {
-    uint8 safeToDealloc; // return value
+    uint8_t safeToDealloc; // return value
 
     switch ( pMsg->cmdOpcode )
     {
@@ -241,10 +249,10 @@ static uint8 smProcessHCICmdCompleteEvt( hciEvt_CmdComplete_t* pMsg )
     @return  TRUE if processed and safe to deallocate, FALSE if passed
             off to another task.
 */
-static uint8 smProcessHCIBLEEventCode( hciEvt_CmdComplete_t* pMsg )
+static uint8_t smProcessHCIBLEEventCode( hciEvt_CmdComplete_t* pMsg )
 {
-    uint8 safeToDealloc = TRUE; // Assume that the message will be processed by SM
-    uint8 eventCode = ((hciEvt_BLELTKReq_t*)pMsg)->BLEEventCode;
+    uint8_t safeToDealloc = TRUE; // Assume that the message will be processed by SM
+    uint8_t eventCode = ((hciEvt_BLELTKReq_t*)pMsg)->BLEEventCode;
 
     switch ( eventCode )
     {
@@ -266,8 +274,8 @@ static uint8 smProcessHCIBLEEventCode( hciEvt_CmdComplete_t* pMsg )
 
     case HCI_ENCRYPTION_CHANGE_EVENT_CODE:
     {
-        uint8 reason;         // Reason field
-        uint16 connHandle;    // Connection handle
+        uint8_t reason;         // Reason field
+        uint16_t connHandle;    // Connection handle
         hciEvt_EncryptChange_t* pPkt = (hciEvt_EncryptChange_t*)pMsg;
         connHandle = pPkt->connHandle;
         reason = pPkt->reason;
@@ -285,15 +293,15 @@ static uint8 smProcessHCIBLEEventCode( hciEvt_CmdComplete_t* pMsg )
     return ( safeToDealloc );
 }
 
-void smTo_timerCB( uint8* pData )
+void smTo_timerCB( uint8_t* pData )
 {
-    uint16 connHandle = (uint16 )pData[0];
+    uint16_t connHandle = (uint16_t )pData[0];
     smTimedOut( connHandle );
 }
 
-void smState_timerCB( uint8* pData )
+void smState_timerCB( uint8_t* pData )
 {
-    uint16 connHandle = (uint16 )pData[0];
+    uint16_t connHandle = (uint16_t )pData[0];
     smNextPairingState( connHandle );
 }
 

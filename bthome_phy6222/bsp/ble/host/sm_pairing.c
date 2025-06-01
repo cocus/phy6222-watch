@@ -9,13 +9,10 @@
 
 **************************************************************************************************/
 
-#include "bcomdef.h"
-#include "l2cap.h"
-#include "gap_internal.h"
-#include "linkdb.h"
-#include "sm.h"
+#include <ble/include/l2cap.h>
+#include <ble/controller/ll.h>
 #include "sm_internal.h"
-#include "smp.h"
+#include "gap_internal.h"
 
 /*********************************************************************
     MACROS
@@ -68,7 +65,7 @@ static const smInitiatorCBs_t* pfnInitiatorCBs = NULL;
 
 // Determine the Pairing passkey requirement (from the spec):
 //       IOCapMatrix[Responder's IOCapability][Initiator's IOCapability];
-static CONST uint8 IOCapMatrix[5][5] =
+static CONST uint8_t IOCapMatrix[5][5] =
 {
     /*        Initiator:    DisplayOnly,  DisplayYesNo, KeyboardOnly, NoInputNoOutput,  KeyboardDisplay */
     /* Responder:      */
@@ -82,11 +79,11 @@ static CONST uint8 IOCapMatrix[5][5] =
 /*********************************************************************
     LOCAL FUNCTIONS
 */
-static uint8 smpProcessIncoming( uint16 connHandle, uint8 cmdID, smpMsgs_t* pParsedMsg );
+static uint8_t smpProcessIncoming( uint16_t connHandle, uint8_t cmdID, smpMsgs_t* pParsedMsg );
 
-static bStatus_t smDetermineIOCaps( uint16 connectionHandle,uint8 initiatorIO, uint8 responderIO );
-static void smFreePairingParams( uint16 connectionHandle );
-static void smSetPairingReqRsp( uint16 connectionHandle,smpPairingReq_t* pReq );
+static bStatus_t smDetermineIOCaps( uint16_t connectionHandle,uint8_t initiatorIO, uint8_t responderIO );
+static void smFreePairingParams( uint16_t connectionHandle );
+static void smSetPairingReqRsp( uint16_t connectionHandle,smpPairingReq_t* pReq );
 
 
 /*********************************************************************
@@ -104,9 +101,9 @@ static void smSetPairingReqRsp( uint16 connectionHandle,smpPairingReq_t* pReq );
 
     Public function defined in sm.h.
 */
-bStatus_t SM_StartPairing( uint8 initiator,
-                           uint8 taskID,
-                           uint16 connectionHandle,
+bStatus_t SM_StartPairing( uint8_t initiator,
+                           uint8_t taskID,
+                           uint16_t connectionHandle,
                            smLinkSecurityReq_t* pSecReqs )
 {
     bStatus_t ret = SUCCESS;    // Return value
@@ -124,14 +121,14 @@ bStatus_t SM_StartPairing( uint8 initiator,
         return ( INVALIDPARAMETER );
     }
 
-    pPairingParams[connectionHandle] = ( smPairingParams_t*)osal_mem_alloc( (uint16)sizeof ( smPairingParams_t ) );
+    pPairingParams[connectionHandle] = ( smPairingParams_t*)osal_mem_alloc( (uint16_t)sizeof ( smPairingParams_t ) );
 
     if ( pPairingParams[connectionHandle] == NULL )
     {
         return ( bleMemAllocError );
     }
 
-    VOID osal_memset( pPairingParams[connectionHandle], 0, sizeof( smPairingParams_t ) );
+    osal_memset( pPairingParams[connectionHandle], 0, sizeof( smPairingParams_t ) );
     // Save parameters
     pPairingParams[connectionHandle]->state = SM_PAIRING_STATE_INITIALIZE;
     pPairingParams[connectionHandle]->initiator = initiator;
@@ -164,10 +161,10 @@ bStatus_t SM_StartPairing( uint8 initiator,
 
     Public function defined in sm.h.
 */
-bStatus_t SM_PasskeyUpdate( uint8* pPasskey, uint16 connectionHandle )
+bStatus_t SM_PasskeyUpdate( uint8_t* pPasskey, uint16_t connectionHandle )
 {
     bStatus_t ret = SUCCESS;    // return value
-    uint8 sendConfirm = FALSE;  // flag to send pairing confirm message
+    uint8_t sendConfirm = FALSE;  // flag to send pairing confirm message
 
     // Are we pairing?
     if ( pPairingParams[connectionHandle] == NULL )
@@ -190,7 +187,7 @@ bStatus_t SM_PasskeyUpdate( uint8* pPasskey, uint16 connectionHandle )
     }
 
     // Copy the passkey (tk)
-    VOID osal_memcpy( pPairingParams[connectionHandle]->tk, pPasskey, KEYLEN );
+    osal_memcpy( pPairingParams[connectionHandle]->tk, pPasskey, KEYLEN );
     // Generate Rand (MRand or SRand)
     smGenerateRandBuf( pPairingParams[connectionHandle]->myComp.rand, SMP_RANDOM_LEN );
     // Generate Confirm (MConfirm or SConfirm)
@@ -227,7 +224,7 @@ bStatus_t SM_PasskeyUpdate( uint8* pPasskey, uint16 connectionHandle )
 
         if ( GAP_GetParamValue( TGAP_SM_TESTCODE ) == SM_TESTMODE_SEND_BAD_CONFIRM )
         {
-            VOID osal_memset( pPairingParams[connectionHandle]->myComp.confirm, 0, KEYLEN );
+            osal_memset( pPairingParams[connectionHandle]->myComp.confirm, 0, KEYLEN );
         }
 
         #endif // TESTMODE
@@ -281,7 +278,7 @@ void smRegisterResponder( smResponderCBs_t* pfnCBs )
 
     @return      none
 */
-void smLinkCheck( uint16 connectionHandle, uint8 changeType )
+void smLinkCheck( uint16_t connectionHandle, uint8_t changeType )
 {
     if ( (pPairingParams[connectionHandle])
             && (pPairingParams[connectionHandle]->connectionHandle == connectionHandle)
@@ -301,7 +298,7 @@ void smLinkCheck( uint16 connectionHandle, uint8 changeType )
 
     @return      none
 */
-void smTimedOut( uint16 connectionHandle )
+void smTimedOut( uint16_t connectionHandle )
 {
     smEndPairing( connectionHandle,bleTimeout );
 }
@@ -320,7 +317,7 @@ void smProcessDataMsg( l2capDataEvent_t* pMsg )
     smpMsgs_t parsedMsg;        // Place to parse the message
     bStatus_t stat = SUCCESS;   // Return value
     smpPairingFailed_t failed;  // Pairing Failed message
-    uint8 cmdID;                // Message command ID
+    uint8_t cmdID;                // Message command ID
     #if defined ( TESTMODES )
 
     if ( GAP_GetParamValue( TGAP_SM_TESTCODE ) == SM_TESTMODE_NO_RESPONSE )
@@ -419,7 +416,7 @@ void smProcessDataMsg( l2capDataEvent_t* pMsg )
     @return      SUCCESS if pairing failed sent
                 otherwise failure.
 */
-bStatus_t smSendFailAndEnd( uint16 connHandle, smpPairingFailed_t* pFailedMsg )
+bStatus_t smSendFailAndEnd( uint16_t connHandle, smpPairingFailed_t* pFailedMsg )
 {
     bStatus_t stat;   // return value
     // Send Pairing Failed message
@@ -439,9 +436,9 @@ bStatus_t smSendFailAndEnd( uint16 connHandle, smpPairingFailed_t* pFailedMsg )
 
     @return      TRUE - We are always expecting this message
 */
-uint8 smProcessEncryptChange( uint16 connectionHandle, uint8 reason )
+uint8_t smProcessEncryptChange( uint16_t connectionHandle, uint8_t reason )
 {
-    uint8 sendBondEnd = FALSE;  // Assume not bonding
+    uint8_t sendBondEnd = FALSE;  // Assume not bonding
 
     // Check for the correct state and connection
     if ( (pPairingParams[connectionHandle])
@@ -545,7 +542,7 @@ uint8 smProcessEncryptChange( uint16 connectionHandle, uint8 reason )
 
     @return      none
 */
-void smNextPairingState(uint16 connectionHandle )
+void smNextPairingState(uint16_t connectionHandle )
 {
     if ( pPairingParams[connectionHandle] )
     {
@@ -587,15 +584,15 @@ void smNextPairingState(uint16 connectionHandle )
 
     @return      status
 */
-bStatus_t sm_c1(uint16 connectionHandle,uint8* pK, uint8* pR, uint8* pC1 )
+bStatus_t sm_c1(uint16_t connectionHandle,uint8_t* pK, uint8_t* pR, uint8_t* pC1 )
 {
     bStatus_t stat;                   // return value
-    uint8 pres[SMP_PAIRING_RSP_LEN];  // Pairing Response message (raw)
-    uint8 preq[SMP_PAIRING_REQ_LEN];  // Pairing Request message (raw)
-    uint8 iat;                        // initiator address type
-    uint8 rat;                        // responder address type
-    uint8* pIA;                       // initiator address
-    uint8* pRA;                       // responder address
+    uint8_t pres[SMP_PAIRING_RSP_LEN];  // Pairing Response message (raw)
+    uint8_t preq[SMP_PAIRING_REQ_LEN];  // Pairing Request message (raw)
+    uint8_t iat;                        // initiator address type
+    uint8_t rat;                        // responder address type
+    uint8_t* pIA;                       // initiator address
+    uint8_t* pRA;                       // responder address
     smpPairingReq_t pairingStruct;    // Pairing Reqeust struct
     smpPairingReq_t* pPairingReq;      // Pairing Reqeust
     smpPairingReq_t* pPairingRsp;      // Pairing Response
@@ -640,8 +637,8 @@ bStatus_t sm_c1(uint16 connectionHandle,uint8* pK, uint8* pR, uint8* pC1 )
     }
 
     // build the raw data for the Pairing Request and Pairing Response messages
-    VOID smpBuildPairingRsp( pPairingRsp, pres );
-    VOID smpBuildPairingReq( pPairingReq, preq );
+    smpBuildPairingRsp( pPairingRsp, pres );
+    smpBuildPairingReq( pPairingReq, preq );
     // Calculate the cl
     stat =  sm_c1new( pK, pR, pres, preq, iat, pIA, rat, pRA, pC1 );
     return ( stat );
@@ -667,10 +664,10 @@ bStatus_t sm_c1(uint16 connectionHandle,uint8* pK, uint8* pR, uint8* pC1 )
                 SMP_PAIRING_FAILED_UNSPECIFIED
                 SMP_PAIRING_FAILED_REPEATED_ATTEMPTS
 */
-static uint8 smpProcessIncoming( uint16 connHandle, uint8 cmdID, smpMsgs_t* pParsedMsg )
+static uint8_t smpProcessIncoming( uint16_t connHandle, uint8_t cmdID, smpMsgs_t* pParsedMsg )
 {
     linkDBItem_t* pLinkItem; // connection information
-    uint8 reason = SMP_PAIRING_FAILED_CMD_NOT_SUPPORTED; // return value
+    uint8_t reason = SMP_PAIRING_FAILED_CMD_NOT_SUPPORTED; // return value
     // find the connection
     pLinkItem = linkDB_Find( connHandle );
 
@@ -722,7 +719,7 @@ void smProcessPairingReq( linkDBItem_t* pLinkItem, gapPairingReq_t* pPairReq )
 {
     if ( pfnResponderCBs && pfnResponderCBs->pfnProcessMsg )
     {
-        uint8 reason;
+        uint8_t reason;
         smpPairingReq_t pairingReq;
         pairingReq.ioCapability = pPairReq->ioCap;
         pairingReq.oobDataFlag = pPairReq->oobDataFlag;
@@ -736,7 +733,7 @@ void smProcessPairingReq( linkDBItem_t* pLinkItem, gapPairingReq_t* pPairReq )
         {
             smpPairingFailed_t failedMsg;
             failedMsg.reason = reason;
-            VOID smSendFailAndEnd( pLinkItem->connectionHandle, &failedMsg );
+            mSendFailAndEnd( pLinkItem->connectionHandle, &failedMsg );
         }
     }
 }
@@ -756,8 +753,8 @@ void smProcessPairingReq( linkDBItem_t* pLinkItem, gapPairingReq_t* pPairReq )
                 INVALIDPARAMETER
                 other from HCI/LL
 */
-bStatus_t smStartEncryption( uint16 connHandle, uint8* pLTK, uint16 div,
-                             uint8* pRandNum, uint8 keyLen )
+bStatus_t smStartEncryption( uint16_t connHandle, uint8_t* pLTK, uint16_t div,
+                             uint8_t* pRandNum, uint8_t keyLen )
 {
     if ( pfnInitiatorCBs && pfnInitiatorCBs->pfnStartEncryption )
     {
@@ -776,7 +773,7 @@ bStatus_t smStartEncryption( uint16 connHandle, uint8* pLTK, uint16 div,
 
     @return      SUCCESS, FAILURE
 */
-bStatus_t smGeneratePairingReqRsp( uint16 connectionHandle )
+bStatus_t smGeneratePairingReqRsp( uint16_t connectionHandle )
 {
     if ( pPairingParams[connectionHandle] )
     {
@@ -810,11 +807,11 @@ bStatus_t smGeneratePairingReqRsp( uint16 connectionHandle )
 
     @return      SUCCESS
 */
-bStatus_t smGenerateConfirm( uint16 connectionHandle )
+bStatus_t smGenerateConfirm( uint16_t connectionHandle )
 {
     smpPairingConfirm_t confirmMsg; // Parameters to build message
     // Copy the confirm
-    VOID osal_memcpy( confirmMsg.confirmValue,
+    osal_memcpy( confirmMsg.confirmValue,
                       pPairingParams[connectionHandle]->myComp.confirm, SMP_CONFIRM_LEN );
     // Send confirm message
     return ( smSendPairingConfirm( pPairingParams[connectionHandle]->connectionHandle, &confirmMsg ) );
@@ -829,11 +826,11 @@ bStatus_t smGenerateConfirm( uint16 connectionHandle )
 
     @return      SUCCESS
 */
-bStatus_t smGenerateRandMsg( uint16 connectionHandle )
+bStatus_t smGenerateRandMsg( uint16_t connectionHandle )
 {
     smpPairingRandom_t randMsg;  // Parameters to build message
     // Build rand
-    VOID osal_memcpy( randMsg.randomValue,
+    osal_memcpy( randMsg.randomValue,
                       pPairingParams[connectionHandle]->myComp.rand, SMP_RANDOM_LEN );
     // Send Random message
     return ( smSendPairingRandom( pPairingParams[connectionHandle]->connectionHandle, &randMsg ) );
@@ -850,17 +847,17 @@ bStatus_t smGenerateRandMsg( uint16 connectionHandle )
                 bleMemAllocError
                 bleInvalidRange - auth reqs don't match
 */
-bStatus_t smSavePairInfo( uint16 connectionHandle, smpPairingReq_t* pPair )
+bStatus_t smSavePairInfo( uint16_t connectionHandle, smpPairingReq_t* pPair )
 {
     bStatus_t ret = SUCCESS;
     // Allocate the pairing information
-    pPairingParams[connectionHandle]->pPairDev = (smpPairingReq_t*)osal_mem_alloc( (uint16)sizeof( smpPairingReq_t ) );
+    pPairingParams[connectionHandle]->pPairDev = (smpPairingReq_t*)osal_mem_alloc( (uint16_t)sizeof( smpPairingReq_t ) );
 
     if ( pPairingParams[connectionHandle]->pPairDev )
     {
         smLinkSecurityReq_t* pSecReq = pPairingParams[connectionHandle]->pSecReqs;
         // Copy the pairing information into the pairingParam
-        VOID osal_memcpy( pPairingParams[connectionHandle]->pPairDev, pPair, (unsigned int)sizeof ( smpPairingReq_t ) );
+        osal_memcpy( pPairingParams[connectionHandle]->pPairDev, pPair, (unsigned int)sizeof ( smpPairingReq_t ) );
 
         if ( pPairingParams[connectionHandle]->initiator == FALSE  )
         {
@@ -893,8 +890,8 @@ bStatus_t smSavePairInfo( uint16 connectionHandle, smpPairingReq_t* pPair )
         }
         else if ( (pPair->authReq.mitm) || (pSecReq->authReq & SMP_AUTHREQ_MITM) )
         {
-            uint8 initiatorIO;
-            uint8 responderIO;
+            uint8_t initiatorIO;
+            uint8_t responderIO;
 
             if ( pPairingParams[connectionHandle]->initiator )
             {
@@ -936,7 +933,7 @@ bStatus_t smSavePairInfo( uint16 connectionHandle, smpPairingReq_t* pPair )
     @return      SUCCESS
                 bleInvalidRange - IO capability out of range
 */
-static bStatus_t smDetermineIOCaps( uint16 connectionHandle, uint8 initiatorIO, uint8 responderIO )
+static bStatus_t smDetermineIOCaps( uint16_t connectionHandle, uint8_t initiatorIO, uint8_t responderIO )
 {
     if ( (initiatorIO > SMP_IO_CAP_KEYBOARD_DISPLAY) || (responderIO > SMP_IO_CAP_KEYBOARD_DISPLAY) )
     {
@@ -960,10 +957,10 @@ static bStatus_t smDetermineIOCaps( uint16 connectionHandle, uint8 initiatorIO, 
                 INVALIDPARAMETER
                 other from HCI/LL
 */
-void smPairingSendEncInfo( uint16 connHandle, uint8* pLTK )
+void smPairingSendEncInfo( uint16_t connHandle, uint8_t* pLTK )
 {
     // The smpEncInfo_t only has one field in it.
-    VOID smSendEncInfo( connHandle, (smpEncInfo_t*)pLTK );
+    smSendEncInfo( connHandle, (smpEncInfo_t*)pLTK );
 }
 
 /*********************************************************************
@@ -979,14 +976,14 @@ void smPairingSendEncInfo( uint16 connHandle, uint8* pLTK )
                 INVALIDPARAMETER
                 other from HCI/LL
 */
-void smPairingSendMasterID( uint16 connHandle, uint16 ediv, uint8* pRand )
+void smPairingSendMasterID( uint16_t connHandle, uint16_t ediv, uint8_t* pRand )
 {
     smpMasterID_t masterMsg;  // Message structure
     // Fill parameters
     masterMsg.ediv = ediv;
-    VOID osal_memcpy( masterMsg.rand, pRand, B_RANDOM_NUM_SIZE );
+    osal_memcpy( masterMsg.rand, pRand, B_RANDOM_NUM_SIZE );
     // Send Master ID message
-    VOID smSendMasterID( connHandle, &masterMsg );
+    smSendMasterID( connHandle, &masterMsg );
 }
 
 /*********************************************************************
@@ -1001,9 +998,9 @@ void smPairingSendMasterID( uint16 connHandle, uint16 ediv, uint8* pRand )
                 INVALIDPARAMETER
                 other from HCI/LL
 */
-void smPairingSendIdentityInfo( uint16 connHandle, uint8* pIRK )
+void smPairingSendIdentityInfo( uint16_t connHandle, uint8_t* pIRK )
 {
-    VOID smSendIdentityInfo( connHandle, (smpIdentityInfo_t*)pIRK );
+    smSendIdentityInfo( connHandle, (smpIdentityInfo_t*)pIRK );
 }
 
 /*********************************************************************
@@ -1019,14 +1016,14 @@ void smPairingSendIdentityInfo( uint16 connHandle, uint8* pIRK )
                 INVALIDPARAMETER
                 other from HCI/LL
 */
-void smPairingSendIdentityAddrInfo( uint16 connHandle, uint8 addrType, uint8* pMACAddr )
+void smPairingSendIdentityAddrInfo( uint16_t connHandle, uint8_t addrType, uint8_t* pMACAddr )
 {
     smpIdentityAddrInfo_t identityAddrMsg;  // Message structure
     // Fill in parameters
     identityAddrMsg.addrType = addrType;
-    VOID osal_memcpy( identityAddrMsg.bdAddr, pMACAddr, B_ADDR_LEN );
+    osal_memcpy( identityAddrMsg.bdAddr, pMACAddr, B_ADDR_LEN );
     // Send message
-    VOID smSendIdentityAddrInfo( connHandle, &identityAddrMsg );
+    smSendIdentityAddrInfo( connHandle, &identityAddrMsg );
 }
 
 /*********************************************************************
@@ -1041,9 +1038,9 @@ void smPairingSendIdentityAddrInfo( uint16 connHandle, uint8 addrType, uint8* pM
                 INVALIDPARAMETER
                 other from HCI/LL
 */
-void smPairingSendSingingInfo( uint16 connHandle, uint8* pSRK )
+void smPairingSendSingingInfo( uint16_t connHandle, uint8_t* pSRK )
 {
-    VOID smSendSigningInfo( connHandle, (smpSigningInfo_t*)pSRK );
+    smSendSigningInfo( connHandle, (smpSigningInfo_t*)pSRK );
 }
 
 /*********************************************************************
@@ -1055,7 +1052,7 @@ void smPairingSendSingingInfo( uint16 connHandle, uint8* pSRK )
 
     @return      none
 */
-static void smFreePairingParams( uint16 connectionHandle )
+static void smFreePairingParams( uint16_t connectionHandle )
 {
     #if !defined ( HOLD_PAIRING_PARAMETERS )
     // Clear the SM Timeout
@@ -1107,7 +1104,7 @@ static void smFreePairingParams( uint16 connectionHandle )
 
     @return      none
 */
-void smEndPairing( uint16 connectionHandle,uint8 status )
+void smEndPairing( uint16_t connectionHandle,uint8_t status )
 {
     if ( pPairingParams[connectionHandle] )
     {
@@ -1132,9 +1129,9 @@ void smEndPairing( uint16 connectionHandle,uint8 status )
 
     @return      the negotiated key size
 */
-uint8 smDetermineKeySize( uint16 connectionHandle )
+uint8_t smDetermineKeySize( uint16_t connectionHandle )
 {
-    uint8 keySize = KEYLEN;
+    uint8_t keySize = KEYLEN;
 
     if ( pPairingParams[connectionHandle] )
     {
@@ -1163,7 +1160,7 @@ uint8 smDetermineKeySize( uint16 connectionHandle )
 
     @return      none
 */
-static void smSetPairingReqRsp( uint16 connectionHandle,smpPairingReq_t* pReq )
+static void smSetPairingReqRsp( uint16_t connectionHandle,smpPairingReq_t* pReq )
 {
     if ( pPairingParams[connectionHandle] && pPairingParams[connectionHandle]->pSecReqs )
     {
@@ -1176,7 +1173,7 @@ static void smSetPairingReqRsp( uint16 connectionHandle,smpPairingReq_t* pReq )
     }
     else
     {
-        VOID osal_memset( pReq, 0, sizeof( smpPairingReq_t ) );
+        osal_memset( pReq, 0, sizeof( smpPairingReq_t ) );
     }
 }
 

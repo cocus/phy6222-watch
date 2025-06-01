@@ -9,14 +9,9 @@
 
 **************************************************************************************************/
 
-#include "bcomdef.h"
-#include "OSAL.h"
-#include "osal_bufmgr.h"
-#include "hci.h"
-#include "l2cap.h"
-#include "gap.h"
-#include "sm.h"
-#include "sm_internal.h"
+#include <ble/include/bcomdef.h>
+#include <ble/include/gap.h>
+#include <ble/include/l2cap.h>
 #include "smp.h"
 
 /*********************************************************************
@@ -68,7 +63,7 @@
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or pairingReq is NULL
 */
-bStatus_t smpBuildPairingReq( smpPairingReq_t* pPairingReq, uint8* pBuf )
+bStatus_t smpBuildPairingReq( smpPairingReq_t* pPairingReq, uint8_t* pBuf )
 {
     return ( smpBuildPairingReqRsp( SMP_PAIRING_REQ, pPairingReq, pBuf ) );
 }
@@ -84,7 +79,7 @@ bStatus_t smpBuildPairingReq( smpPairingReq_t* pPairingReq, uint8* pBuf )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or pairingRsp is NULL
 */
-bStatus_t smpBuildPairingRsp( smpPairingReq_t* pPairingRsp, uint8* pBuf )
+bStatus_t smpBuildPairingRsp( smpPairingReq_t* pPairingRsp, uint8_t* pBuf )
 {
     return ( smpBuildPairingReqRsp( SMP_PAIRING_RSP, pPairingRsp, pBuf ) );
 }
@@ -101,7 +96,7 @@ bStatus_t smpBuildPairingRsp( smpPairingReq_t* pPairingRsp, uint8* pBuf )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or pairingReq is NULL
 */
-bStatus_t smpBuildPairingReqRsp( uint8 opCode, smpPairingReq_t* pPairingReq, uint8* pBuf )
+bStatus_t smpBuildPairingReqRsp( uint8_t opCode, smpPairingReq_t* pPairingReq, uint8_t* pBuf )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pPairingReq == NULL) )
@@ -139,9 +134,9 @@ bStatus_t smpBuildPairingReqRsp( uint8 opCode, smpPairingReq_t* pPairingReq, uin
                 bleInvalidRange if a generic field is out of range
                 bleIncorrectMode if enc key is out of range
 */
-bStatus_t smpParsePairingReq( uint8* pBuf, smpPairingReq_t* pPairingReq )
+bStatus_t smpParsePairingReq( uint8_t* pBuf, smpPairingReq_t* pPairingReq )
 {
-    uint8 tmp;
+    uint8_t tmp;
 
     // Check pointers
     if ( (pBuf == NULL) || (pPairingReq == NULL) )
@@ -196,7 +191,7 @@ bStatus_t smpParsePairingReq( uint8* pBuf, smpPairingReq_t* pPairingReq )
                 INVALIDPARAMETER if buf or pairingConfirm is NULL
 */
 bStatus_t smpBuildPairingConfirm( smpPairingConfirm_t* pPairingConfirm,
-                                  uint8* pBuf )
+                                  uint8_t* pBuf )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pPairingConfirm == NULL) )
@@ -205,7 +200,7 @@ bStatus_t smpBuildPairingConfirm( smpPairingConfirm_t* pPairingConfirm,
     }
 
     *pBuf++ = SMP_PAIRING_CONFIRM;
-    VOID osal_memcpy( pBuf, pPairingConfirm->confirmValue, SMP_CONFIRM_LEN );
+    osal_memcpy( pBuf, pPairingConfirm->confirmValue, SMP_CONFIRM_LEN );
     return ( SUCCESS );
 }
 
@@ -220,7 +215,7 @@ bStatus_t smpBuildPairingConfirm( smpPairingConfirm_t* pPairingConfirm,
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or pairingConfirm is NULL
 */
-bStatus_t smpParsePairingConfirm( uint8* pBuf,
+bStatus_t smpParsePairingConfirm( uint8_t* pBuf,
                                   smpPairingConfirm_t* pPairingConfirm )
 {
     // Check pointers
@@ -230,7 +225,7 @@ bStatus_t smpParsePairingConfirm( uint8* pBuf,
     }
 
     pBuf++; // Skip code
-    VOID osal_memcpy( pPairingConfirm->confirmValue, pBuf, SMP_CONFIRM_LEN );
+    osal_memcpy( pPairingConfirm->confirmValue, pBuf, SMP_CONFIRM_LEN );
     return ( SUCCESS );
 }
 
@@ -246,7 +241,7 @@ bStatus_t smpParsePairingConfirm( uint8* pBuf,
                 INVALIDPARAMETER if buf or pairingRandom is NULL
 */
 bStatus_t smpBuildPairingRandom( smpPairingRandom_t* pPairingRandom,
-                                 uint8* pBuf )
+                                 uint8_t* pBuf )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pPairingRandom == NULL) )
@@ -255,7 +250,7 @@ bStatus_t smpBuildPairingRandom( smpPairingRandom_t* pPairingRandom,
     }
 
     *pBuf++ = SMP_PAIRING_RANDOM;
-    VOID osal_memcpy( pBuf, pPairingRandom->randomValue, SMP_RANDOM_LEN );
+    osal_memcpy( pBuf, pPairingRandom->randomValue, SMP_RANDOM_LEN );
     return ( SUCCESS );
 }
 
@@ -270,7 +265,7 @@ bStatus_t smpBuildPairingRandom( smpPairingRandom_t* pPairingRandom,
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or pairingRandom is NULL
 */
-bStatus_t smpParsePairingRandom( uint8* pBuf,
+bStatus_t smpParsePairingRandom( uint8_t* pBuf,
                                  smpPairingRandom_t* pPairingRandom )
 {
     // Check pointers
@@ -280,7 +275,7 @@ bStatus_t smpParsePairingRandom( uint8* pBuf,
     }
 
     pBuf++; // Skip code
-    VOID osal_memcpy( pPairingRandom->randomValue, pBuf, SMP_RANDOM_LEN );
+    osal_memcpy( pPairingRandom->randomValue, pBuf, SMP_RANDOM_LEN );
     return ( SUCCESS );
 }
 
@@ -296,7 +291,7 @@ bStatus_t smpParsePairingRandom( uint8* pBuf,
                 INVALIDPARAMETER if buf or pairingFailed is NULL
 */
 bStatus_t smpBuildPairingFailed( smpPairingFailed_t* pPairingFailed,
-                                 uint8* pBuf )
+                                 uint8_t* pBuf )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pPairingFailed == NULL) )
@@ -321,7 +316,7 @@ bStatus_t smpBuildPairingFailed( smpPairingFailed_t* pPairingFailed,
                 INVALIDPARAMETER if buf or pairingFailed is NULL
                 bleInvalidRange if the reason field is out of range
 */
-bStatus_t smpParsePairingFailed( uint8* pBuf,
+bStatus_t smpParsePairingFailed( uint8_t* pBuf,
                                  smpPairingFailed_t* pPairingFailed )
 {
     // Check pointers
@@ -356,7 +351,7 @@ bStatus_t smpParsePairingFailed( uint8* pBuf,
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpBuildEncInfo( smpEncInfo_t* pEncInfo, uint8* pBuf )
+bStatus_t smpBuildEncInfo( smpEncInfo_t* pEncInfo, uint8_t* pBuf )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pEncInfo == NULL) )
@@ -365,7 +360,7 @@ bStatus_t smpBuildEncInfo( smpEncInfo_t* pEncInfo, uint8* pBuf )
     }
 
     *pBuf++ = SMP_ENCRYPTION_INFORMATION;
-    VOID osal_memcpy( pBuf, pEncInfo->ltk, KEYLEN );
+    osal_memcpy( pBuf, pEncInfo->ltk, KEYLEN );
     return ( SUCCESS );
 }
 
@@ -380,7 +375,7 @@ bStatus_t smpBuildEncInfo( smpEncInfo_t* pEncInfo, uint8* pBuf )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpParseEncInfo( uint8* pBuf, smpEncInfo_t* pEncInfo )
+bStatus_t smpParseEncInfo( uint8_t* pBuf, smpEncInfo_t* pEncInfo )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pEncInfo == NULL) )
@@ -389,7 +384,7 @@ bStatus_t smpParseEncInfo( uint8* pBuf, smpEncInfo_t* pEncInfo )
     }
 
     pBuf++; // Skip code
-    VOID osal_memcpy( pEncInfo->ltk, pBuf, KEYLEN );
+    osal_memcpy( pEncInfo->ltk, pBuf, KEYLEN );
     return ( SUCCESS );
 }
 
@@ -404,7 +399,7 @@ bStatus_t smpParseEncInfo( uint8* pBuf, smpEncInfo_t* pEncInfo )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpBuildMasterID( smpMasterID_t* pMasterID, uint8* pBuf )
+bStatus_t smpBuildMasterID( smpMasterID_t* pMasterID, uint8_t* pBuf )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pMasterID == NULL) )
@@ -415,7 +410,7 @@ bStatus_t smpBuildMasterID( smpMasterID_t* pMasterID, uint8* pBuf )
     *pBuf++ = SMP_MASTER_IDENTIFICATION;
     *pBuf++ = LO_UINT16( pMasterID->ediv );
     *pBuf++ = HI_UINT16( pMasterID->ediv );
-    VOID osal_memcpy( pBuf, pMasterID->rand, B_RANDOM_NUM_SIZE );
+    osal_memcpy( pBuf, pMasterID->rand, B_RANDOM_NUM_SIZE );
     return ( SUCCESS );
 }
 
@@ -430,7 +425,7 @@ bStatus_t smpBuildMasterID( smpMasterID_t* pMasterID, uint8* pBuf )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpParseMasterID( uint8* pBuf, smpMasterID_t* pMasterID )
+bStatus_t smpParseMasterID( uint8_t* pBuf, smpMasterID_t* pMasterID )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pMasterID == NULL) )
@@ -440,7 +435,7 @@ bStatus_t smpParseMasterID( uint8* pBuf, smpMasterID_t* pMasterID )
 
     pBuf++; // Skip code
     pMasterID->ediv = BUILD_UINT16( pBuf[0], pBuf[1] );
-    VOID osal_memcpy( pMasterID->rand, &pBuf[2], B_RANDOM_NUM_SIZE );
+    osal_memcpy( pMasterID->rand, &pBuf[2], B_RANDOM_NUM_SIZE );
     return ( SUCCESS );
 }
 
@@ -455,7 +450,7 @@ bStatus_t smpParseMasterID( uint8* pBuf, smpMasterID_t* pMasterID )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpBuildIdentityInfo( smpIdentityInfo_t* pIdInfo, uint8* pBuf )
+bStatus_t smpBuildIdentityInfo( smpIdentityInfo_t* pIdInfo, uint8_t* pBuf )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pIdInfo == NULL) )
@@ -464,7 +459,7 @@ bStatus_t smpBuildIdentityInfo( smpIdentityInfo_t* pIdInfo, uint8* pBuf )
     }
 
     *pBuf++ = SMP_IDENTITY_INFORMATION;
-    VOID osal_memcpy( pBuf, pIdInfo->irk, KEYLEN );
+    osal_memcpy( pBuf, pIdInfo->irk, KEYLEN );
     return ( SUCCESS );
 }
 
@@ -479,7 +474,7 @@ bStatus_t smpBuildIdentityInfo( smpIdentityInfo_t* pIdInfo, uint8* pBuf )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpBuildIdentityAddrInfo( smpIdentityAddrInfo_t* pIdInfo, uint8* pBuf )
+bStatus_t smpBuildIdentityAddrInfo( smpIdentityAddrInfo_t* pIdInfo, uint8_t* pBuf )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pIdInfo == NULL) )
@@ -489,7 +484,7 @@ bStatus_t smpBuildIdentityAddrInfo( smpIdentityAddrInfo_t* pIdInfo, uint8* pBuf 
 
     *pBuf++ = SMP_IDENTITY_ADDR_INFORMATION;
     *pBuf++ = pIdInfo->addrType;
-    VOID osal_memcpy( pBuf, pIdInfo->bdAddr, B_ADDR_LEN );
+    osal_memcpy( pBuf, pIdInfo->bdAddr, B_ADDR_LEN );
     return ( SUCCESS );
 }
 
@@ -504,7 +499,7 @@ bStatus_t smpBuildIdentityAddrInfo( smpIdentityAddrInfo_t* pIdInfo, uint8* pBuf 
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpParseIdentityInfo( uint8* pBuf, smpIdentityInfo_t* pIdInfo )
+bStatus_t smpParseIdentityInfo( uint8_t* pBuf, smpIdentityInfo_t* pIdInfo )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pIdInfo == NULL) )
@@ -513,7 +508,7 @@ bStatus_t smpParseIdentityInfo( uint8* pBuf, smpIdentityInfo_t* pIdInfo )
     }
 
     pBuf++; // Skip code
-    VOID osal_memcpy( pIdInfo->irk, pBuf, KEYLEN );
+    osal_memcpy( pIdInfo->irk, pBuf, KEYLEN );
     return ( SUCCESS );
 }
 
@@ -528,7 +523,7 @@ bStatus_t smpParseIdentityInfo( uint8* pBuf, smpIdentityInfo_t* pIdInfo )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpParseIdentityAddrInfo( uint8* pBuf, smpIdentityAddrInfo_t* pIdInfo )
+bStatus_t smpParseIdentityAddrInfo( uint8_t* pBuf, smpIdentityAddrInfo_t* pIdInfo )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pIdInfo == NULL) )
@@ -538,7 +533,7 @@ bStatus_t smpParseIdentityAddrInfo( uint8* pBuf, smpIdentityAddrInfo_t* pIdInfo 
 
     pBuf++; // Skip code
     pIdInfo->addrType = *pBuf++;
-    VOID osal_memcpy( pIdInfo->bdAddr, pBuf, B_ADDR_LEN );
+    osal_memcpy( pIdInfo->bdAddr, pBuf, B_ADDR_LEN );
     return ( SUCCESS );
 }
 
@@ -553,7 +548,7 @@ bStatus_t smpParseIdentityAddrInfo( uint8* pBuf, smpIdentityAddrInfo_t* pIdInfo 
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpBuildSigningInfo( smpSigningInfo_t* pSigningInfo, uint8* pBuf )
+bStatus_t smpBuildSigningInfo( smpSigningInfo_t* pSigningInfo, uint8_t* pBuf )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pSigningInfo == NULL) )
@@ -562,7 +557,7 @@ bStatus_t smpBuildSigningInfo( smpSigningInfo_t* pSigningInfo, uint8* pBuf )
     }
 
     *pBuf++ = SMP_SIGNING_INFORMATION;
-    VOID osal_memcpy( pBuf, pSigningInfo->signature, KEYLEN );
+    osal_memcpy( pBuf, pSigningInfo->signature, KEYLEN );
     return ( SUCCESS );
 }
 
@@ -577,7 +572,7 @@ bStatus_t smpBuildSigningInfo( smpSigningInfo_t* pSigningInfo, uint8* pBuf )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpParseSigningInfo( uint8* pBuf, smpSigningInfo_t* pSigningInfo )
+bStatus_t smpParseSigningInfo( uint8_t* pBuf, smpSigningInfo_t* pSigningInfo )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pSigningInfo == NULL) )
@@ -586,7 +581,7 @@ bStatus_t smpParseSigningInfo( uint8* pBuf, smpSigningInfo_t* pSigningInfo )
     }
 
     pBuf++; // Skip code
-    VOID osal_memcpy( pSigningInfo->signature, pBuf, KEYLEN );
+    osal_memcpy( pSigningInfo->signature, pBuf, KEYLEN );
     return ( SUCCESS );
 }
 
@@ -601,7 +596,7 @@ bStatus_t smpParseSigningInfo( uint8* pBuf, smpSigningInfo_t* pSigningInfo )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpBuildSecurityReq( smpSecurityReq_t* pSecReq, uint8* pBuf )
+bStatus_t smpBuildSecurityReq( smpSecurityReq_t* pSecReq, uint8_t* pBuf )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pSecReq == NULL) )
@@ -625,7 +620,7 @@ bStatus_t smpBuildSecurityReq( smpSecurityReq_t* pSecReq, uint8* pBuf )
     @return      SUCCESS if parsed
                 INVALIDPARAMETER if buf or struct ptr is NULL
 */
-bStatus_t smpParseSecurityReq( uint8* pBuf, smpSecurityReq_t* pSecReq )
+bStatus_t smpParseSecurityReq( uint8_t* pBuf, smpSecurityReq_t* pSecReq )
 {
     // Check pointers
     if ( (pBuf == NULL) || (pSecReq == NULL) )
@@ -651,14 +646,14 @@ bStatus_t smpParseSecurityReq( uint8* pBuf, smpSecurityReq_t* pSecReq )
 
     @return      status
 */
-bStatus_t smSendSMMsg( uint16 connHandle, uint8 bufLen, smpMsgs_t* pMsg, pfnSMBuildCmd_t buildFn )
+bStatus_t smSendSMMsg( uint16_t connHandle, uint8_t bufLen, smpMsgs_t* pMsg, pfnSMBuildCmd_t buildFn )
 {
     bStatus_t stat;
     l2capPacket_t sendData;
     // Allocate a buffer
     sendData.CID = L2CAP_CID_SMP;
     sendData.len = bufLen;
-    sendData.pPayload = (uint8*)L2CAP_bm_alloc( sendData.len );
+    sendData.pPayload = (uint8_t*)L2CAP_bm_alloc( sendData.len );
 
     if ( sendData.pPayload )
     {

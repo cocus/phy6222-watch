@@ -25,9 +25,6 @@ extern "C"
 /*********************************************************************
     INCLUDES
 */
-#include "bcomdef.h"
-#include "OSAL.h"
-
 #include "l2cap.h"
 
 /*********************************************************************
@@ -192,7 +189,7 @@ extern "C"
 /*********************************************************************
     VARIABLES
 */
-extern CONST uint8 btBaseUUID[ATT_UUID_SIZE];
+extern CONST uint8_t btBaseUUID[ATT_UUID_SIZE];
 
 /*********************************************************************
     MACROS
@@ -207,11 +204,11 @@ extern CONST uint8 btBaseUUID[ATT_UUID_SIZE];
 */
 typedef struct
 {
-    uint8 sig;      //!< Authentication Signature status (not included (0), valid (1), invalid (2))
-    uint8 cmd;      //!< Command Flag
-    uint8 method;   //!< Method
-    uint16 len;     //!< Length of Attribute Parameters
-    uint8* pParams; //!< Attribute Parameters
+    uint8_t sig;      //!< Authentication Signature status (not included (0), valid (1), invalid (2))
+    uint8_t cmd;      //!< Command Flag
+    uint8_t method;   //!< Method
+    uint16_t len;     //!< Length of Attribute Parameters
+    uint8_t* pParams; //!< Attribute Parameters
 } attPacket_t;
 
 /**
@@ -219,8 +216,8 @@ typedef struct
 */
 typedef struct
 {
-    uint8 len;                 //!< Length of UUID
-    uint8 uuid[ATT_UUID_SIZE]; //!< 16 or 128 bit UUID
+    uint8_t len;                 //!< Length of UUID
+    uint8_t uuid[ATT_UUID_SIZE]; //!< 16 or 128 bit UUID
 } attAttrType_t;
 
 /**
@@ -228,8 +225,8 @@ typedef struct
 */
 typedef struct
 {
-    uint8 len;                    //!< Length of UUID
-    uint8 uuid[ATT_BT_UUID_SIZE]; //!< 16 bit UUID
+    uint8_t len;                    //!< Length of UUID
+    uint8_t uuid[ATT_BT_UUID_SIZE]; //!< 16 bit UUID
 } attAttrBtType_t;
 
 /**
@@ -237,9 +234,9 @@ typedef struct
 */
 typedef struct
 {
-    uint8 reqOpcode; //!< Request that generated this error response
-    uint16 handle;   //!< Attribute handle that generated error response
-    uint8 errCode;   //!< Reason why the request has generated error response
+    uint8_t reqOpcode; //!< Request that generated this error response
+    uint16_t handle;   //!< Attribute handle that generated error response
+    uint8_t errCode;   //!< Reason why the request has generated error response
 } attErrorRsp_t;
 
 /**
@@ -247,7 +244,7 @@ typedef struct
 */
 typedef struct
 {
-    uint16 clientRxMTU; //!< Client receive MTU size
+    uint16_t clientRxMTU; //!< Client receive MTU size
 } attExchangeMTUReq_t;
 
 /**
@@ -255,13 +252,13 @@ typedef struct
 */
 typedef struct
 {
-    uint16 serverRxMTU; //!< Server receive MTU size
+    uint16_t serverRxMTU; //!< Server receive MTU size
 } attExchangeMTURsp_t;
 
 typedef struct
 {
-    uint16 clientMTU;
-    uint16 serverMTU;
+    uint16_t clientMTU;
+    uint16_t serverMTU;
 } attMTU_t;
 
 /**
@@ -269,8 +266,8 @@ typedef struct
 */
 typedef struct
 {
-    uint16 startHandle;       //!< First requested handle number (must be first field)
-    uint16 endHandle;         //!< Last requested handle number
+    uint16_t startHandle;       //!< First requested handle number (must be first field)
+    uint16_t endHandle;         //!< Last requested handle number
 } attFindInfoReq_t;
 
 /**
@@ -278,8 +275,8 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle;                //!< Handle
-    uint8 uuid[ATT_BT_UUID_SIZE]; //!< 2-octet Bluetooth UUID
+    uint16_t handle;                //!< Handle
+    uint8_t uuid[ATT_BT_UUID_SIZE]; //!< 2-octet Bluetooth UUID
 } attHandleBtUUID_t;
 
 /**
@@ -287,8 +284,8 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle;             //!< Handle
-    uint8 uuid[ATT_UUID_SIZE]; //!< 16-octect UUID
+    uint16_t handle;             //!< Handle
+    uint8_t uuid[ATT_UUID_SIZE]; //!< 16-octect UUID
 } attHandleUUID_t;
 
 /**
@@ -305,8 +302,8 @@ typedef union
 */
 typedef struct
 {
-    uint8 numInfo;      //!< Number of attribute handle-UUID pairs found
-    uint8 format;       //!< Format of information data
+    uint8_t numInfo;      //!< Number of attribute handle-UUID pairs found
+    uint8_t format;       //!< Format of information data
     attFindInfo_t info; //!< Information data whose format is determined by format field
 } attFindInfoRsp_t;
 
@@ -315,12 +312,12 @@ typedef struct
 */
 typedef struct
 {
-    uint16 startHandle;          //!< First requested handle number (must be first field)
-    uint16 endHandle;            //!< Last requested handle number
+    uint16_t startHandle;          //!< First requested handle number (must be first field)
+    uint16_t endHandle;            //!< Last requested handle number
     attAttrBtType_t type;        //!< 2-octet UUID to find
-//  uint8 len;                   //!< Length of value
-    uint16 len;                  //!< Length of value
-    uint8 value[ATT_MTU_SIZE-7]; //!< Attribute value to find
+//  uint8_t len;                   //!< Length of value
+    uint16_t len;                  //!< Length of value
+    uint8_t value[ATT_MTU_SIZE-7]; //!< Attribute value to find
 } attFindByTypeValueReq_t;
 
 /**
@@ -328,8 +325,8 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle;       //!< Found attribute handle
-    uint16 grpEndHandle; //!< Group end handle
+    uint16_t handle;       //!< Found attribute handle
+    uint16_t grpEndHandle; //!< Group end handle
 } attHandlesInfo_t;
 
 /**
@@ -337,7 +334,7 @@ typedef struct
 */
 typedef struct
 {
-    uint8 numInfo;                                          //!< Number of handles information found
+    uint8_t numInfo;                                          //!< Number of handles information found
     attHandlesInfo_t handlesInfo[ATT_MAX_NUM_HANDLES_INFO]; //!< List of 1 or more handles information
 } attFindByTypeValueRsp_t;
 
@@ -346,8 +343,8 @@ typedef struct
 */
 typedef struct
 {
-    uint16 startHandle; //!< First requested handle number (must be first field)
-    uint16 endHandle;   //!< Last requested handle number
+    uint16_t startHandle; //!< First requested handle number (must be first field)
+    uint16_t endHandle;   //!< Last requested handle number
     attAttrType_t type; //!< Requested type (2 or 16 octet UUID)
 } attReadByTypeReq_t;
 
@@ -356,10 +353,10 @@ typedef struct
 */
 typedef struct
 {
-    uint8 numPairs;                 //!< Number of attribute handle-UUID pairs found
-//  uint8 len;                      //!< Size of each attribute handle-value pair
-    uint16 len;
-    uint8 dataList[ATT_MTU_SIZE-2]; //!< List of 1 or more attribute handle-value pairs
+    uint8_t numPairs;                 //!< Number of attribute handle-UUID pairs found
+//  uint8_t len;                      //!< Size of each attribute handle-value pair
+    uint16_t len;
+    uint8_t dataList[ATT_MTU_SIZE-2]; //!< List of 1 or more attribute handle-value pairs
 } attReadByTypeRsp_t;
 
 /**
@@ -367,7 +364,7 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle; //!< Handle of the attribute to be read (must be first field)
+    uint16_t handle; //!< Handle of the attribute to be read (must be first field)
 } attReadReq_t;
 
 /**
@@ -375,9 +372,9 @@ typedef struct
 */
 typedef struct
 {
-//  uint8 len;                   //!< Length of value
-    uint16 len;
-    uint8 value[ATT_MTU_SIZE-1]; //!< Value of the attribute with the handle given
+//  uint8_t len;                   //!< Length of value
+    uint16_t len;
+    uint8_t value[ATT_MTU_SIZE-1]; //!< Value of the attribute with the handle given
 } attReadRsp_t;
 
 /**
@@ -385,8 +382,8 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle; //!< Handle of the attribute to be read (must be first field)
-    uint16 offset; //!< Offset of the first octet to be read
+    uint16_t handle; //!< Handle of the attribute to be read (must be first field)
+    uint16_t offset; //!< Offset of the first octet to be read
 } attReadBlobReq_t;
 
 /**
@@ -394,9 +391,9 @@ typedef struct
 */
 typedef struct
 {
-//  uint8 len;                   //!< Length of value
-    uint16 len;
-    uint8 value[ATT_MTU_SIZE-1]; //!< Part of the value of the attribute with the handle given
+//  uint8_t len;                   //!< Length of value
+    uint16_t len;
+    uint8_t value[ATT_MTU_SIZE-1]; //!< Part of the value of the attribute with the handle given
 } attReadBlobRsp_t;
 
 /**
@@ -404,8 +401,8 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle[ATT_MAX_NUM_HANDLES]; //!< Set of two or more attribute handles (must be first field)
-    uint8 numHandles;                   //!< Number of attribute handles
+    uint16_t handle[ATT_MAX_NUM_HANDLES]; //!< Set of two or more attribute handles (must be first field)
+    uint8_t numHandles;                   //!< Number of attribute handles
 } attReadMultiReq_t;
 
 /**
@@ -413,9 +410,9 @@ typedef struct
 */
 typedef struct
 {
-//  uint8 len;                    //!< Length of values
-    uint16 len;
-    uint8 values[ATT_MTU_SIZE-1]; //!< Set of two or more values
+//  uint8_t len;                    //!< Length of values
+    uint16_t len;
+    uint8_t values[ATT_MTU_SIZE-1]; //!< Set of two or more values
 } attReadMultiRsp_t;
 
 /**
@@ -423,8 +420,8 @@ typedef struct
 */
 typedef struct
 {
-    uint16 startHandle; //!< First requested handle number (must be first field)
-    uint16 endHandle;   //!< Last requested handle number
+    uint16_t startHandle; //!< First requested handle number (must be first field)
+    uint16_t endHandle;   //!< Last requested handle number
     attAttrType_t type; //!< Requested group type (2 or 16 octet UUID)
 } attReadByGrpTypeReq_t;
 
@@ -433,10 +430,10 @@ typedef struct
 */
 typedef struct
 {
-    uint8 numGrps;                  //!< Number of attribute handle, end group handle and value sets found
-//  uint8 len;                      //!< Length of each attribute handle, end group handle and value set
-    uint16 len;
-    uint8 dataList[ATT_MTU_SIZE-2]; //!< List of 1 or more attribute handle, end group handle and value
+    uint8_t numGrps;                  //!< Number of attribute handle, end group handle and value sets found
+//  uint8_t len;                      //!< Length of each attribute handle, end group handle and value set
+    uint16_t len;
+    uint8_t dataList[ATT_MTU_SIZE-2]; //!< List of 1 or more attribute handle, end group handle and value
 } attReadByGrpTypeRsp_t;
 
 /**
@@ -444,12 +441,12 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle;               //!< Handle of the attribute to be written (must be first field)
-//  uint8 len;                   //!< Length of value
-    uint16 len;
-    uint8 value[ATT_MTU_SIZE-3]; //!< Value of the attribute to be written
-    uint8 sig;                   //!< Authentication Signature status (not included (0), valid (1), invalid (2))
-    uint8 cmd;                   //!< Command Flag
+    uint16_t handle;               //!< Handle of the attribute to be written (must be first field)
+//  uint8_t len;                   //!< Length of value
+    uint16_t len;
+    uint8_t value[ATT_MTU_SIZE-3]; //!< Value of the attribute to be written
+    uint8_t sig;                   //!< Authentication Signature status (not included (0), valid (1), invalid (2))
+    uint8_t cmd;                   //!< Command Flag
 } attWriteReq_t;
 
 /**
@@ -457,11 +454,11 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle;               //!< Handle of the attribute to be written (must be first field)
-    uint16 offset;               //!< Offset of the first octet to be written
-//  uint8 len;                   //!< Length of value
-    uint16 len;
-    uint8 value[ATT_MTU_SIZE-5]; //!< Part of the value of the attribute to be written
+    uint16_t handle;               //!< Handle of the attribute to be written (must be first field)
+    uint16_t offset;               //!< Offset of the first octet to be written
+//  uint8_t len;                   //!< Length of value
+    uint16_t len;
+    uint8_t value[ATT_MTU_SIZE-5]; //!< Part of the value of the attribute to be written
 } attPrepareWriteReq_t;
 
 /**
@@ -469,11 +466,11 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle;               //!< Handle of the attribute that has been read
-    uint16 offset;               //!< Offset of the first octet to be written
-//  uint8 len;                   //!< Length of value
-    uint16 len;
-    uint8 value[ATT_MTU_SIZE-5]; //!< Part of the value of the attribute to be written
+    uint16_t handle;               //!< Handle of the attribute that has been read
+    uint16_t offset;               //!< Offset of the first octet to be written
+//  uint8_t len;                   //!< Length of value
+    uint16_t len;
+    uint8_t value[ATT_MTU_SIZE-5]; //!< Part of the value of the attribute to be written
 } attPrepareWriteRsp_t;
 
 /**
@@ -481,7 +478,7 @@ typedef struct
 */
 typedef struct
 {
-    uint8 flags; //!< 0x00 - cancel all prepared writes.
+    uint8_t flags; //!< 0x00 - cancel all prepared writes.
     //!< 0x01 - immediately write all pending prepared values.
 } attExecuteWriteReq_t;
 
@@ -490,10 +487,10 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle;               //!< Handle of the attribute that has been changed (must be first field)
-//  uint8 len;                   //!< Length of value
-    uint16 len;                  //!< Length of value
-    uint8 value[ATT_MTU_SIZE-3]; //!< New value of the attribute
+    uint16_t handle;               //!< Handle of the attribute that has been changed (must be first field)
+//  uint8_t len;                   //!< Length of value
+    uint16_t len;                  //!< Length of value
+    uint8_t value[ATT_MTU_SIZE-3]; //!< New value of the attribute
 } attHandleValueNoti_t;
 
 /**
@@ -501,10 +498,10 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle;               //!< Handle of the attribute that has been changed (must be first field)
-//  uint8 len;                   //!< Length of value
-    uint16 len;
-    uint8 value[ATT_MTU_SIZE-3]; //!< New value of the attribute
+    uint16_t handle;               //!< Handle of the attribute that has been changed (must be first field)
+//  uint8_t len;                   //!< Length of value
+    uint16_t len;
+    uint8_t value[ATT_MTU_SIZE-3]; //!< New value of the attribute
 } attHandleValueInd_t;
 
 /**
@@ -558,22 +555,22 @@ typedef union
 /*
     Parse an attribute protocol message.
 */
-extern uint8 ATT_ParsePacket( l2capDataEvent_t* pL2capMsg, attPacket_t* pPkt );
+extern uint8_t ATT_ParsePacket( l2capDataEvent_t* pL2capMsg, attPacket_t* pPkt );
 
 /*
     Compare two UUIDs. The UUIDs are converted if necessary.
 */
-extern uint8 ATT_CompareUUID( const uint8* pUUID1, uint16 len1,
-                              const uint8* pUUID2, uint16 len2 );
+extern uint8_t ATT_CompareUUID( const uint8_t* pUUID1, uint16_t len1,
+                              const uint8_t* pUUID2, uint16_t len2 );
 /*
     Convert a 16-bit UUID to 128-bit UUID.
 */
-extern uint8 ATT_ConvertUUIDto128( const uint8* pUUID16, uint8* pUUID128 );
+extern uint8_t ATT_ConvertUUIDto128( const uint8_t* pUUID16, uint8_t* pUUID128 );
 
 /*
     Convert a 128-bit UUID to 16-bit UUID.
 */
-extern uint8 ATT_ConvertUUIDto16( const uint8* pUUID128, uint8* pUUID16 );
+extern uint8_t ATT_ConvertUUIDto16( const uint8_t* pUUID128, uint8_t* pUUID16 );
 
 
 /*  -------------------------------------------------------------------
@@ -583,172 +580,172 @@ extern uint8 ATT_ConvertUUIDto16( const uint8* pUUID128, uint8* pUUID16 );
 /*
     Build Error Response.
 */
-extern uint16 ATT_BuildErrorRsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildErrorRsp( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Error Response.
 */
-extern bStatus_t ATT_ParseErrorRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseErrorRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Exchange MTU Request.
 */
-extern uint16 ATT_BuildExchangeMTUReq( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildExchangeMTUReq( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Build Exchange MTU Respnose.
 */
-extern uint16 ATT_BuildExchangeMTURsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildExchangeMTURsp( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Exchange MTU Response.
 */
-extern bStatus_t ATT_ParseExchangeMTURsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseExchangeMTURsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Find Information Request.
 */
-extern uint16 ATT_BuildFindInfoReq( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildFindInfoReq( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Find Information Response.
 */
-extern bStatus_t ATT_ParseFindInfoRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseFindInfoRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Find Information Response.
 */
-extern uint16 ATT_BuildFindInfoRsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildFindInfoRsp( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Build Find By Type Value Request.
 */
-extern uint16 ATT_BuildFindByTypeValueReq( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildFindByTypeValueReq( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Build Find By Type Value Response.
 */
-extern uint16 ATT_BuildFindByTypeValueRsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildFindByTypeValueRsp( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Find By Type Value Response.
 */
-extern bStatus_t ATT_ParseFindByTypeValueRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseFindByTypeValueRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Read By Type Request.
 */
-extern uint16 ATT_BuildReadByTypeReq( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildReadByTypeReq( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Build Read By Type Response.
 */
-extern uint16 ATT_BuildReadByTypeRsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildReadByTypeRsp( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Read By Type Response.
 */
-extern bStatus_t ATT_ParseReadByTypeRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseReadByTypeRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Read Request.
 */
-extern uint16 ATT_BuildReadReq( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildReadReq( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Build Read Response.
 */
-extern uint16 ATT_BuildReadRsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildReadRsp( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Read Response.
 */
-extern bStatus_t ATT_ParseReadRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseReadRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Read Blob Request.
 */
-extern uint16 ATT_BuildReadBlobReq( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildReadBlobReq( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Build Read Blob Response.
 */
-extern uint16 ATT_BuildReadBlobRsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildReadBlobRsp( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Read Blob Response.
 */
-extern bStatus_t ATT_ParseReadBlobRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseReadBlobRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Read Multiple Request.
 */
-extern uint16 ATT_BuildReadMultiReq( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildReadMultiReq( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Build Read Multiple Response.
 */
-extern uint16 ATT_BuildReadMultiRsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildReadMultiRsp( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Read Multiple Response.
 */
-extern bStatus_t ATT_ParseReadMultiRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseReadMultiRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Read By Group Type Response.
 */
-extern uint16 ATT_BuildReadByGrpTypeRsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildReadByGrpTypeRsp( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Read By Group Type Response.
 */
-extern bStatus_t ATT_ParseReadByGrpTypeRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseReadByGrpTypeRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Write Request.
 */
-extern uint16 ATT_BuildWriteReq( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildWriteReq( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Write Response.
 */
-extern bStatus_t ATT_ParseWriteRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseWriteRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Prepare Write Request.
 */
-extern uint16 ATT_BuildPrepareWriteReq( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildPrepareWriteReq( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Build Prepare Write Response.
 */
-extern uint16 ATT_BuildPrepareWriteRsp( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildPrepareWriteRsp( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Prepare Write Response.
 */
-extern bStatus_t ATT_ParsePrepareWriteRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParsePrepareWriteRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Execute Write Request.
 */
-extern uint16 ATT_BuildExecuteWriteReq( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildExecuteWriteReq( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Execute Write Response.
 */
-extern bStatus_t ATT_ParseExecuteWriteRsp( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseExecuteWriteRsp( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Build Handle Value Indication.
 */
-extern uint16 ATT_BuildHandleValueInd( uint8* pBuf, uint8* pMsg );
+extern uint16_t ATT_BuildHandleValueInd( uint8_t* pBuf, uint8_t* pMsg );
 
 /*
     Parse Handle Value Indication.
 */
-extern bStatus_t ATT_ParseHandleValueInd( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseHandleValueInd( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 
 /*  -------------------------------------------------------------------
@@ -758,57 +755,57 @@ extern bStatus_t ATT_ParseHandleValueInd( uint8 sig, uint8 cmd, uint8* pParams, 
 /*
     Parse Exchange MTU Request.
 */
-extern bStatus_t ATT_ParseExchangeMTUReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseExchangeMTUReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Parse Find Information Request.
 */
-extern bStatus_t ATT_ParseFindInfoReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseFindInfoReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Parse Find By Type Value Request.
 */
-extern bStatus_t ATT_ParseFindByTypeValueReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseFindByTypeValueReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Parse Read By Type Request.
 */
-extern bStatus_t ATT_ParseReadByTypeReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseReadByTypeReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Parse Read Request.
 */
-extern bStatus_t ATT_ParseReadReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseReadReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Parse Write Blob Request.
 */
-extern bStatus_t ATT_ParseReadBlobReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseReadBlobReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Parse Read Multiple Request.
 */
-extern bStatus_t ATT_ParseReadMultiReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseReadMultiReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Parse Write Request.
 */
-extern bStatus_t ATT_ParseWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseWriteReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Parse Execute Write Request.
 */
-extern bStatus_t ATT_ParseExecuteWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseExecuteWriteReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Parse Prepare Write Request.
 */
-extern bStatus_t ATT_ParsePrepareWriteReq( uint8 sig, uint8 cmd, uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParsePrepareWriteReq( uint8_t sig, uint8_t cmd, uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 /*
     Parse Handle Value Confirmation.
 */
-extern bStatus_t ATT_ParseHandleValueCfm( uint8* pParams, uint16 len, attMsg_t* pMsg );
+extern bStatus_t ATT_ParseHandleValueCfm( uint8_t* pParams, uint16_t len, attMsg_t* pMsg );
 
 
 /*  -------------------------------------------------------------------
@@ -833,7 +830,7 @@ extern bStatus_t ATT_ParseHandleValueCfm( uint8* pParams, uint16 len, attMsg_t* 
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ExchangeMTUReq( uint16 connHandle, attExchangeMTUReq_t* pReq );
+extern bStatus_t ATT_ExchangeMTUReq( uint16_t connHandle, attExchangeMTUReq_t* pReq );
 
 /**
     @brief   Send Find Information Request.
@@ -847,7 +844,7 @@ extern bStatus_t ATT_ExchangeMTUReq( uint16 connHandle, attExchangeMTUReq_t* pRe
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_FindInfoReq( uint16 connHandle, attFindInfoReq_t* pReq );
+extern bStatus_t ATT_FindInfoReq( uint16_t connHandle, attFindInfoReq_t* pReq );
 
 /**
     @brief   Send Find By Type Value Request.
@@ -861,7 +858,7 @@ extern bStatus_t ATT_FindInfoReq( uint16 connHandle, attFindInfoReq_t* pReq );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_FindByTypeValueReq( uint16 connHandle, attFindByTypeValueReq_t* pReq );
+extern bStatus_t ATT_FindByTypeValueReq( uint16_t connHandle, attFindByTypeValueReq_t* pReq );
 
 /**
     @brief   Send Read By Type Request.
@@ -875,7 +872,7 @@ extern bStatus_t ATT_FindByTypeValueReq( uint16 connHandle, attFindByTypeValueRe
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ReadByTypeReq( uint16 connHandle, attReadByTypeReq_t* pReq );
+extern bStatus_t ATT_ReadByTypeReq( uint16_t connHandle, attReadByTypeReq_t* pReq );
 
 /**
     @brief   Send Read Request.
@@ -889,7 +886,7 @@ extern bStatus_t ATT_ReadByTypeReq( uint16 connHandle, attReadByTypeReq_t* pReq 
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ReadReq( uint16 connHandle, attReadReq_t* pReq );
+extern bStatus_t ATT_ReadReq( uint16_t connHandle, attReadReq_t* pReq );
 
 /**
     @brief   Send Read Blob Request.
@@ -903,7 +900,7 @@ extern bStatus_t ATT_ReadReq( uint16 connHandle, attReadReq_t* pReq );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ReadBlobReq( uint16 connHandle, attReadBlobReq_t* pReq );
+extern bStatus_t ATT_ReadBlobReq( uint16_t connHandle, attReadBlobReq_t* pReq );
 
 /**
     @brief   Send Read Multiple Request.
@@ -917,7 +914,7 @@ extern bStatus_t ATT_ReadBlobReq( uint16 connHandle, attReadBlobReq_t* pReq );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ReadMultiReq( uint16 connHandle, attReadMultiReq_t* pReq );
+extern bStatus_t ATT_ReadMultiReq( uint16_t connHandle, attReadMultiReq_t* pReq );
 
 /**
     @brief   Send Read By Group Type Request.
@@ -931,7 +928,7 @@ extern bStatus_t ATT_ReadMultiReq( uint16 connHandle, attReadMultiReq_t* pReq );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ReadByGrpTypeReq( uint16 connHandle, attReadByGrpTypeReq_t* pReq );
+extern bStatus_t ATT_ReadByGrpTypeReq( uint16_t connHandle, attReadByGrpTypeReq_t* pReq );
 
 /**
     @brief   Send Write Request.
@@ -946,7 +943,7 @@ extern bStatus_t ATT_ReadByGrpTypeReq( uint16 connHandle, attReadByGrpTypeReq_t*
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleLinkEncrypted: Connection is already encrypted.<BR>
 */
-extern bStatus_t ATT_WriteReq( uint16 connHandle, attWriteReq_t* pReq );
+extern bStatus_t ATT_WriteReq( uint16_t connHandle, attWriteReq_t* pReq );
 
 /**
     @brief   Send Prepare Write Request.
@@ -960,7 +957,7 @@ extern bStatus_t ATT_WriteReq( uint16 connHandle, attWriteReq_t* pReq );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_PrepareWriteReq( uint16 connHandle, attPrepareWriteReq_t* pReq );
+extern bStatus_t ATT_PrepareWriteReq( uint16_t connHandle, attPrepareWriteReq_t* pReq );
 
 /**
     @brief   Send Execute Write Request.
@@ -974,7 +971,7 @@ extern bStatus_t ATT_PrepareWriteReq( uint16 connHandle, attPrepareWriteReq_t* p
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ExecuteWriteReq( uint16 connHandle, attExecuteWriteReq_t* pReq );
+extern bStatus_t ATT_ExecuteWriteReq( uint16_t connHandle, attExecuteWriteReq_t* pReq );
 
 /**
     @brief   Send Handle Value Confirmation.
@@ -987,7 +984,7 @@ extern bStatus_t ATT_ExecuteWriteReq( uint16 connHandle, attExecuteWriteReq_t* p
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_HandleValueCfm( uint16 connHandle );
+extern bStatus_t ATT_HandleValueCfm( uint16_t connHandle );
 
 /**
     @}
@@ -1015,7 +1012,7 @@ extern bStatus_t ATT_HandleValueCfm( uint16 connHandle );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ErrorRsp( uint16 connHandle, attErrorRsp_t* pRsp );
+extern bStatus_t ATT_ErrorRsp( uint16_t connHandle, attErrorRsp_t* pRsp );
 
 /**
     @brief   Send Exchange MTU Response.
@@ -1029,7 +1026,7 @@ extern bStatus_t ATT_ErrorRsp( uint16 connHandle, attErrorRsp_t* pRsp );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ExchangeMTURsp( uint16 connHandle, attExchangeMTURsp_t* pRsp );
+extern bStatus_t ATT_ExchangeMTURsp( uint16_t connHandle, attExchangeMTURsp_t* pRsp );
 
 /**
     @brief   Send Find Information Response.
@@ -1043,7 +1040,7 @@ extern bStatus_t ATT_ExchangeMTURsp( uint16 connHandle, attExchangeMTURsp_t* pRs
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_FindInfoRsp( uint16 connHandle, attFindInfoRsp_t* pRsp );
+extern bStatus_t ATT_FindInfoRsp( uint16_t connHandle, attFindInfoRsp_t* pRsp );
 
 /**
     @brief   Send Find By Tyep Value Response.
@@ -1057,7 +1054,7 @@ extern bStatus_t ATT_FindInfoRsp( uint16 connHandle, attFindInfoRsp_t* pRsp );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_FindByTypeValueRsp( uint16 connHandle, attFindByTypeValueRsp_t* pRsp );
+extern bStatus_t ATT_FindByTypeValueRsp( uint16_t connHandle, attFindByTypeValueRsp_t* pRsp );
 
 /**
     @brief   Send Read By Type Respond.
@@ -1071,7 +1068,7 @@ extern bStatus_t ATT_FindByTypeValueRsp( uint16 connHandle, attFindByTypeValueRs
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ReadByTypeRsp( uint16 connHandle, attReadByTypeRsp_t* pRsp );
+extern bStatus_t ATT_ReadByTypeRsp( uint16_t connHandle, attReadByTypeRsp_t* pRsp );
 
 /**
     @brief   Send Read Response.
@@ -1085,7 +1082,7 @@ extern bStatus_t ATT_ReadByTypeRsp( uint16 connHandle, attReadByTypeRsp_t* pRsp 
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ReadRsp( uint16 connHandle, attReadRsp_t* pRsp );
+extern bStatus_t ATT_ReadRsp( uint16_t connHandle, attReadRsp_t* pRsp );
 
 /**
     @brief   Send Read Blob Response.
@@ -1099,7 +1096,7 @@ extern bStatus_t ATT_ReadRsp( uint16 connHandle, attReadRsp_t* pRsp );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ReadBlobRsp( uint16 connHandle, attReadBlobRsp_t* pRsp );
+extern bStatus_t ATT_ReadBlobRsp( uint16_t connHandle, attReadBlobRsp_t* pRsp );
 
 /**
     @brief   Send Read Multiple Response.
@@ -1113,7 +1110,7 @@ extern bStatus_t ATT_ReadBlobRsp( uint16 connHandle, attReadBlobRsp_t* pRsp );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ReadMultiRsp( uint16 connHandle, attReadMultiRsp_t* pRsp ) ;
+extern bStatus_t ATT_ReadMultiRsp( uint16_t connHandle, attReadMultiRsp_t* pRsp ) ;
 
 /**
     @brief   Send Read By Group Type Respond.
@@ -1127,7 +1124,7 @@ extern bStatus_t ATT_ReadMultiRsp( uint16 connHandle, attReadMultiRsp_t* pRsp ) 
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ReadByGrpTypeRsp( uint16 connHandle, attReadByGrpTypeRsp_t* pRsp );
+extern bStatus_t ATT_ReadByGrpTypeRsp( uint16_t connHandle, attReadByGrpTypeRsp_t* pRsp );
 
 /**
     @brief   Send Write Response.
@@ -1140,7 +1137,7 @@ extern bStatus_t ATT_ReadByGrpTypeRsp( uint16 connHandle, attReadByGrpTypeRsp_t*
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_WriteRsp( uint16 connHandle );
+extern bStatus_t ATT_WriteRsp( uint16_t connHandle );
 
 /**
     @brief   Send Prepare Write Response.
@@ -1154,7 +1151,7 @@ extern bStatus_t ATT_WriteRsp( uint16 connHandle );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_PrepareWriteRsp( uint16 connHandle, attPrepareWriteRsp_t* pRsp );
+extern bStatus_t ATT_PrepareWriteRsp( uint16_t connHandle, attPrepareWriteRsp_t* pRsp );
 
 /**
     @brief   Send Execute Write Response.
@@ -1167,7 +1164,7 @@ extern bStatus_t ATT_PrepareWriteRsp( uint16 connHandle, attPrepareWriteRsp_t* p
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_ExecuteWriteRsp( uint16 connHandle );
+extern bStatus_t ATT_ExecuteWriteRsp( uint16_t connHandle );
 
 /**
     @brief   Send Handle Value Notification.
@@ -1181,7 +1178,7 @@ extern bStatus_t ATT_ExecuteWriteRsp( uint16 connHandle );
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_HandleValueNoti( uint16 connHandle, attHandleValueNoti_t* pNoti );
+extern bStatus_t ATT_HandleValueNoti( uint16_t connHandle, attHandleValueNoti_t* pNoti );
 
 /**
     @brief   Send Handle Value Indication.
@@ -1195,7 +1192,7 @@ extern bStatus_t ATT_HandleValueNoti( uint16 connHandle, attHandleValueNoti_t* p
             bleNotConnected: Connection is down.<BR>
             bleMemAllocError: Memory allocation error occurred.<BR>
 */
-extern bStatus_t ATT_HandleValueInd( uint16 connHandle, attHandleValueInd_t* pInd );
+extern bStatus_t ATT_HandleValueInd( uint16_t connHandle, attHandleValueInd_t* pInd );
 
 /**
     @}
@@ -1209,7 +1206,7 @@ extern bStatus_t ATT_HandleValueInd( uint16 connHandle, attHandleValueInd_t* pIn
 
     @return  void
 */
-extern void ATT_SetParamValue( uint16 value );
+extern void ATT_SetParamValue( uint16_t value );
 
 /**
     @brief   Get a ATT Parameter value.
@@ -1218,25 +1215,25 @@ extern void ATT_SetParamValue( uint16 value );
 
     @return  ATT Parameter value
 */
-extern uint16 ATT_GetParamValue( void );
+extern uint16_t ATT_GetParamValue( void );
 
-extern uint16 ATT_GetCurrentMTUSize( uint16 connHandle );
-extern void ATT_UpdateMtuSize(uint16 connHandle, uint16 mtuSize);
-extern void ATT_SetMTUSizeMax(uint16 mtuSize);
-//extern void ATT_MTU_SIZE_UPDATE(uint8 mtuSize);
+extern uint16_t ATT_GetCurrentMTUSize( uint16_t connHandle );
+extern void ATT_UpdateMtuSize(uint16_t connHandle, uint16_t mtuSize);
+extern void ATT_SetMTUSizeMax(uint16_t mtuSize);
+//extern void ATT_MTU_SIZE_UPDATE(uint8_t mtuSize);
 
 extern void ATT_InitMtuSize(void);
 
-//extern uint16 g_ATT_MTU_SIZE;
-extern uint16 g_ATT_MTU_SIZE_MAX;
-extern uint16 g_ATT_MAX_NUM_HANDLES;
-extern uint16 g_ATT_MAX_NUM_HANDLES_INFO;
-//extern uint16 g_ATT_MAX_NUM_HANDLE_BT_UUID;
+//extern uint16_t g_ATT_MTU_SIZE;
+extern uint16_t g_ATT_MTU_SIZE_MAX;
+extern uint16_t g_ATT_MAX_NUM_HANDLES;
+extern uint16_t g_ATT_MAX_NUM_HANDLES_INFO;
+//extern uint16_t g_ATT_MAX_NUM_HANDLE_BT_UUID;
 extern attMTU_t g_attMtuClientServer;
 
 
 // for multi-role
-extern uint16  gAttMtuSize[];
+extern uint16_t  gAttMtuSize[];
 
 /*********************************************************************
 *********************************************************************/

@@ -14,8 +14,8 @@ extern "C"
 /*********************************************************************
     INCLUDES
 */
-#include "hci.h"
-#include "l2cap.h"
+//#include <ble/include/hci.h>
+#include <ble/include/l2cap.h>
 
 /*********************************************************************
     MACROS
@@ -72,33 +72,33 @@ extern "C"
 typedef struct
 {
     // Channel info
-    uint8  state; // Channel connection state
-    uint16 CID;   // Local channel id
-    uint8  id;    // Local identifier - matches responses with requests
+    uint8_t  state; // Channel connection state
+    uint16_t CID;   // Local channel id
+    uint8_t  id;    // Local identifier - matches responses with requests
 
     // Link info
-    uint16 connHandle; // link connection handle
+    uint16_t connHandle; // link connection handle
 
     // Application info
-    uint8 taskId; // task that channel belongs to
+    uint8_t taskId; // task that channel belongs to
 
     // Timer id
-    uint8 timerId;
+    uint8_t timerId;
 } l2capChannel_t;
 
 // L2CAP Fixed Channel structure. Allocated one for each fixed channel.
 typedef struct
 {
-    uint16 CID;   // channel id
-    uint8 taskId; // task registered with channel
+    uint16_t CID;   // channel id
+    uint8_t taskId; // task registered with channel
 } l2capFixedChannel_t;
 
 // Signaling packet header format
 typedef struct
 {
-    uint8 opcode; // type of command
-    uint8 id;     // identifier - matches responses with requests
-    uint16 len;   // length of data field (doesn't cover Code, Identifier and Length fields)
+    uint8_t opcode; // type of command
+    uint8_t id;     // identifier - matches responses with requests
+    uint16_t len;   // length of data field (doesn't cover Code, Identifier and Length fields)
 } l2capSignalHdr_t;
 
 /**
@@ -109,12 +109,12 @@ typedef struct
 
     @return  length of the command data
 */
-typedef uint16 (*pfnL2CAPBuildCmd_t)( uint8* pBuf, uint8* pData );
+typedef uint16_t (*pfnL2CAPBuildCmd_t)( uint8_t* pBuf, uint8_t* pData );
 
 /*********************************************************************
     GLOBAL VARIABLES
 */
-extern uint8 l2capTaskID;
+extern uint8_t l2capTaskID;
 extern l2capChannel_t l2capChannels[];
 extern l2capFixedChannel_t l2capFixedChannels[];
 
@@ -125,72 +125,72 @@ extern l2capFixedChannel_t l2capFixedChannels[];
 /*
     Send L2CAP Command.
 */
-extern bStatus_t l2capSendCmd( uint16 connHandle, uint8 opcode, uint8 id,
-                               uint8* pCmd, pfnL2CAPBuildCmd_t pfnBuildCmd );
+extern bStatus_t l2capSendCmd( uint16_t connHandle, uint8_t opcode, uint8_t id,
+                               uint8_t* pCmd, pfnL2CAPBuildCmd_t pfnBuildCmd );
 /*
     Send L2CAP Request.
 */
-extern bStatus_t l2capSendReq( uint16 connHandle, uint8 opcode, uint8* pReq,
-                               pfnL2CAPBuildCmd_t pfnBuildCmd, uint8 state, uint8 taskId );
+extern bStatus_t l2capSendReq( uint16_t connHandle, uint8_t opcode, uint8_t* pReq,
+                               pfnL2CAPBuildCmd_t pfnBuildCmd, uint8_t state, uint8_t taskId );
 /*
     Build Echo Request.
 */
-extern uint16 l2capBuildEchoReq( uint8* pBuf, uint8* pCmd );
+extern uint16_t l2capBuildEchoReq( uint8_t* pBuf, uint8_t* pCmd );
 
 /*
     Build Info Request.
 */
-extern uint16 l2capBuildInfoReq( uint8* pBuf, uint8* pCmd );
+extern uint16_t l2capBuildInfoReq( uint8_t* pBuf, uint8_t* pCmd );
 
 /*
     Build Parameter Update Request.
 */
-extern uint16 l2capBuildParamUpdateReq( uint8* pBuf, uint8* pData );
+extern uint16_t l2capBuildParamUpdateReq( uint8_t* pBuf, uint8_t* pData );
 
 /*
     Encapsulate and send L2CAP packet.
 */
-extern bStatus_t l2capEncapSendData( uint16 connHandle, l2capPacket_t* pPkt );
+extern bStatus_t l2capEncapSendData( uint16_t connHandle, l2capPacket_t* pPkt );
 
 /*
     Parse L2CAP packet.
 */
-extern uint8 l2capParsePacket( l2capPacket_t* pPkt, hciDataEvent_t* pHciMsg );
+extern uint8_t l2capParsePacket( l2capPacket_t* pPkt, hciDataEvent_t* pHciMsg );
 
 /*
     Parse L2CAP Signaling header.
 */
-extern void l2capParseSignalHdr( l2capSignalHdr_t* pHdr, uint8* pData );
+extern void l2capParseSignalHdr( l2capSignalHdr_t* pHdr, uint8_t* pData );
 
 /*
     Build Echo Response.
 */
-extern uint16 l2capBuildEchoRsp( uint8* pBuf, uint8* pCmd );
+extern uint16_t l2capBuildEchoRsp( uint8_t* pBuf, uint8_t* pCmd );
 
 /*
     Parse Command Reject.
 */
-extern bStatus_t l2capParseCmdReject( l2capSignalCmd_t* pCmd, uint8* pData, uint16 len );
+extern bStatus_t l2capParseCmdReject( l2capSignalCmd_t* pCmd, uint8_t* pData, uint16_t len );
 
 /*
     Parse Echo Response.
 */
-extern bStatus_t l2capParseEchoRsp( l2capSignalCmd_t* pCmd, uint8* pData, uint16 len );
+extern bStatus_t l2capParseEchoRsp( l2capSignalCmd_t* pCmd, uint8_t* pData, uint16_t len );
 
 /*
     Parse Information Response.
 */
-extern bStatus_t l2capParseInfoRsp( l2capSignalCmd_t* pCmd, uint8* pData, uint16 len );
+extern bStatus_t l2capParseInfoRsp( l2capSignalCmd_t* pCmd, uint8_t* pData, uint16_t len );
 
 /*
     Parse Connection Parameter Update Response.
 */
-extern bStatus_t l2capParseParamUpdateRsp( l2capSignalCmd_t* pCmd, uint8* pData, uint16 len );
+extern bStatus_t l2capParseParamUpdateRsp( l2capSignalCmd_t* pCmd, uint8_t* pData, uint16_t len );
 
 /*
     Find a channel using the local identifier.
 */
-extern l2capChannel_t* l2capFindLocalId( uint8 id );
+extern l2capChannel_t* l2capFindLocalId( uint8_t id );
 
 /*
     Free a channel.
@@ -205,22 +205,22 @@ extern void l2capStopTimer( l2capChannel_t* pChannel );
 /*
     Handle an incoming packet error.
 */
-extern void l2capHandleRxError( uint16 connHandle );
+extern void l2capHandleRxError( uint16_t connHandle );
 
 /*
     Forward a data message to upper layer application.
 */
-extern bStatus_t l2capNotifyData( uint8 taskId, uint16 connHandle, l2capPacket_t* pPkt );
+extern bStatus_t l2capNotifyData( uint8_t taskId, uint16_t connHandle, l2capPacket_t* pPkt );
 
 /*
     Send a Signaling command to upper layer application.
 */
-extern void l2capNotifySignal( uint8 taskId, uint16 connHandle, uint8 status,
-                               uint8 opcode, uint8 id, l2capSignalCmd_t* pCmd );
+extern void l2capNotifySignal( uint8_t taskId, uint16_t connHandle, uint8_t status,
+                               uint8_t opcode, uint8_t id, l2capSignalCmd_t* pCmd );
 
-extern void* L2CAP_Fragment_bm_alloc( uint16 size );
+extern void* L2CAP_Fragment_bm_alloc( uint16_t size );
 
-extern uint8 L2CAP_Fragment_SendDataPkt( uint16 connHandle, uint8 fragFlg,uint16 pktLen, uint8* pBuf );
+extern uint8_t L2CAP_Fragment_SendDataPkt( uint16_t connHandle, uint8_t fragFlg,uint16_t pktLen, uint8_t* pBuf );
 
 
 /*********************************************************************
@@ -228,7 +228,7 @@ extern uint8 L2CAP_Fragment_SendDataPkt( uint16 connHandle, uint8 fragFlg,uint16
 
     @brief   Send Info Response.
 
-            Use like: l2capInfoRsp( uint16 connHandle, uint8 id, l2capInfoRsp_t *pInfoRsp );
+            Use like: l2capInfoRsp( uint16_t connHandle, uint8_t id, l2capInfoRsp_t *pInfoRsp );
 
     @param   connHandle - connection to use
     @param   id - identifier received in request
@@ -241,14 +241,14 @@ extern uint8 L2CAP_Fragment_SendDataPkt( uint16 connHandle, uint8 fragFlg,uint16
             bleMemAllocError: Memory allocation error occurred.
 */
 #define l2capInfoRsp( connHandle, id, pInfoRsp )  l2capSendCmd( (connHandle), L2CAP_INFO_RSP, (id),\
-                                                                (uint8 *)(pInfoRsp), L2CAP_BuildInfoRsp )
+                                                                (uint8_t *)(pInfoRsp), L2CAP_BuildInfoRsp )
 
 /*********************************************************************
     @fn      l2capEchoRsp
 
     @brief   Send Ehco Response.
 
-            Use like: l2capEchoRsp( uint16 connHandle, uint8 id, l2capEchoRsp_t *pEchoRsp );
+            Use like: l2capEchoRsp( uint16_t connHandle, uint8_t id, l2capEchoRsp_t *pEchoRsp );
 
     @param   connHandle - connection to use
     @param   id - identifier received in request
@@ -261,7 +261,7 @@ extern uint8 L2CAP_Fragment_SendDataPkt( uint16 connHandle, uint8 fragFlg,uint16
             bleMemAllocError: Memory allocation error occurred.
 */
 #define l2capEchoRsp( connHandle, id, pEchoRsp )  l2capSendCmd( (connHandle), L2CAP_ECHO_RSP, (id),\
-                                                                (uint8 *)(pEchoRsp), l2capBuildEchoRsp )
+                                                                (uint8_t *)(pEchoRsp), l2capBuildEchoRsp )
 
 
 /*********************************************************************

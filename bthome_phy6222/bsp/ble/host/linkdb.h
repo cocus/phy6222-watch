@@ -19,6 +19,7 @@ extern "C"
 /*********************************************************************
  * INCLUDES
  */
+#include <ble/include/bcomdef.h>
 
 /*********************************************************************
  * MACROS
@@ -55,33 +56,33 @@ extern "C"
 
 typedef struct
 {
-  uint8 srk[KEYLEN];  // Signature Resolving Key
-  uint32 signCounter; // Sign Counter 
+  uint8_t srk[KEYLEN];  // Signature Resolving Key
+  uint32_t signCounter; // Sign Counter 
 } linkSec_t;
 
 typedef struct
 {
-  uint8 ltk[KEYLEN];             // Long Term Key
-  uint16 div;                    // Diversifier
-  uint8 rand[B_RANDOM_NUM_SIZE]; // random number
-  uint8 keySize;                 // LTK Key Size
+  uint8_t ltk[KEYLEN];             // Long Term Key
+  uint16_t div;                    // Diversifier
+  uint8_t rand[B_RANDOM_NUM_SIZE]; // random number
+  uint8_t keySize;                 // LTK Key Size
 } encParams_t;
 
 typedef struct
 {
-  uint8 taskID;            // Application that controls the link
-    uint16 connectionHandle; // Controller connection handle
-    uint8 stateFlags;        // LINK_CONNECTED, LINK_AUTHENTICATED...
-    uint8 role;               // 2020-04-22 add (case for multi-role SMP )
-    uint8 addrType;          // Address type of connected device
-    uint8 addr[B_ADDR_LEN];  // Other Device's address
-  uint16 connInterval;     // The connection's interval (n * 1.23 ms)
+  uint8_t taskID;            // Application that controls the link
+    uint16_t connectionHandle; // Controller connection handle
+    uint8_t stateFlags;        // LINK_CONNECTED, LINK_AUTHENTICATED...
+    uint8_t role;               // 2020-04-22 add (case for multi-role SMP )
+    uint8_t addrType;          // Address type of connected device
+    uint8_t addr[B_ADDR_LEN];  // Other Device's address
+  uint16_t connInterval;     // The connection's interval (n * 1.23 ms)
   linkSec_t sec;           // Connection Security related items
   encParams_t *pEncParams; // pointer to LTK, ediv, rand. if needed.
 } linkDBItem_t;
 
 // function pointer used to register for a status callback
-typedef void (*pfnLinkDBCB_t)( uint16 connectionHandle, uint8 changeType );
+typedef void (*pfnLinkDBCB_t)( uint16_t connectionHandle, uint8_t changeType );
 
 // function pointer used to perform specialized link database searches
 typedef void (*pfnPerformFuncCB_t)( linkDBItem_t *pLinkItem );
@@ -102,50 +103,50 @@ typedef void (*pfnPerformFuncCB_t)( linkDBItem_t *pLinkItem );
    * linkDB_Register - Register with this function to receive a callback when
    *              status changes on a connection.
    */
-  extern uint8 linkDB_Register( pfnLinkDBCB_t pFunc );
+  extern uint8_t linkDB_Register( pfnLinkDBCB_t pFunc );
 
   /*
    * linkDB_Add - Adds a record to the link database.
    */
-extern uint8 linkDB_Add( uint8 taskID, uint16 connectionHandle, uint8  stateFlags, uint8 role,
-                         uint8 addrType, uint8* pAddr, uint16 connInterval );
+extern uint8_t linkDB_Add( uint8_t taskID, uint16_t connectionHandle, uint8_t  stateFlags, uint8_t role,
+                         uint8_t addrType, uint8_t* pAddr, uint16_t connInterval );
 
   /*
    * linkDB_Remove - Removes a record from the link database.
    */
-  extern uint8 linkDB_Remove( uint16 connectionHandle );
+  extern uint8_t linkDB_Remove( uint16_t connectionHandle );
 
   /*
    * linkDB_Update - This function is used to update the stateFlags of 
    *              a link record.
    */
-  extern uint8 linkDB_Update( uint16 connectionHandle, uint8 newState );
+  extern uint8_t linkDB_Update( uint16_t connectionHandle, uint8_t newState );
 
   /*
    * linkDB_NumActive - returns the number of active connections.
    */
-  extern uint8 linkDB_NumActive( void );
+  extern uint8_t linkDB_NumActive( void );
 
   /*
    * linkDB_Find - Find link database item (link information)
    * 
    *    returns a pointer to the link item, NULL if not found
    */
-  extern linkDBItem_t *linkDB_Find( uint16 connectionHandle );
+  extern linkDBItem_t *linkDB_Find( uint16_t connectionHandle );
 
   /*
    * linkDB_FindFirst - Find the first link that matches the taskID.
    * 
    *    returns a pointer to the link item, NULL if not found
    */
-  extern linkDBItem_t *linkDB_FindFirst( uint8 taskID );
+  extern linkDBItem_t *linkDB_FindFirst( uint8_t taskID );
 
   /*
    * linkDB_State - Check to see if a physical link is in a specific state.
    * 
    *    returns TRUE is the link is in state. FALSE, otherwise.
    */
-  extern uint8 linkDB_State( uint16 connectionHandle, uint8 state );
+  extern uint8_t linkDB_State( uint16_t connectionHandle, uint8_t state );
 
   /*
    * linkDB_Authen - Check to see if the physical link is encrypted and authenticated.
@@ -155,7 +156,7 @@ extern uint8 linkDB_Add( uint8 taskID, uint16 connectionHandle, uint8  stateFlag
    *            LINBDB_ERR_INSUFFICIENT_KEYSIZE - key size encrypted is not large enough,
    *            LINKDB_ERR_INSUFFICIENT_ENCRYPTION - link is encrypted, but not authenticated
    */
-  extern uint8 linkDB_Authen( uint16 connectionHandle, uint8 keySize, uint8 mitmRequired );
+  extern uint8_t linkDB_Authen( uint16_t connectionHandle, uint8_t keySize, uint8_t mitmRequired );
   
   /*
    * linkDB_PerformFunc - Perform a function of each connection in the link database.
@@ -164,7 +165,7 @@ extern uint8 linkDB_Add( uint8 taskID, uint16 connectionHandle, uint8  stateFlag
   
   /*
    * linkDB_Up - Check to see if a physical link is up (connected).
-   *    Use like:  uint8 linkDB_Up( uint16 connectionHandle );
+   *    Use like:  uint8_t linkDB_Up( uint16_t connectionHandle );
    *            connectionHandle - controller link connection handle.
    *            returns TRUE if the link is up. FALSE, otherwise.
    */
@@ -172,7 +173,7 @@ extern uint8 linkDB_Add( uint8 taskID, uint16 connectionHandle, uint8  stateFlag
 
   /*
    * linkDB_Encrypted - Check to see if the physical link is encrypted.
-   *    Use like:  linkDB_Encrypted( uint16 connectionHandle );
+   *    Use like:  linkDB_Encrypted( uint16_t connectionHandle );
    *            connectionHandle - controller link connection handle.
    *            returns TRUE if the link is encrypted. FALSE, otherwise.
    */
@@ -180,7 +181,7 @@ extern uint8 linkDB_Add( uint8 taskID, uint16 connectionHandle, uint8  stateFlag
   
   /*
    * linkDB_Authenticated - Check to see if the physical link is authenticated.
-   *    Use like:  linkDB_Authenticated( uint16 connectionHandle );
+   *    Use like:  linkDB_Authenticated( uint16_t connectionHandle );
    *            connectionHandle - controller link connection handle.
    *            returns TRUE if the link is authenticated. FALSE, otherwise.
    */
@@ -188,7 +189,7 @@ extern uint8 linkDB_Add( uint8 taskID, uint16 connectionHandle, uint8  stateFlag
 
   /*
    * linkDB_Bonded - Check to see if the physical link is bonded.
-   *    Use like:  linkDB_Bonded( uint16 connectionHandle );
+   *    Use like:  linkDB_Bonded( uint16_t connectionHandle );
    *            connectionHandle - controller link connection handle.
    *            returns TRUE if the link is bonded. FALSE, otherwise.
    */

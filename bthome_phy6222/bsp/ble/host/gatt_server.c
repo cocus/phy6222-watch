@@ -13,13 +13,9 @@
 /*********************************************************************
     INCLUDES
 */
-#include "bcomdef.h"
 #include "linkdb.h"
-
-#include "gatt.h"
-#include "gatt_uuid.h"
 #include "gatt_internal.h"
-
+#include <ble/include/gatt_uuid.h>
 
 /*********************************************************************
     MACROS
@@ -59,7 +55,7 @@ typedef struct
 gattServerInfo_t serverInfoTbl[GATT_MAX_NUM_CONN];
 
 // Task to be notified of requests
-uint8 reqTaskId = INVALID_TASK_ID;
+uint8_t reqTaskId = INVALID_TASK_ID;
 
 /*********************************************************************
     EXTERNAL VARIABLES
@@ -76,32 +72,32 @@ uint8 reqTaskId = INVALID_TASK_ID;
 static gattServiceList_t* pServiceList = NULL;
 
 // Next available attribute handle
-static uint16 nextHandle = GATT_MIN_HANDLE;
+static uint16_t nextHandle = GATT_MIN_HANDLE;
 
 /*********************************************************************
     LOCAL FUNCTIONS
 */
-static bStatus_t gattProcessExchangeMTUReq( uint16 connHandle, attMsg_t* pMsg );
-static bStatus_t gattProcessFindInfoReq( uint16 connHandle, attMsg_t* pMsg );
-static bStatus_t gattProcessFindByTypeValueReq( uint16 connHandle, attMsg_t* pMsg );
-static bStatus_t gattProcessReadByTypeReq( uint16 connHandle, attMsg_t* pMsg );
-static bStatus_t gattProcessReadReq( uint16 connHandle, attMsg_t* pMsg );
-static bStatus_t gattProcessReadMultiReq( uint16 connHandle, attMsg_t* pMsg );
-static bStatus_t gattProcessReadByGrpTypeReq( uint16 connHandle, attMsg_t* pMsg );
-static bStatus_t gattProcessWriteReq( uint16 connHandle, attMsg_t* pMsg );
-static bStatus_t gattProcessExecuteWriteReq( uint16 connHandle, attMsg_t* pMsg );
+static bStatus_t gattProcessExchangeMTUReq( uint16_t connHandle, attMsg_t* pMsg );
+static bStatus_t gattProcessFindInfoReq( uint16_t connHandle, attMsg_t* pMsg );
+static bStatus_t gattProcessFindByTypeValueReq( uint16_t connHandle, attMsg_t* pMsg );
+static bStatus_t gattProcessReadByTypeReq( uint16_t connHandle, attMsg_t* pMsg );
+static bStatus_t gattProcessReadReq( uint16_t connHandle, attMsg_t* pMsg );
+static bStatus_t gattProcessReadMultiReq( uint16_t connHandle, attMsg_t* pMsg );
+static bStatus_t gattProcessReadByGrpTypeReq( uint16_t connHandle, attMsg_t* pMsg );
+static bStatus_t gattProcessWriteReq( uint16_t connHandle, attMsg_t* pMsg );
+static bStatus_t gattProcessExecuteWriteReq( uint16_t connHandle, attMsg_t* pMsg );
 
-static void gattStoreServerInfo( gattServerInfo_t* pServer, uint8 taskId );
-//static bStatus_t gattGetServerStatus( uint16 connHandle, gattServerInfo_t** p2pServer );
-static gattServerInfo_t* gattFindServerInfo( uint16 connHandle );
+static void gattStoreServerInfo( gattServerInfo_t* pServer, uint8_t taskId );
+//static bStatus_t gattGetServerStatus( uint16_t connHandle, gattServerInfo_t** p2pServer );
+static gattServerInfo_t* gattFindServerInfo( uint16_t connHandle );
 static void gattResetServerInfo( gattServerInfo_t* pServer );
-static void gattServerStartTimer( uint8* pData, uint16 timeout, uint8* pTimerId );
-static uint16 gattServiceLastHandle( uint16 handle );
+static void gattServerStartTimer( uint8_t* pData, uint16_t timeout, uint8_t* pTimerId );
+static uint16_t gattServiceLastHandle( uint16_t handle );
 
 // Callback functions
-static bStatus_t gattServerProcessMsgCB( uint16 connHandle, attPacket_t* pPkt );
-static void gattServerHandleTimerCB( uint8* pData );
-static void gattServerHandleConnStatusCB( uint16 connectionHandle, uint8 changeType );
+static bStatus_t gattServerProcessMsgCB( uint16_t connHandle, attPacket_t* pPkt );
+static void gattServerHandleTimerCB( uint8_t* pData );
+static void gattServerHandleConnStatusCB( uint16_t connectionHandle, uint8_t changeType );
 
 /*********************************************************************
     Server Handle Request Table
@@ -140,7 +136,7 @@ static CONST gattHandleReq_t serverReqTbl[] =
 bStatus_t GATT_InitServer( void )
 {
     // Mark all Server records as unused
-    for ( uint8 i = 0; i < GATT_MAX_NUM_CONN; i++ )
+    for ( uint8_t i = 0; i < GATT_MAX_NUM_CONN; i++ )
     {
         gattServerInfo_t* pServer = &serverInfoTbl[i];
 
@@ -219,7 +215,7 @@ bStatus_t GATT_RegisterService( gattService_t* pService )
     }
 
     // Assign attribute handles
-    for ( uint16 i = 0; i < pService->numAttrs; i++ )
+    for ( uint16_t i = 0; i < pService->numAttrs; i++ )
     {
         pService->attrs[i].handle = nextHandle++;
     }
@@ -265,7 +261,7 @@ bStatus_t GATT_RegisterService( gattService_t* pService )
     @return  SUCCESS: Service deregistered successfully.
             FAILURE: Service not found.
 */
-bStatus_t GATT_DeregisterService( uint16 handle, gattService_t* pService )
+bStatus_t GATT_DeregisterService( uint16_t handle, gattService_t* pService )
 {
     gattServiceList_t* pLoop = pServiceList;
     gattServiceList_t* pPrev = NULL;
@@ -289,7 +285,7 @@ bStatus_t GATT_DeregisterService( uint16 handle, gattService_t* pService )
             // Application will free the service attribute list
             if ( pService != NULL )
             {
-                VOID osal_memcpy( pService, &(pLoop->service), sizeof( gattService_t ) );
+                osal_memcpy( pService, &(pLoop->service), sizeof( gattService_t ) );
             }
 
             // Free the service record
@@ -314,7 +310,7 @@ bStatus_t GATT_DeregisterService( uint16 handle, gattService_t* pService )
 
     @return  void
 */
-void GATT_RegisterForReq( uint8 taskId )
+void GATT_RegisterForReq( uint8_t taskId )
 {
     reqTaskId = taskId;
 }
@@ -333,7 +329,7 @@ void GATT_RegisterForReq( uint8 taskId )
             ATT_ERR_INSUFFICIENT_KEY_SIZE: Key Size used for encrypting is insufficient
             ATT_ERR_INSUFFICIENT_ENCRYPT: Attribute requires encryption
 */
-bStatus_t GATT_VerifyReadPermissions( uint16 connHandle, uint8 permissions )
+bStatus_t GATT_VerifyReadPermissions( uint16_t connHandle, uint8_t permissions )
 {
     // Make sure the requesting device has sufficient security
     if ( gattPermitAuthorRead( permissions ) || gattPermitAuthenRead( permissions ) )
@@ -373,7 +369,7 @@ bStatus_t GATT_VerifyReadPermissions( uint16 connHandle, uint8 permissions )
             ATT_ERR_INSUFFICIENT_KEY_SIZE: Key Size used for encrypting is insufficient
             ATT_ERR_INSUFFICIENT_ENCRYPT: Attribute requires encryption
 */
-bStatus_t GATT_VerifyWritePermissions( uint16 connHandle, uint8 permissions, attWriteReq_t* pReq )
+bStatus_t GATT_VerifyWritePermissions( uint16_t connHandle, uint8_t permissions, attWriteReq_t* pReq )
 {
     // Make sure the requesting device has sufficient security
     if ( gattPermitAuthorWrite( permissions ) )
@@ -385,7 +381,7 @@ bStatus_t GATT_VerifyWritePermissions( uint16 connHandle, uint8 permissions, att
 
     if ( gattPermitAuthenWrite( permissions ) || gattPermitEncryptWrite( permissions ) )
     {
-        uint8 status = linkDB_Authen( connHandle, GATT_ENCRYPT_KEY_SIZE, gattPermitAuthenWrite( permissions ) );
+        uint8_t status = linkDB_Authen( connHandle, GATT_ENCRYPT_KEY_SIZE, gattPermitAuthenWrite( permissions ) );
 
         // Write operation requires an encrypted link or an authenticated signed command
         if ( ( status != SUCCESS ) && ( ( pReq->cmd == FALSE ) || ( pReq->sig != ATT_SIG_VALID ) ) )
@@ -417,7 +413,7 @@ bStatus_t GATT_VerifyWritePermissions( uint16 connHandle, uint8 permissions, att
             bleNotConnected: Connection is down.
             blePending: A confirmation is pending with this client.
 */
-uint8 GATT_ServiceChangedInd( uint16 connHandle, uint8 taskId )
+uint8_t GATT_ServiceChangedInd( uint16_t connHandle, uint8_t taskId )
 {
     gattAttribute_t* pAttr;
     // Find the Service Changed attribute record
@@ -455,14 +451,14 @@ uint8 GATT_ServiceChangedInd( uint16 connHandle, uint8 taskId )
 
     @return  Pointer to attribute record. NULL, otherwise.
 */
-gattAttribute_t* GATT_FindHandleUUID( uint16 startHandle, uint16 endHandle, const uint8* pUUID,
-                                      uint16 len, uint16* pHandle )
+gattAttribute_t* GATT_FindHandleUUID( uint16_t startHandle, uint16_t endHandle, const uint8_t* pUUID,
+                                      uint16_t len, uint16_t* pHandle )
 {
     gattServiceList_t* pLoop = pServiceList;
 
     while ( pLoop != NULL )
     {
-        for ( uint16 i = 0; i < pLoop->service.numAttrs; i++ )
+        for ( uint16_t i = 0; i < pLoop->service.numAttrs; i++ )
         {
             gattAttribute_t* pAttr = &(pLoop->service.attrs[i]);
 
@@ -503,18 +499,18 @@ gattAttribute_t* GATT_FindHandleUUID( uint16 startHandle, uint16 endHandle, cons
 
     @return  Pointer to attribute record. NULL, otherwise.
 */
-gattAttribute_t* GATT_FindHandle( uint16 handle, uint16* pHandle )
+gattAttribute_t* GATT_FindHandle( uint16_t handle, uint16_t* pHandle )
 {
     gattServiceList_t* pLoop = pServiceList;
 
     while ( pLoop != NULL )
     {
-        uint16 serviceHandle = pLoop->service.attrs[0].handle;
+        uint16_t serviceHandle = pLoop->service.attrs[0].handle;
 
         // See if the handle falls within this service
         if ( ( handle >= serviceHandle ) && ( handle < serviceHandle + pLoop->service.numAttrs ) )
         {
-            for ( uint16 i = 0; i < pLoop->service.numAttrs; i++ )
+            for ( uint16_t i = 0; i < pLoop->service.numAttrs; i++ )
             {
                 gattAttribute_t* pAttr = &(pLoop->service.attrs[i]);
 
@@ -551,12 +547,12 @@ gattAttribute_t* GATT_FindHandle( uint16 handle, uint16* pHandle )
 
     @return  Pointer to next attribute record. NULL, otherwise.
 */
-gattAttribute_t* GATT_FindNextAttr( gattAttribute_t* pAttr, uint16 endHandle,
-                                    uint16 service, uint16* pLastHandle )
+gattAttribute_t* GATT_FindNextAttr( gattAttribute_t* pAttr, uint16_t endHandle,
+                                    uint16_t service, uint16_t* pLastHandle )
 {
-    uint16 lastHandle;
+    uint16_t lastHandle;
     gattAttribute_t* pNext = NULL;
-    uint16 owner = GATT_INVALID_HANDLE;
+    uint16_t owner = GATT_INVALID_HANDLE;
 
     // Try to find the next attribute of the same type
 
@@ -610,7 +606,7 @@ gattAttribute_t* GATT_FindNextAttr( gattAttribute_t* pAttr, uint16 endHandle,
 
     @return  Number of attributes. 0, otherwise.
 */
-uint16 GATT_ServiceNumAttrs( uint16 handle )
+uint16_t GATT_ServiceNumAttrs( uint16_t handle )
 {
     gattServiceList_t* pLoop = pServiceList;
 
@@ -666,11 +662,11 @@ uint16 GATT_ServiceNumAttrs( uint16 handle )
             blePending: A confirmation is pending with this client.
             bleTimeout: Previous transaction timed out.
 */
-bStatus_t GATT_Indication( uint16 connHandle, attHandleValueInd_t* pInd,
-                           uint8 authenticated, uint8 taskId )
+bStatus_t GATT_Indication( uint16_t connHandle, attHandleValueInd_t* pInd,
+                           uint8_t authenticated, uint8_t taskId )
 {
     gattServerInfo_t* pServer;
-    uint8 status;
+    uint8_t status;
     // Make sure we're allowed to send a new indication
     status = gattGetServerStatus( connHandle, &pServer );
 
@@ -727,11 +723,11 @@ bStatus_t GATT_Indication( uint16 connHandle, attHandleValueInd_t* pInd,
             bleNotConnected: Connection is down.
             bleTimeout: Previous transaction timed out.
 */
-bStatus_t GATT_Notification( uint16 connHandle, attHandleValueNoti_t* pNoti,
-                             uint8 authenticated )
+bStatus_t GATT_Notification( uint16_t connHandle, attHandleValueNoti_t* pNoti,
+                             uint8_t authenticated )
 {
     gattServerInfo_t* pServer;
-    uint8 status;
+    uint8_t status;
     // Make sure we're allowed to send a new notification
     status = gattGetServerStatus( connHandle, &pServer );
 
@@ -768,9 +764,9 @@ bStatus_t GATT_Notification( uint16 connHandle, attHandleValueNoti_t* pNoti,
 
     @return  Handle of last attribute for service. Handle, otherwise.
 */
-static uint16 gattServiceLastHandle( uint16 handle )
+static uint16_t gattServiceLastHandle( uint16_t handle )
 {
-    uint16 lastHandle;
+    uint16_t lastHandle;
     // Find out the handle of the last attribute withis this service
     lastHandle = GATT_ServiceNumAttrs( handle );
 
@@ -796,12 +792,12 @@ static uint16 gattServiceLastHandle( uint16 handle )
 
     @return  void
 */
-static void gattStoreServerInfo( gattServerInfo_t* pServer, uint8 taskId )
+static void gattStoreServerInfo( gattServerInfo_t* pServer, uint8_t taskId )
 {
     if ( taskId != INVALID_TASK_ID )
     {
         // Start a timeout timer for the confirmation
-        gattServerStartTimer( (uint8*)pServer, ATT_MSG_TIMEOUT, &pServer->timerId );
+        gattServerStartTimer( (uint8_t*)pServer, ATT_MSG_TIMEOUT, &pServer->timerId );
         // Store task id to forward the confirmation to
         pServer->taskId = taskId;
     }
@@ -820,10 +816,10 @@ static void gattStoreServerInfo( gattServerInfo_t* pServer, uint8 taskId )
                 ATT_ERR_INVALID_PDU: Invalid PDU
                 bleMemAllocError: Memory allocation error occurred
 */
-static bStatus_t gattServerProcessMsgCB( uint16 connHandle, attPacket_t* pPkt )
+static bStatus_t gattServerProcessMsgCB( uint16_t connHandle, attPacket_t* pPkt )
 {
     gattMsg_t msg;
-    uint8 status = SUCCESS;
+    uint8_t status = SUCCESS;
 
     // See if this is a confirmation to an indication
     if ( pPkt->method == ATT_HANDLE_VALUE_CFM )
@@ -897,7 +893,7 @@ static bStatus_t gattServerProcessMsgCB( uint16 connHandle, attPacket_t* pPkt )
             }
 
             // Send an Error Response back
-            VOID ATT_ErrorRsp( connHandle, &errorRsp );
+            ATT_ErrorRsp( connHandle, &errorRsp );
             // We're done with this request
             status = SUCCESS;
         }
@@ -916,9 +912,9 @@ static bStatus_t gattServerProcessMsgCB( uint16 connHandle, attPacket_t* pPkt )
 
     @return  SUCCESS: Forward the request up to the application
 */
-static bStatus_t gattProcessExchangeMTUReq( uint16 connHandle, attMsg_t* pMsg )
+static bStatus_t gattProcessExchangeMTUReq( uint16_t connHandle, attMsg_t* pMsg )
 {
-    VOID connHandle; // Not used here
+    UNUSED(connHandle); // Not used here
     //VOID pMsg; // Not used here
     attExchangeMTUReq_t* pReq = &pMsg->exchangeMTUReq;
     g_attMtuClientServer.clientMTU=ATT_MTU_SIZE_MIN;
@@ -944,12 +940,12 @@ static bStatus_t gattProcessExchangeMTUReq( uint16 connHandle, attMsg_t* pMsg )
             ATT_ERR_INVALID_HANDLE: Invalid attribute handle
             ATT_ERR_ATTR_NOT_FOUND: Attribute not found
 */
-static bStatus_t gattProcessFindInfoReq( uint16 connHandle, attMsg_t* pMsg )
+static bStatus_t gattProcessFindInfoReq( uint16_t connHandle, attMsg_t* pMsg )
 {
     attFindInfoReq_t* pReq = &pMsg->findInfoReq;
-    uint16 startHandle = pReq->startHandle;
+    uint16_t startHandle = pReq->startHandle;
     attFindInfoRsp_t rsp;
-    uint8 done = FALSE;
+    uint8_t done = FALSE;
 
     // If the starting handle greater than the ending handle or the starting
     // handle is 0x0000 then return the status code Invalid Handle
@@ -1004,7 +1000,7 @@ static bStatus_t gattProcessFindInfoReq( uint16 connHandle, attMsg_t* pMsg )
             }
 
             rsp.info.btPair[rsp.numInfo].handle = pAttr->handle;
-            VOID osal_memcpy( rsp.info.btPair[rsp.numInfo].uuid, pAttr->type.uuid, ATT_BT_UUID_SIZE );
+            osal_memcpy( rsp.info.btPair[rsp.numInfo].uuid, pAttr->type.uuid, ATT_BT_UUID_SIZE );
 
             if ( ( ++rsp.numInfo >= ATT_MAX_NUM_HANDLE_BT_UUID ) ||
                     ( pAttr->handle == GATT_MAX_HANDLE ) )
@@ -1016,7 +1012,7 @@ static bStatus_t gattProcessFindInfoReq( uint16 connHandle, attMsg_t* pMsg )
         {
             // Handle with its 128 bit Bluetooth UUID
             rsp.info.pair[rsp.numInfo].handle = pAttr->handle;
-            VOID osal_memcpy( rsp.info.pair[rsp.numInfo].uuid, pAttr->type.uuid, ATT_UUID_SIZE );
+            osal_memcpy( rsp.info.pair[rsp.numInfo].uuid, pAttr->type.uuid, ATT_UUID_SIZE );
 
             if ( ( ++rsp.numInfo >= ATT_MAX_NUM_HANDLE_UUID ) ||
                     ( pAttr->handle == GATT_MAX_HANDLE ) )
@@ -1036,7 +1032,7 @@ static bStatus_t gattProcessFindInfoReq( uint16 connHandle, attMsg_t* pMsg )
     }
 
     // Send a Find Info Response back
-    VOID ATT_FindInfoRsp( connHandle, &rsp );
+    ATT_FindInfoRsp( connHandle, &rsp );
     return ( SUCCESS );
 }
 
@@ -1052,10 +1048,10 @@ static bStatus_t gattProcessFindInfoReq( uint16 connHandle, attMsg_t* pMsg )
             ATT_ERR_INVALID_HANDLE: Invalid attribute handle
             ATT_ERR_ATTR_NOT_FOUND: Attribute not found
 */
-static bStatus_t gattProcessFindByTypeValueReq( uint16 connHandle, attMsg_t* pMsg )
+static bStatus_t gattProcessFindByTypeValueReq( uint16_t connHandle, attMsg_t* pMsg )
 {
     attFindByTypeValueReq_t* pReq = &pMsg->findByTypeValueReq;
-    VOID connHandle; // Not used here
+    UNUSED(connHandle); // Not used here
 
     // If the starting handle greater than the ending handle or the starting
     // handle is 0x0000 then return the status code Invalid Handle
@@ -1094,10 +1090,10 @@ static bStatus_t gattProcessFindByTypeValueReq( uint16 connHandle, attMsg_t* pMs
             ATT_ERR_INVALID_HANDLE: Invalid attribute handle
             ATT_ERR_ATTR_NOT_FOUND: Attribute not found
 */
-static bStatus_t gattProcessReadByTypeReq( uint16 connHandle, attMsg_t* pMsg )
+static bStatus_t gattProcessReadByTypeReq( uint16_t connHandle, attMsg_t* pMsg )
 {
     attReadByTypeReq_t* pReq = &pMsg->readByTypeReq;
-    VOID connHandle; // Not used here
+    UNUSED(connHandle); // Not used here
 
     // If the starting handle greater than the ending handle or the starting
     // handle is 0x0000 then return the status code Invalid Handle
@@ -1139,10 +1135,10 @@ static bStatus_t gattProcessReadByTypeReq( uint16 connHandle, attMsg_t* pMsg )
             ATT_ERR_INSUFFICIENT_KEY_SIZE: Key Size used for encrypting is insufficient
             ATT_ERR_INSUFFICIENT_ENCRYPT: Attribute requires encryption
 */
-static bStatus_t gattProcessReadReq( uint16 connHandle, attMsg_t* pMsg )
+static bStatus_t gattProcessReadReq( uint16_t connHandle, attMsg_t* pMsg )
 {
     gattAttribute_t* pAttr;
-    uint16 handle = pMsg->readReq.handle;
+    uint16_t handle = pMsg->readReq.handle;
     // Make sure the handle is valid
     pAttr = GATT_FindHandle( handle, NULL );
 
@@ -1170,16 +1166,16 @@ static bStatus_t gattProcessReadReq( uint16 connHandle, attMsg_t* pMsg )
             ATT_ERR_INSUFFICIENT_KEY_SIZE: Key Size used for encrypting is insufficient
             ATT_ERR_INSUFFICIENT_ENCRYPT: Attribute requires encryption
 */
-static bStatus_t gattProcessReadMultiReq( uint16 connHandle, attMsg_t* pMsg )
+static bStatus_t gattProcessReadMultiReq( uint16_t connHandle, attMsg_t* pMsg )
 {
     attReadMultiReq_t* pReq = &pMsg->readMultiReq;
 
     // Make sure all the handles are valid and all attributes have sufficient
     // permissions to allow reading.
-    for ( uint8 i = 0; i < pReq->numHandles; i++ )
+    for ( uint8_t i = 0; i < pReq->numHandles; i++ )
     {
         gattAttribute_t* pAttr;
-        uint8 status;
+        uint8_t status;
         // Make sure the handle is valid
         pAttr = GATT_FindHandle( pReq->handle[i], NULL );
 
@@ -1218,10 +1214,10 @@ static bStatus_t gattProcessReadMultiReq( uint16 connHandle, attMsg_t* pMsg )
             ATT_ERR_UNSUPPORTED_GRP_TYPE: Group attribute type not supported
             ATT_ERR_ATTR_NOT_FOUND: Attribute not found
 */
-static bStatus_t gattProcessReadByGrpTypeReq( uint16 connHandle, attMsg_t* pMsg )
+static bStatus_t gattProcessReadByGrpTypeReq( uint16_t connHandle, attMsg_t* pMsg )
 {
     attReadByGrpTypeReq_t* pReq = &pMsg->readByGrpTypeReq;
-    VOID connHandle; // Not used here
+    UNUSED(connHandle); // Not used here
 
     // If the starting handle greater than the ending handle or the starting
     // handle is 0x0000 then return the status code Invalid Handle
@@ -1269,7 +1265,7 @@ static bStatus_t gattProcessReadByGrpTypeReq( uint16 connHandle, attMsg_t* pMsg 
             ATT_ERR_INSUFFICIENT_KEY_SIZE: Key Size used for encrypting is insufficient
             ATT_ERR_INSUFFICIENT_ENCRYPT: Attribute requires encryption
 */
-static bStatus_t gattProcessWriteReq( uint16 connHandle, attMsg_t* pMsg )
+static bStatus_t gattProcessWriteReq( uint16_t connHandle, attMsg_t* pMsg )
 {
     gattAttribute_t* pAttr;
     attWriteReq_t* pReq = &(pMsg->writeReq);
@@ -1295,10 +1291,10 @@ static bStatus_t gattProcessWriteReq( uint16 connHandle, attMsg_t* pMsg )
 
     @return  SUCCESS: Forward the request up to the application
 */
-static bStatus_t gattProcessExecuteWriteReq( uint16 connHandle, attMsg_t* pMsg )
+static bStatus_t gattProcessExecuteWriteReq( uint16_t connHandle, attMsg_t* pMsg )
 {
-    VOID connHandle; // Not used here
-    VOID pMsg; // Not used here
+    UNUSED(connHandle); // Not used here
+    UNUSED(pMsg); // Not used here
     // Forward the request up to the application
     return ( SUCCESS );
 }
@@ -1316,7 +1312,7 @@ static bStatus_t gattProcessExecuteWriteReq( uint16 connHandle, attMsg_t* pMsg )
                 blePending: Confirmation pending
                 bleTimeout: Previous transaction timed out
 */
-bStatus_t gattGetServerStatus( uint16 connHandle, gattServerInfo_t** p2pServer )
+bStatus_t gattGetServerStatus( uint16_t connHandle, gattServerInfo_t** p2pServer )
 {
     gattServerInfo_t* pServer;
     pServer = gattFindServerInfo( connHandle );
@@ -1346,9 +1342,9 @@ bStatus_t gattGetServerStatus( uint16 connHandle, gattServerInfo_t** p2pServer )
 
     @return  a pointer to the found item. NULL, otherwise.
 */
-static gattServerInfo_t* gattFindServerInfo( uint16 connHandle )
+static gattServerInfo_t* gattFindServerInfo( uint16_t connHandle )
 {
-    uint8 i;
+    uint8_t i;
 
     for ( i = 0; i < GATT_MAX_NUM_CONN; i++ )
     {
@@ -1390,7 +1386,7 @@ static void gattResetServerInfo( gattServerInfo_t* pServer )
 
     @return  void
 */
-static void gattServerStartTimer( uint8* pData, uint16 timeout, uint8* pTimerId )
+static void gattServerStartTimer( uint8_t* pData, uint16_t timeout, uint8_t* pTimerId )
 {
     gattStartTimer( gattServerHandleTimerCB, pData, timeout, pTimerId );
 }
@@ -1404,7 +1400,7 @@ static void gattServerStartTimer( uint8* pData, uint16 timeout, uint8* pTimerId 
 
     @return  void
 */
-static void gattServerHandleTimerCB( uint8* pData )
+static void gattServerHandleTimerCB( uint8_t* pData )
 {
     gattServerInfo_t* pServer = (gattServerInfo_t*)pData;
 
@@ -1412,7 +1408,7 @@ static void gattServerHandleTimerCB( uint8* pData )
     if ( ( pServer != NULL ) && TIMER_VALID( pServer->timerId ) )
     {
         // Notify the application about the timeout
-        VOID gattNotifyEvent( pServer->taskId, pServer->connHandle, bleTimeout,
+        gattNotifyEvent( pServer->taskId, pServer->connHandle, bleTimeout,
                               ATT_HANDLE_VALUE_CFM, NULL );
         // Timer has expired. If a transaction has not completed before it times
         // out, then this transaction shall be considered to have failed. No more
@@ -1434,7 +1430,7 @@ static void gattServerHandleTimerCB( uint8* pData )
 
     @return      void
 */
-static void gattServerHandleConnStatusCB( uint16 connHandle, uint8 changeType )
+static void gattServerHandleConnStatusCB( uint16_t connHandle, uint8_t changeType )
 {
     gattServerInfo_t* pServer = NULL;
 
@@ -1492,7 +1488,7 @@ static void gattServerHandleConnStatusCB( uint16 connHandle, uint8 changeType )
             if ( pServer->timerId != TIMEOUT_TIMER_ID )
             {
                 // Notify the application about the link disconnect
-                VOID gattNotifyEvent( pServer->taskId, connHandle, bleNotConnected,
+                gattNotifyEvent( pServer->taskId, connHandle, bleNotConnected,
                                       ATT_HANDLE_VALUE_CFM, NULL );
             }
 
@@ -1513,7 +1509,7 @@ static void gattServerHandleConnStatusCB( uint16 connHandle, uint8 changeType )
 
     @return      void
 */
-void GATT_SetNextHandle( uint16 handle )
+void GATT_SetNextHandle( uint16_t handle )
 {
     if ( handle >= nextHandle )
     {

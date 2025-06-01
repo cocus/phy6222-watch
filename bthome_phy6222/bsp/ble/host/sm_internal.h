@@ -14,9 +14,9 @@ extern "C"
 /*********************************************************************
  * INCLUDES
  */
-#include "bcomdef.h"
-#include "l2cap.h"
-#include "smp.h"
+#include <ble/host/smp.h>
+#include <ble/include/l2cap.h>
+#include <ble/include/gap.h>
 #include "linkdb.h"
 
 /*********************************************************************
@@ -77,27 +77,27 @@ extern "C"
 
 typedef struct
 {
-  uint8  confirm[KEYLEN];       // calculated confirm value
-  uint8  rand[SMP_RANDOM_LEN];  // First MRand or Srand, then RAND
+  uint8_t  confirm[KEYLEN];       // calculated confirm value
+  uint8_t  rand[SMP_RANDOM_LEN];  // First MRand or Srand, then RAND
 } devPairing_t;
 
 typedef struct
 {
   // From the start
-  uint8                initiator;        // TRUE if initiator
-  uint8                state;            // Pairing state
-  uint8                taskID;           // Task ID of the app/profile that requested the pairing
+  uint8_t                initiator;        // TRUE if initiator
+  uint8_t                state;            // Pairing state
+  uint8_t                taskID;           // Task ID of the app/profile that requested the pairing
 
-    uint8                timerID;           // 2021-03-29 add , timerid for simultaneously SMP for multi-role(the same as single connection )
-    uint8                stateID;           // 2021-03-29 add , stateid for simultaneously SMP pairing state change idx
-  uint16               connectionHandle; // Connection Handle from controller,
+    uint8_t                timerID;           // 2021-03-29 add , timerid for simultaneously SMP for multi-role(the same as single connection )
+    uint8_t                stateID;           // 2021-03-29 add , stateid for simultaneously SMP pairing state change idx
+  uint16_t               connectionHandle; // Connection Handle from controller,
   smLinkSecurityReq_t  *pSecReqs;        // Pairing Control info
-  uint8                tk[KEYLEN];       // Holds tk from app
-  uint8                authState;        // uses SM_AUTH_STATE_AUTHENTICATED & SM_AUTH_STATE_BONDING
+  uint8_t                tk[KEYLEN];       // Holds tk from app
+  uint8_t                authState;        // uses SM_AUTH_STATE_AUTHENTICATED & SM_AUTH_STATE_BONDING
   
   // During pairing
   smpPairingReq_t      *pPairDev;        // Info of paired device.
-  uint8                type;             // ie. SM_PAIRING_TYPE_JUST_WORKS
+  uint8_t                type;             // ie. SM_PAIRING_TYPE_JUST_WORKS
   
   // device information
   devPairing_t         myComp;          // This device's pairing components
@@ -112,17 +112,17 @@ typedef struct
 } smPairingParams_t;
 
 // Callback when an SMP message has been received on the Initiator or Responder.
-typedef uint8 (*smProcessMsg_t)( linkDBItem_t *pLinkItem, uint8 cmdID, smpMsgs_t *pParsedMsg );
+typedef uint8_t (*smProcessMsg_t)( linkDBItem_t *pLinkItem, uint8_t cmdID, smpMsgs_t *pParsedMsg );
 
 // Callback to send next key message, and sets state for next event on the Initiator or Responder.
-typedef void (*smSendNextKeyInfo_t)( uint16 connectionHandle );
+typedef void (*smSendNextKeyInfo_t)( uint16_t connectionHandle );
 
 // Callback to send Start Encrypt through HCI on the Initiator.
-typedef bStatus_t (*smStartEncryption_t)( uint16 connHandle, uint8 *pLTK, uint16 div,
-                                          uint8 *pRandNum, uint8 keyLen );
+typedef bStatus_t (*smStartEncryption_t)( uint16_t connHandle, uint8_t *pLTK, uint16_t div,
+                                          uint8_t *pRandNum, uint8_t keyLen );
 
 // Callback when an HCI BLE LTK Request has been received on the Responder.
-typedef uint8 (*smProcessLTKReq_t)( uint16 connectionHandle, uint8 *pRandom, uint16 encDiv );
+typedef uint8_t (*smProcessLTKReq_t)( uint16_t connectionHandle, uint8_t *pRandom, uint16_t encDiv );
 
 // Initiator callback structure - must be setup by the Initiator.
 typedef struct
@@ -145,7 +145,7 @@ typedef struct
  */
   
 // Security Manager's OSAL task ID
-extern uint8 smTaskID;
+extern uint8_t smTaskID;
 
 extern smPairingParams_t* pPairingParams[];
 
@@ -162,27 +162,27 @@ extern smResponderCBs_t *pfnResponderCBs;
   /*
    * smLinkCheck - link database callback function.
    */
-  extern void smLinkCheck( uint16 connectionHandle, uint8 changeType );
+  extern void smLinkCheck( uint16_t connectionHandle, uint8_t changeType );
   
   /*
    * smProcessRandComplete - Process the HCI Random Complete Event.
    */
-  extern uint8 smProcessRandComplete( uint8 status, uint8 *rand );
+  extern uint8_t smProcessRandComplete( uint8_t status, uint8_t *rand );
 
   /*
    * smTimedOut - Process the SM timeout.
    */
-extern void smTimedOut( uint16 connectionHandle );
+extern void smTimedOut( uint16_t connectionHandle );
   
   /*
    * smStartRspTimer - Start the SM Response Timer.
 */
-extern void smStartRspTimer( uint16 connectionHandle );
+extern void smStartRspTimer( uint16_t connectionHandle );
 
 /*
     smStopRspTimer - Stop the SM Response Timer.
 */
-extern void smStopRspTimer( uint16 connectionHandle );
+extern void smStopRspTimer( uint16_t connectionHandle );
 
   /*
    * smProcessDataMsg - Process incoming L2CAP messages.
@@ -192,138 +192,138 @@ extern void smStopRspTimer( uint16 connectionHandle );
   /*
    * smProcessEncryptChange - Process the HCI BLE Encrypt Change Event.
    */
-  extern uint8 smProcessEncryptChange( uint16 connectionHandle, uint8 reason );
+  extern uint8_t smProcessEncryptChange( uint16_t connectionHandle, uint8_t reason );
   
   /*
    * smInProcess - Is SM already processing something?
    */
-  extern uint8 smInProcess( void );
+  extern uint8_t smInProcess( void );
 
   /*
    * sm_d1 - SM diversifying function d1
    */
-  extern bStatus_t sm_d1( uint8 *pK, uint16 d, uint8 *pD1 );
+  extern bStatus_t sm_d1( uint8_t *pK, uint16_t d, uint8_t *pD1 );
 
   /*
    * sm_ah - Random address hash function
    */
-  extern bStatus_t sm_ah( uint8 *pK, uint8 *pR, uint8 *pAh );
+  extern bStatus_t sm_ah( uint8_t *pK, uint8_t *pR, uint8_t *pAh );
 
   /*
    * sm_dm - SM DIV Maxk generation function dm
    */
-  extern bStatus_t sm_dm( uint8 *pK, uint8 *pR, uint16 *pDm );
+  extern bStatus_t sm_dm( uint8_t *pK, uint8_t *pR, uint16_t *pDm );
 
 /*
     sm_c1 - SM Confirm value generation function c1
 */
-extern bStatus_t sm_c1( uint16 connectionHandle,uint8* pK, uint8* pR, uint8* pC1 );
+extern bStatus_t sm_c1( uint16_t connectionHandle,uint8_t* pK, uint8_t* pR, uint8_t* pC1 );
 
 /*
     sm_c1new - SM Confirm value generation function c1
 */
-extern bStatus_t sm_c1new( uint8* pK, uint8* pR, uint8* pRes, uint8* pReq,
-                           uint8 iat, uint8* pIA, uint8 rat, uint8* pRA, uint8* pC1 );
+extern bStatus_t sm_c1new( uint8_t* pK, uint8_t* pR, uint8_t* pRes, uint8_t* pReq,
+                           uint8_t iat, uint8_t* pIA, uint8_t rat, uint8_t* pRA, uint8_t* pC1 );
 /*
     sm_s1 - SM key generation function s1
 */
-extern bStatus_t sm_s1( uint8* pK, uint8* pR1, uint8* pR2, uint8* pS1 );
+extern bStatus_t sm_s1( uint8_t* pK, uint8_t* pR1, uint8_t* pR2, uint8_t* pS1 );
 
 /*
     smGenerateRandBuf - generate a buffer of random numbers
 */
-extern void smGenerateRandBuf( uint8* pRandNum, uint8 len );
+extern void smGenerateRandBuf( uint8_t* pRandNum, uint8_t len );
 
 /*
     smEncLTK - start LTK Encryption
 */
-extern void smEncLTK( uint16 connectionHandle );
+extern void smEncLTK( uint16_t connectionHandle );
 
 /*
     smNextPairingState - trigger next state machine
 */
-extern void smNextPairingState( uint16 connectionHandle );
+extern void smNextPairingState( uint16_t connectionHandle );
 
 /*
     smAuthReqToUint8 - conversion function
 */
-extern uint8 smAuthReqToUint8( authReq_t* pAuthReq );
+extern uint8_t smAuthReqToUint8( authReq_t* pAuthReq );
 
 /*
     smUint8ToAuthReq - conversion function
 */
-extern void smUint8ToAuthReq( authReq_t* pAuthReq, uint8 authReqUint8 );
+extern void smUint8ToAuthReq( authReq_t* pAuthReq, uint8_t authReqUint8 );
 
 /*
     smpResponderProcessPairingReq - Process an incoming Pairing Request message
 */
-extern uint8 smpResponderProcessPairingReq( uint16 connectionHandle,smpPairingReq_t* pParsedMsg );
+extern uint8_t smpResponderProcessPairingReq( uint16_t connectionHandle,smpPairingReq_t* pParsedMsg );
 
 /*
     smSendFailAndEnd - Send the pairing failed message and end existing pairing
 */
-extern bStatus_t smSendFailAndEnd( uint16 connHandle, smpPairingFailed_t* pFailedMsg );
+extern bStatus_t smSendFailAndEnd( uint16_t connHandle, smpPairingFailed_t* pFailedMsg );
 
 /*
     generateRandMsg - Generate a Pairing Random
 */
-extern bStatus_t smGenerateRandMsg( uint16 connectionHandle);
+extern bStatus_t smGenerateRandMsg( uint16_t connectionHandle);
 
 /*
     smSavePairInfo - Save the Pairing Req or Rsp information
 */
-extern bStatus_t smSavePairInfo( uint16 connectionHandle,smpPairingReq_t* pPair );
+extern bStatus_t smSavePairInfo( uint16_t connectionHandle,smpPairingReq_t* pPair );
 
 /*
     generateConfirm - Generate a Pairing Confirm
 */
-extern bStatus_t smGenerateConfirm( uint16 connectionHandle );
+extern bStatus_t smGenerateConfirm( uint16_t connectionHandle );
 
 /*
     smEndPairing - Pairing mode has ended.  Yeah. Notify the GAP and free
                   up the memory used.
 */
-extern void smEndPairing( uint16 connectionHandle,uint8 status );
+extern void smEndPairing( uint16_t connectionHandle,uint8_t status );
 
 /*
     determineKeySize - Determine the maximum encryption key size
 */
-extern uint8 smDetermineKeySize( uint16 connectionHandle );
+extern uint8_t smDetermineKeySize( uint16_t connectionHandle );
 
 /*
     smGeneratePairingReqRsp - Generate a pairing req or response
 */
-extern bStatus_t smGeneratePairingReqRsp( uint16 connectionHandle );
+extern bStatus_t smGeneratePairingReqRsp( uint16_t connectionHandle );
 
   /*
    * smPairingSendEncInfo - Send SM Encryption Information message
    */
-  extern void smPairingSendEncInfo( uint16 connHandle, uint8 *pLTK );
+  extern void smPairingSendEncInfo( uint16_t connHandle, uint8_t *pLTK );
 
   /*
    * smPairingSendMasterID - Send SM Master Identification message
    */
-  extern void smPairingSendMasterID( uint16 connHandle, uint16 ediv, uint8 *pRand );
+  extern void smPairingSendMasterID( uint16_t connHandle, uint16_t ediv, uint8_t *pRand );
 
   /*
    * smPairingSendIdentityInfo - Send SM Identity Information message
    */
-  extern void smPairingSendIdentityInfo( uint16 connHandle, uint8 *pIRK );
+  extern void smPairingSendIdentityInfo( uint16_t connHandle, uint8_t *pIRK );
 
   /*
    * smPairingSendIdentityAddrInfo - Send SM Identity Addr Information message
    */
-  extern void smPairingSendIdentityAddrInfo( uint16 connHandle, uint8 addrType, uint8 *pMACAddr );
+  extern void smPairingSendIdentityAddrInfo( uint16_t connHandle, uint8_t addrType, uint8_t *pMACAddr );
 
   /*
    * smPairingSendSingingInfo - Send SM Signing Information message
    */
-  extern void smPairingSendSingingInfo( uint16 connHandle, uint8 *pSRK );
+  extern void smPairingSendSingingInfo( uint16_t connHandle, uint8_t *pSRK );
 
   /*
    * smPairingSendEncInfo - Send SM Encryption Information message
    */
-  extern void smPairingSendEncInfo( uint16 connHandle, uint8 *pLTK );
+  extern void smPairingSendEncInfo( uint16_t connHandle, uint8_t *pLTK );
 
   /*
    * smProcessPairingReq - Process Pairing Request
@@ -333,8 +333,8 @@ extern bStatus_t smGeneratePairingReqRsp( uint16 connectionHandle );
   /*
    * smStartEncryption - Perform Encrypt through HCI
    */
-  extern bStatus_t smStartEncryption( uint16 connHandle, uint8 *pLTK, uint16 div,
-                                      uint8 *pRandNum, uint8 keyLen );
+  extern bStatus_t smStartEncryption( uint16_t connHandle, uint8_t *pLTK, uint16_t div,
+                                      uint8_t *pRandNum, uint8_t keyLen );
 
   /*
    * smRegisterInitiator - egister Initiator's processing function with SM task
@@ -349,8 +349,8 @@ extern bStatus_t smGeneratePairingReqRsp( uint16 connectionHandle );
 /*
     smp timerout callback for SMP Timeout and pairing state
 */
-extern void smTo_timerCB( uint8* pData );
-extern void smState_timerCB( uint8* pData );
+extern void smTo_timerCB( uint8_t* pData );
+extern void smState_timerCB( uint8_t* pData );
 
 /*********************************************************************
 *********************************************************************/

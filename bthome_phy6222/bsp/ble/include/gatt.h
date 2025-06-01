@@ -23,9 +23,6 @@ extern "C"
 /*********************************************************************
     INCLUDES
 */
-#include "bcomdef.h"
-#include "OSAL.h"
-
 #include "att.h"
 
 /*********************************************************************
@@ -128,7 +125,7 @@ extern "C"
 */
 typedef struct
 {
-    uint8 discCharsByUUID;  //!< Whether this is a GATT Discover Characteristics by UUID sub-procedure
+    uint8_t discCharsByUUID;  //!< Whether this is a GATT Discover Characteristics by UUID sub-procedure
     attReadByTypeReq_t req; //!< Read By Type Request
 } gattReadByTypeReq_t;
 
@@ -137,10 +134,10 @@ typedef struct
 */
 typedef struct
 {
-    uint16 handle; //!< Handle of the attribute to be written (must be first field)
-    uint16 offset; //!< Offset of the first octet to be written
-    uint8 len;     //!< Length of value
-    uint8* pValue; //!< Part of the value of the attribute to be written (must be allocated)
+    uint16_t handle; //!< Handle of the attribute to be written (must be first field)
+    uint16_t offset; //!< Offset of the first octet to be written
+    uint8_t len;     //!< Length of value
+    uint8_t* pValue; //!< Part of the value of the attribute to be written (must be allocated)
 } gattPrepareWriteReq_t;
 
 /**
@@ -148,9 +145,9 @@ typedef struct
 */
 typedef struct
 {
-    uint8 reliable;            //!< Whether reliable writes requested (always FALSE for Write Long)
+    uint8_t reliable;            //!< Whether reliable writes requested (always FALSE for Write Long)
     gattPrepareWriteReq_t req; //!< GATT Prepare Write Request
-    uint16 lastOffset;         //!< Offset of last Prepare Write Request sent
+    uint16_t lastOffset;         //!< Offset of last Prepare Write Request sent
 } gattWriteLongReq_t;
 
 /**
@@ -158,11 +155,11 @@ typedef struct
 */
 typedef struct
 {
-    uint8 reliable;              //!< Whether reliable writes requested (always TRUE for Reliable Writes)
+    uint8_t reliable;              //!< Whether reliable writes requested (always TRUE for Reliable Writes)
     attPrepareWriteReq_t* pReqs; //!< Arrary of Prepare Write Requests (must be allocated)
-    uint8 numReqs;               //!< Number of Prepare Write Requests
-    uint8 index;                 //!< Index of last Prepare Write Request sent
-    uint8 flags;                 //!< 0x00 - cancel all prepared writes.
+    uint8_t numReqs;               //!< Number of Prepare Write Requests
+    uint8_t index;                 //!< Index of last Prepare Write Request sent
+    uint8_t flags;                 //!< 0x00 - cancel all prepared writes.
     //!< 0x01 - immediately write all pending prepared values.
 } gattReliableWritesReq_t;
 
@@ -212,8 +209,8 @@ typedef union
 typedef struct
 {
     osal_event_hdr_t hdr; //!< GATT_MSG_EVENT and status
-    uint16 connHandle;    //!< Connection message was received on
-    uint8 method;         //!< Type of message
+    uint16_t connHandle;    //!< Connection message was received on
+    uint8_t method;         //!< Type of message
     gattMsg_t msg;        //!< Attribute protocol/profile message
 } gattMsgEvent_t;
 
@@ -222,8 +219,8 @@ typedef struct
 */
 typedef struct
 {
-    uint8 len;         //!< Length of UUID
-    const uint8* uuid; //!< Pointer to UUID
+    uint8_t len;         //!< Length of UUID
+    const uint8_t* uuid; //!< Pointer to UUID
 } gattAttrType_t;
 
 /**
@@ -232,9 +229,9 @@ typedef struct
 typedef struct attAttribute_t
 {
     gattAttrType_t type; //!< Attribute type (2 or 16 octet UUIDs)
-    uint8 permissions;   //!< Attribute permissions
-    uint16 handle;       //!< Attribute handle - assigned internally by attribute server
-    uint8* const pValue; //!< Attribute value - encoding of the octet array is defined in
+    uint8_t permissions;   //!< Attribute permissions
+    uint16_t handle;       //!< Attribute handle - assigned internally by attribute server
+    uint8_t* const pValue; //!< Attribute value - encoding of the octet array is defined in
     //!< the applicable profile. The maximum length of an attribute
     //!< value shall be 512 octets.
 } gattAttribute_t;
@@ -244,7 +241,7 @@ typedef struct attAttribute_t
 */
 typedef struct
 {
-    uint16 numAttrs; //!< Number of attributes in attrs
+    uint16_t numAttrs; //!< Number of attributes in attrs
 
     /** Array of attribute records.
         NOTE: The list must start with a Service attribute followed by
@@ -257,11 +254,11 @@ typedef struct
 typedef struct
 {
     // Info maintained for Handle Value Confirmation message
-    uint16 connHandle;    // connection message was sent on
-    uint8 timerId;        // confirmation timeout timer id
-    uint8 taskId;         // task to be notified of confirmation
+    uint16_t connHandle;    // connection message was sent on
+    uint8_t timerId;        // confirmation timeout timer id
+    uint8_t taskId;         // task to be notified of confirmation
 } gattServerInfo_t;
-bStatus_t gattGetServerStatus( uint16 connHandle, gattServerInfo_t** p2pServer );
+bStatus_t gattGetServerStatus( uint16_t connHandle, gattServerInfo_t** p2pServer );
 /*********************************************************************
     VARIABLES
 */
@@ -295,7 +292,7 @@ extern bStatus_t GATT_InitClient( void );
 
     @return  void
 */
-extern void GATT_RegisterForInd( uint8 taskId );
+extern void GATT_RegisterForInd( uint8_t taskId );
 
 /**
     @brief   The Prepare Write Request is used to request the server to
@@ -315,7 +312,7 @@ extern void GATT_RegisterForInd( uint8 taskId );
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_PrepareWriteReq( uint16 connHandle, attPrepareWriteReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_PrepareWriteReq( uint16_t connHandle, attPrepareWriteReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   The Execute Write Request is used to request the server to
@@ -336,7 +333,7 @@ extern bStatus_t GATT_PrepareWriteReq( uint16 connHandle, attPrepareWriteReq_t* 
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_ExecuteWriteReq( uint16 connHandle, attExecuteWriteReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_ExecuteWriteReq( uint16_t connHandle, attExecuteWriteReq_t* pReq, uint8_t taskId );
 
 /**
     @}
@@ -398,7 +395,7 @@ extern bStatus_t GATT_RegisterService( gattService_t* pService );
     @return  SUCCESS: Service deregistered successfully.<BR>
             FAILURE: Service not found.<BR>
 */
-extern bStatus_t GATT_DeregisterService( uint16 handle, gattService_t* pService );
+extern bStatus_t GATT_DeregisterService( uint16_t handle, gattService_t* pService );
 
 /**
     @brief   Register to receive incoming ATT Requests.
@@ -407,7 +404,7 @@ extern bStatus_t GATT_DeregisterService( uint16 handle, gattService_t* pService 
 
     @return  void
 */
-extern void GATT_RegisterForReq( uint8 taskId );
+extern void GATT_RegisterForReq( uint8_t taskId );
 
 /**
     @brief   Verify the permissions of an attribute for reading.
@@ -421,7 +418,7 @@ extern void GATT_RegisterForReq( uint8 taskId );
             ATT_ERR_INSUFFICIENT_KEY_SIZE: Key Size used for encrypting is insufficient.<BR>
             ATT_ERR_INSUFFICIENT_ENCRYPT: Attribute requires encryption.<BR>
 */
-extern bStatus_t GATT_VerifyReadPermissions( uint16 connHandle, uint8 permissions );
+extern bStatus_t GATT_VerifyReadPermissions( uint16_t connHandle, uint8_t permissions );
 
 /**
     @brief   Verify the permissions of an attribute for writing.
@@ -436,7 +433,7 @@ extern bStatus_t GATT_VerifyReadPermissions( uint16 connHandle, uint8 permission
             ATT_ERR_INSUFFICIENT_KEY_SIZE: Key Size used for encrypting is insufficient.<BR>
             ATT_ERR_INSUFFICIENT_ENCRYPT: Attribute requires encryption.<BR>
 */
-extern bStatus_t GATT_VerifyWritePermissions( uint16 connHandle, uint8 permissions, attWriteReq_t* pReq );
+extern bStatus_t GATT_VerifyWritePermissions( uint16_t connHandle, uint8_t permissions, attWriteReq_t* pReq );
 
 /**
     @brief   Send out a Service Changed Indication.
@@ -451,7 +448,7 @@ extern bStatus_t GATT_VerifyWritePermissions( uint16 connHandle, uint8 permissio
             bleNotConnected: Connection is down.<BR>
             blePending: A confirmation is pending with this client.<BR>
 */
-extern uint8 GATT_ServiceChangedInd( uint16 connHandle, uint8 taskId );
+extern uint8_t GATT_ServiceChangedInd( uint16_t connHandle, uint8_t taskId );
 
 /**
     @brief   Find the attribute record for a given handle and UUID.
@@ -464,8 +461,8 @@ extern uint8 GATT_ServiceChangedInd( uint16 connHandle, uint8 taskId );
 
     @return  Pointer to attribute record. NULL, otherwise.
 */
-extern gattAttribute_t* GATT_FindHandleUUID( uint16 startHandle, uint16 endHandle, const uint8* pUUID,
-                                             uint16 len, uint16* pHandle );
+extern gattAttribute_t* GATT_FindHandleUUID( uint16_t startHandle, uint16_t endHandle, const uint8_t* pUUID,
+                                             uint16_t len, uint16_t* pHandle );
 /**
     @brief   Find the attribute record for a given handle
 
@@ -474,7 +471,7 @@ extern gattAttribute_t* GATT_FindHandleUUID( uint16 startHandle, uint16 endHandl
 
     @return  Pointer to attribute record. NULL, otherwise.
 */
-extern gattAttribute_t* GATT_FindHandle( uint16 handle, uint16* pHandle );
+extern gattAttribute_t* GATT_FindHandle( uint16_t handle, uint16_t* pHandle );
 
 /**
     @brief   Find the next attribute of the same type for a given attribute.
@@ -486,8 +483,8 @@ extern gattAttribute_t* GATT_FindHandle( uint16 handle, uint16* pHandle );
 
     @return  Pointer to next attribute record. NULL, otherwise.
 */
-extern gattAttribute_t* GATT_FindNextAttr( gattAttribute_t* pAttr, uint16 endHandle,
-                                           uint16 service, uint16* pLastHandle );
+extern gattAttribute_t* GATT_FindNextAttr( gattAttribute_t* pAttr, uint16_t endHandle,
+                                           uint16_t service, uint16_t* pLastHandle );
 /**
     @brief   Get the number of attributes for a given service
 
@@ -495,7 +492,7 @@ extern gattAttribute_t* GATT_FindNextAttr( gattAttribute_t* pAttr, uint16 endHan
 
     @return  Number of attributes. 0, otherwise.
 */
-extern uint16 GATT_ServiceNumAttrs( uint16 handle );
+extern uint16_t GATT_ServiceNumAttrs( uint16_t handle );
 
 /**
     @}
@@ -540,8 +537,8 @@ extern uint16 GATT_ServiceNumAttrs( uint16 handle );
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_Indication( uint16 connHandle, attHandleValueInd_t* pInd,
-                                  uint8 authenticated, uint8 taskId );
+extern bStatus_t GATT_Indication( uint16_t connHandle, attHandleValueInd_t* pInd,
+                                  uint8_t authenticated, uint8_t taskId );
 /**
     @brief   This sub-procedure is used when a server is configured to
             notify a characteristic value to a client without expecting
@@ -567,8 +564,8 @@ extern bStatus_t GATT_Indication( uint16 connHandle, attHandleValueInd_t* pInd,
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_Notification( uint16 connHandle, attHandleValueNoti_t* pNoti,
-                                    uint8 authenticated );
+extern bStatus_t GATT_Notification( uint16_t connHandle, attHandleValueNoti_t* pNoti,
+                                    uint8_t authenticated );
 /**
     @}
 */
@@ -613,7 +610,7 @@ extern bStatus_t GATT_Notification( uint16 connHandle, attHandleValueNoti_t* pNo
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_ExchangeMTU( uint16 connHandle, attExchangeMTUReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_ExchangeMTU( uint16_t connHandle, attExchangeMTUReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used by a client to discover all
@@ -645,7 +642,7 @@ extern bStatus_t GATT_ExchangeMTU( uint16 connHandle, attExchangeMTUReq_t* pReq,
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_DiscAllPrimaryServices( uint16 connHandle, uint8 taskId );
+extern bStatus_t GATT_DiscAllPrimaryServices( uint16_t connHandle, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used by a client to discover a specific
@@ -682,8 +679,8 @@ extern bStatus_t GATT_DiscAllPrimaryServices( uint16 connHandle, uint8 taskId );
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_DiscPrimaryServiceByUUID( uint16 connHandle, uint8* pValue,
-                                                uint8 len, uint8 taskId );
+extern bStatus_t GATT_DiscPrimaryServiceByUUID( uint16_t connHandle, uint8_t* pValue,
+                                                uint8_t len, uint8_t taskId );
 /**
     @brief   This sub-procedure is used by a client to find include
             service declarations within a service definition on a
@@ -718,8 +715,8 @@ extern bStatus_t GATT_DiscPrimaryServiceByUUID( uint16 connHandle, uint8* pValue
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_FindIncludedServices( uint16 connHandle, uint16 startHandle,
-                                            uint16 endHandle, uint8 taskId );
+extern bStatus_t GATT_FindIncludedServices( uint16_t connHandle, uint16_t startHandle,
+                                            uint16_t endHandle, uint8_t taskId );
 /**
     @brief   This sub-procedure is used by a client to find all the
             characteristic declarations within a service definition on
@@ -754,8 +751,8 @@ extern bStatus_t GATT_FindIncludedServices( uint16 connHandle, uint16 startHandl
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_DiscAllChars( uint16 connHandle, uint16 startHandle,
-                                    uint16 endHandle, uint8 taskId );
+extern bStatus_t GATT_DiscAllChars( uint16_t connHandle, uint16_t startHandle,
+                                    uint16_t endHandle, uint8_t taskId );
 /**
     @brief   This sub-procedure is used by a client to discover service
             characteristics on a server when only the service handle
@@ -790,7 +787,7 @@ extern bStatus_t GATT_DiscAllChars( uint16 connHandle, uint16 startHandle,
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_DiscCharsByUUID( uint16 connHandle, attReadByTypeReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_DiscCharsByUUID( uint16_t connHandle, attReadByTypeReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used by a client to find all the
@@ -826,8 +823,8 @@ extern bStatus_t GATT_DiscCharsByUUID( uint16 connHandle, attReadByTypeReq_t* pR
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_DiscAllCharDescs( uint16 connHandle, uint16 startHandle,
-                                        uint16 endHandle, uint8 taskId );
+extern bStatus_t GATT_DiscAllCharDescs( uint16_t connHandle, uint16_t startHandle,
+                                        uint16_t endHandle, uint8_t taskId );
 /**
     @brief   This sub-procedure is used to read a Characteristic Value
             from a server when the client knows the Characteristic Value
@@ -863,7 +860,7 @@ extern bStatus_t GATT_DiscAllCharDescs( uint16 connHandle, uint16 startHandle,
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_ReadCharValue( uint16 connHandle, attReadReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_ReadCharValue( uint16_t connHandle, attReadReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used to read a Characteristic Value
@@ -898,7 +895,7 @@ extern bStatus_t GATT_ReadCharValue( uint16 connHandle, attReadReq_t* pReq, uint
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_ReadUsingCharUUID( uint16 connHandle, attReadByTypeReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_ReadUsingCharUUID( uint16_t connHandle, attReadByTypeReq_t* pReq, uint8_t taskId );
 /**
     @brief   This sub-procedure is used to read a Characteristic Value from
             a server when the client knows the Characteristic Value Handle
@@ -928,7 +925,7 @@ extern bStatus_t GATT_ReadUsingCharUUID( uint16 connHandle, attReadByTypeReq_t* 
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_ReadLongCharValue( uint16 connHandle, attReadBlobReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_ReadLongCharValue( uint16_t connHandle, attReadBlobReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used to read multiple Characteristic Values
@@ -961,7 +958,7 @@ extern bStatus_t GATT_ReadLongCharValue( uint16 connHandle, attReadBlobReq_t* pR
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_ReadMultiCharValues( uint16 connHandle, attReadMultiReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_ReadMultiCharValues( uint16_t connHandle, attReadMultiReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used to write a Characteristic Value
@@ -994,7 +991,7 @@ extern bStatus_t GATT_ReadMultiCharValues( uint16 connHandle, attReadMultiReq_t*
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_WriteNoRsp( uint16 connHandle, attWriteReq_t* pReq );
+extern bStatus_t GATT_WriteNoRsp( uint16_t connHandle, attWriteReq_t* pReq );
 
 /**
     @brief   This sub-procedure is used to write a Characteristic Value
@@ -1032,7 +1029,7 @@ extern bStatus_t GATT_WriteNoRsp( uint16 connHandle, attWriteReq_t* pReq );
             bleLinkEncrypted: Connection is already encrypted.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_SignedWriteNoRsp( uint16 connHandle, attWriteReq_t* pReq );
+extern bStatus_t GATT_SignedWriteNoRsp( uint16_t connHandle, attWriteReq_t* pReq );
 
 /**
     @brief   This sub-procedure is used to write a characteristic value
@@ -1068,7 +1065,7 @@ extern bStatus_t GATT_SignedWriteNoRsp( uint16 connHandle, attWriteReq_t* pReq )
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_WriteCharValue( uint16 connHandle, attWriteReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_WriteCharValue( uint16_t connHandle, attWriteReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used to write a Characteristic Value to
@@ -1105,7 +1102,7 @@ extern bStatus_t GATT_WriteCharValue( uint16 connHandle, attWriteReq_t* pReq, ui
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_WriteLongCharValue( uint16 connHandle, gattPrepareWriteReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_WriteLongCharValue( uint16_t connHandle, gattPrepareWriteReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used to write a Characteristic Value to
@@ -1153,8 +1150,8 @@ extern bStatus_t GATT_WriteLongCharValue( uint16 connHandle, gattPrepareWriteReq
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_ReliableWrites( uint16 connHandle, attPrepareWriteReq_t* pReqs,
-                                      uint8 numReqs, uint8 flags, uint8 taskId );
+extern bStatus_t GATT_ReliableWrites( uint16_t connHandle, attPrepareWriteReq_t* pReqs,
+                                      uint8_t numReqs, uint8_t flags, uint8_t taskId );
 /**
     @brief   This sub-procedure is used to read a characteristic descriptor
             from a server when the client knows the characteristic descriptor
@@ -1186,7 +1183,7 @@ extern bStatus_t GATT_ReliableWrites( uint16 connHandle, attPrepareWriteReq_t* p
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_ReadCharDesc( uint16 connHandle, attReadReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_ReadCharDesc( uint16_t connHandle, attReadReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used to read a characteristic descriptor
@@ -1221,7 +1218,7 @@ extern bStatus_t GATT_ReadCharDesc( uint16 connHandle, attReadReq_t* pReq, uint8
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_ReadLongCharDesc( uint16 connHandle, attReadBlobReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_ReadLongCharDesc( uint16_t connHandle, attReadBlobReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used to write a characteristic
@@ -1254,7 +1251,7 @@ extern bStatus_t GATT_ReadLongCharDesc( uint16 connHandle, attReadBlobReq_t* pRe
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_WriteCharDesc( uint16 connHandle, attWriteReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_WriteCharDesc( uint16_t connHandle, attWriteReq_t* pReq, uint8_t taskId );
 
 /**
     @brief   This sub-procedure is used to write a Characteristic Value to
@@ -1291,7 +1288,7 @@ extern bStatus_t GATT_WriteCharDesc( uint16 connHandle, attWriteReq_t* pReq, uin
             bleMemAllocError: Memory allocation error occurred.<BR>
             bleTimeout: Previous transaction timed out.<BR>
 */
-extern bStatus_t GATT_WriteLongCharDesc( uint16 connHandle, gattPrepareWriteReq_t* pReq, uint8 taskId );
+extern bStatus_t GATT_WriteLongCharDesc( uint16_t connHandle, gattPrepareWriteReq_t* pReq, uint8_t taskId );
 
 /**
     @}
@@ -1319,7 +1316,7 @@ extern bStatus_t GATT_WriteLongCharDesc( uint16 connHandle, gattPrepareWriteReq_
 
     @return  void
 */
-extern void GATT_SetHostToAppFlowCtrl( uint16 hostBufSize,uint8 flowCtrlMode );
+extern void GATT_SetHostToAppFlowCtrl( uint16_t hostBufSize,uint8_t flowCtrlMode );
 
 /**
     @brief   This API is used by the Application to notify GATT that
@@ -1348,7 +1345,7 @@ extern void GATT_AppCompletedMsg( gattMsgEvent_t* pMsg );
 
     @return      none
 */
-extern void GATT_SetNextHandle( uint16 handle );
+extern void GATT_SetNextHandle( uint16_t handle );
 
 /*  -------------------------------------------------------------------
     TASK API - These functions must only be called by OSAL.
@@ -1363,7 +1360,7 @@ extern void GATT_SetNextHandle( uint16 handle );
 
     @return  void
 */
-extern void GATT_Init( uint8 taskId );
+extern void GATT_Init( uint8_t taskId );
 
 /**
     @internal
@@ -1375,7 +1372,7 @@ extern void GATT_Init( uint8 taskId );
 
     @return  events not processed
 */
-extern uint16 GATT_ProcessEvent( uint8 taskId, uint16 events );
+extern uint16_t GATT_ProcessEvent( uint8_t taskId, uint16_t events );
 
 /*********************************************************************
 *********************************************************************/

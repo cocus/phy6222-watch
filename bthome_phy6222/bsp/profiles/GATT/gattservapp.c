@@ -9,17 +9,18 @@
 
 **************************************************************************************************/
 
-#if ( HOST_CONFIG & ( CENTRAL_CFG | PERIPHERAL_CFG ) )
+//#if ( HOST_CONFIG & ( CENTRAL_CFG | PERIPHERAL_CFG ) )
 
 /*******************************************************************************
     INCLUDES
 */
-#include "bcomdef.h"
-#include "linkdb.h"
+#include <osal/OSAL.h>
+#include <ble/include/bcomdef.h>
+#include <ble/include/gatt.h>
+#include <ble/host/linkdb.h>
 
-#include "gatt.h"
-#include "gatt_uuid.h"
-#include "gattservapp.h"
+#include <ble/include/gatt_uuid.h>
+#include <ble/host/gattservapp.h>
 
 
 /*********************************************************************
@@ -37,14 +38,14 @@
 // Structure to keep Prepare Write Requests for each Client
 typedef struct
 {
-    uint16 connHandle;                    // connection message was received on
+    uint16_t connHandle;                    // connection message was received on
     attPrepareWriteReq_t* pPrepareWriteQ; // Prepare Write Request queue
 } prepareWrites_t;
 
 // GATT Structure to keep CBs information for each service being registered
 typedef struct
 {
-    uint16 handle;                // Service handle - assigned internally by GATT Server
+    uint16_t handle;                // Service handle - assigned internally by GATT Server
     CONST gattServiceCBs_t* pCBs; // Service callback function pointers
 } gattServiceCBsInfo_t;
 
@@ -70,16 +71,16 @@ extern l2capSegmentBuff_t   l2capSegmentPkt;
 /*********************************************************************
     LOCAL VARIABLES
 */
-uint8 GATTServApp_TaskID;   // Task ID for internal task/event processing
+uint8_t GATTServApp_TaskID;   // Task ID for internal task/event processing
 
-uint8 appTaskID = INVALID_TASK_ID; // The task ID of an app/profile that
+uint8_t appTaskID = INVALID_TASK_ID; // The task ID of an app/profile that
 // wants GATT Server event messages
 
 // Server Prepare Write table (one entry per each physical link)
 static prepareWrites_t prepareWritesTbl[MAX_NUM_LL_CONN];
 
 // Maximum number of attributes that Server can prepare for writing per Client
-static uint8 maxNumPrepareWrites = 0;
+static uint8_t maxNumPrepareWrites = 0;
 #ifdef PREPARE_QUEUE_STATIC
     static attPrepareWriteReq_t prepareQueue[MAX_NUM_LL_CONN*GATT_MAX_NUM_PREPARE_WRITES];
 #endif
@@ -87,9 +88,9 @@ static uint8 maxNumPrepareWrites = 0;
 static serviceCBsList_t* serviceCBsList = NULL;
 
 // Globals to be used for processing an incoming request
-//static uint8 attrLen;
-static uint16 attrLen;
-static uint8 attrValue[ATT_MTU_SIZE-1];
+//static uint8_t attrLen;
+static uint16_t attrLen;
+static uint8_t attrValue[ATT_MTU_SIZE-1];
 static attMsg_t rsp;
 
 /*** Defined GATT Attributes ***/
@@ -99,7 +100,7 @@ static CONST gattAttrType_t gattService = { ATT_BT_UUID_SIZE, gattServiceUUID };
 
 #ifndef HID_VOICE_SPEC
     // Service Changed Characteristic Properties
-    static uint8 serviceChangedCharProps = GATT_PROP_INDICATE;
+    static uint8_t serviceChangedCharProps = GATT_PROP_INDICATE;
 #endif
 
 // Service Changed attribute (hidden). Set the affected Attribute Handle range
@@ -113,7 +114,7 @@ static CONST gattAttrType_t gattService = { ATT_BT_UUID_SIZE, gattServiceUUID };
 static gattCharCfg_t indCharCfg[GATT_MAX_NUM_CONN];
 
 #if defined ( TESTMODES )
-    static uint16 paramValue = 0;
+    static uint16_t paramValue = 0;
 #endif
 
 /*********************************************************************
@@ -128,7 +129,7 @@ static gattAttribute_t gattAttrTbl[] =
         { ATT_BT_UUID_SIZE, primaryServiceUUID }, /* type */
         GATT_PERMIT_READ,                         /* permissions */
         0,                                        /* handle */
-        (uint8*)& gattService                     /* pValue */
+        (uint8_t*)& gattService                     /* pValue */
     },
     #ifndef HID_VOICE_SPEC
     // Characteristic Declaration
@@ -152,7 +153,7 @@ static gattAttribute_t gattAttrTbl[] =
         { ATT_BT_UUID_SIZE, clientCharCfgUUID },
         GATT_PERMIT_READ | GATT_PERMIT_WRITE,
         0,
-        (uint8*)indCharCfg
+        (uint8_t*)indCharCfg
     }
     #endif
 };
@@ -162,37 +163,37 @@ static gattAttribute_t gattAttrTbl[] =
 */
 static void gattServApp_ProcessMsg( gattMsgEvent_t* pMsg );
 static bStatus_t gattServApp_ProcessExchangeMTUReq( gattMsgEvent_t* pMsg );
-static bStatus_t gattServApp_ProcessFindByTypeValueReq( gattMsgEvent_t* pMsg, uint16* pErrHandle );
-static bStatus_t gattServApp_ProcessReadByTypeReq( gattMsgEvent_t* pMsg, uint16* pErrHandle );
-static bStatus_t gattServApp_ProcessReadReq( gattMsgEvent_t* pMsg, uint16* pErrHandle );
-static bStatus_t gattServApp_ProcessReadBlobReq( gattMsgEvent_t* pMsg, uint16* pErrHandle );
-static bStatus_t gattServApp_ProcessReadMultiReq( gattMsgEvent_t* pMsg, uint16* pErrHandle );
-static bStatus_t gattServApp_ProcessReadByGrpTypeReq( gattMsgEvent_t* pMsg, uint16* pErrHandle );
-static bStatus_t gattServApp_ProcessWriteReq( gattMsgEvent_t* pMsg, uint16* pErrHandle );
-static bStatus_t gattServApp_ProcessPrepareWriteReq( gattMsgEvent_t* pMsg, uint16* pErrHandle );
-static bStatus_t gattServApp_ProcessExecuteWriteReq( gattMsgEvent_t* pMsg, uint16* pErrHandle );
+static bStatus_t gattServApp_ProcessFindByTypeValueReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle );
+static bStatus_t gattServApp_ProcessReadByTypeReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle );
+static bStatus_t gattServApp_ProcessReadReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle );
+static bStatus_t gattServApp_ProcessReadBlobReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle );
+static bStatus_t gattServApp_ProcessReadMultiReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle );
+static bStatus_t gattServApp_ProcessReadByGrpTypeReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle );
+static bStatus_t gattServApp_ProcessWriteReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle );
+static bStatus_t gattServApp_ProcessPrepareWriteReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle );
+static bStatus_t gattServApp_ProcessExecuteWriteReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle );
 
-static bStatus_t gattServApp_RegisterServiceCBs( uint16 handle, CONST gattServiceCBs_t* pServiceCBs );
-static bStatus_t gattServApp_DeregisterServiceCBs( uint16 handle );
-static bStatus_t gattServApp_SetNumPrepareWrites( uint8 numPrepareWrites );
-static uint8 gattServApp_PrepareWriteQInUse( void );
-static CONST gattServiceCBs_t* gattServApp_FindServiceCBs( uint16 service );
-static bStatus_t gattServApp_EnqueuePrepareWriteReq( uint16 connHandle, attPrepareWriteReq_t* pReq );
-static prepareWrites_t* gattServApp_FindPrepareWriteQ( uint16 connHandle );
-static gattCharCfg_t* gattServApp_FindCharCfgItem( uint16 connHandle,
+static bStatus_t gattServApp_RegisterServiceCBs( uint16_t handle, CONST gattServiceCBs_t* pServiceCBs );
+static bStatus_t gattServApp_DeregisterServiceCBs( uint16_t handle );
+static bStatus_t gattServApp_SetNumPrepareWrites( uint8_t numPrepareWrites );
+static uint8_t gattServApp_PrepareWriteQInUse( void );
+static CONST gattServiceCBs_t* gattServApp_FindServiceCBs( uint16_t service );
+static bStatus_t gattServApp_EnqueuePrepareWriteReq( uint16_t connHandle, attPrepareWriteReq_t* pReq );
+static prepareWrites_t* gattServApp_FindPrepareWriteQ( uint16_t connHandle );
+static gattCharCfg_t* gattServApp_FindCharCfgItem( uint16_t connHandle,
                                                    gattCharCfg_t* charCfgTbl );
-static pfnGATTReadAttrCB_t gattServApp_FindReadAttrCB( uint16 handle );
-static pfnGATTWriteAttrCB_t gattServApp_FindWriteAttrCB( uint16 handle );
-static pfnGATTAuthorizeAttrCB_t gattServApp_FindAuthorizeAttrCB( uint16 handle );
+static pfnGATTReadAttrCB_t gattServApp_FindReadAttrCB( uint16_t handle );
+static pfnGATTWriteAttrCB_t gattServApp_FindWriteAttrCB( uint16_t handle );
+static pfnGATTAuthorizeAttrCB_t gattServApp_FindAuthorizeAttrCB( uint16_t handle );
 
 /*********************************************************************
     API FUNCTIONS
 */
 
 // GATT App Callback functions
-static void gattServApp_HandleConnStatusCB( uint16 connHandle, uint8 changeType );
-static bStatus_t gattServApp_WriteAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
-                                          uint8* pValue, uint16 len, uint16 offset );
+static void gattServApp_HandleConnStatusCB( uint16_t connHandle, uint8_t changeType );
+static bStatus_t gattServApp_WriteAttrCB( uint16_t connHandle, gattAttribute_t* pAttr,
+                                          uint8_t* pValue, uint16_t len, uint16_t offset );
 
 /*********************************************************************
     PROFILE CALLBACKS
@@ -215,7 +216,7 @@ static gattServMsgCB_t s_GATTServCB = NULL;
 
     @return  none
 */
-void GATTServApp_RegisterForMsg( uint8 taskID )
+void GATTServApp_RegisterForMsg( uint8_t taskID )
 {
     appTaskID = taskID;
 }
@@ -229,14 +230,14 @@ void GATTServApp_RegisterForMsg( uint8 taskID )
 
     @return  none
 */
-void GATTServApp_Init( uint8 taskId )
+void GATTServApp_Init( uint8_t taskId )
 {
     GATTServApp_TaskID = taskId;
     // Initialize Client Characteristic Configuration attributes
     GATTServApp_InitCharCfg( INVALID_CONNHANDLE, indCharCfg );
 
     // Initialize Prepare Write Table
-    for ( uint8 i = 0; i < MAX_NUM_LL_CONN; i++ )
+    for ( uint8_t i = 0; i < MAX_NUM_LL_CONN; i++ )
     {
         // Initialize connection handle
         prepareWritesTbl[i].connHandle = INVALID_CONNHANDLE;
@@ -265,7 +266,7 @@ void GATTServApp_Init( uint8 taskId )
 
     @return  none
 */
-uint16 GATTServApp_ProcessEvent( uint8 task_id, uint16 events )
+uint16_t GATTServApp_ProcessEvent( uint8_t task_id, uint16_t events )
 {
 	(void) task_id;
     if ( events & SYS_EVENT_MSG )
@@ -288,7 +289,7 @@ uint16 GATTServApp_ProcessEvent( uint8 task_id, uint16 events )
             }
 
             // Release the OSAL message
-            VOID osal_msg_deallocate( (uint8*)pMsg );
+            osal_msg_deallocate( (uint8_t*)pMsg );
         }
 
         // return unprocessed events
@@ -314,10 +315,10 @@ uint16 GATTServApp_ProcessEvent( uint8 task_id, uint16 events )
             FAILURE: Not enough attribute handles available.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t GATTServApp_RegisterService( gattAttribute_t* pAttrs, uint16 numAttrs,
+bStatus_t GATTServApp_RegisterService( gattAttribute_t* pAttrs, uint16_t numAttrs,
                                        CONST gattServiceCBs_t* pServiceCBs )
 {
-    uint8 status;
+    uint8_t status;
 
     // First register the service attribute list with GATT Server
     if ( pAttrs != NULL )
@@ -357,9 +358,9 @@ bStatus_t GATTServApp_RegisterService( gattAttribute_t* pAttrs, uint16 numAttrs,
     @return  SUCCESS: Service deregistered successfully.
             FAILURE: Service not found.
 */
-bStatus_t GATTServApp_DeregisterService( uint16 handle, gattAttribute_t** p2pAttrs )
+bStatus_t GATTServApp_DeregisterService( uint16_t handle, gattAttribute_t** p2pAttrs )
 {
-    uint8 status;
+    uint8_t status;
     // First deregister the service CBs with GATT Server Application
     status = gattServApp_DeregisterServiceCBs( handle );
 
@@ -390,8 +391,8 @@ bStatus_t GATTServApp_DeregisterService( uint16 handle, gattAttribute_t** p2pAtt
     @param   len - length of data to right
     @param   pValue - pointer to data to write.  This is dependent on the
                      the parameter ID and WILL be cast to the appropriate
-                     data type (example: data type of uint16 will be cast
-                     to uint16 pointer).
+                     data type (example: data type of uint16_t will be cast
+                     to uint16_t pointer).
 
     @return  SUCCESS: Parameter set successful
             FAILURE: Parameter in use
@@ -399,19 +400,19 @@ bStatus_t GATTServApp_DeregisterService( uint16 handle, gattAttribute_t** p2pAtt
             bleInvalidRange: Invalid value
             bleMemAllocError: Memory allocation failed
 */
-bStatus_t GATTServApp_SetParameter( uint8 param, uint8 len, void* pValue )
+bStatus_t GATTServApp_SetParameter( uint8_t param, uint8_t len, void* pValue )
 {
     bStatus_t status = SUCCESS;
 
     switch ( param )
     {
     case GATT_PARAM_NUM_PREPARE_WRITES:
-        if ( len == sizeof ( uint8 ) )
+        if ( len == sizeof ( uint8_t ) )
         {
             if ( !gattServApp_PrepareWriteQInUse() )
             {
                 // Set the new nunber of prepare writes
-                status = gattServApp_SetNumPrepareWrites( *((uint8*)pValue) );
+                status = gattServApp_SetNumPrepareWrites( *((uint8_t*)pValue) );
             }
             else
             {
@@ -441,20 +442,20 @@ bStatus_t GATTServApp_SetParameter( uint8 param, uint8 len, void* pValue )
     @param   param - Profile parameter ID
     @param   pValue - pointer to data to put. This is dependent on the
                      parameter ID and WILL be cast to the appropriate
-                     data type (example: data type of uint16 will be
-                     cast to uint16 pointer).
+                     data type (example: data type of uint16_t will be
+                     cast to uint16_t pointer).
 
     @return  SUCCESS: Parameter get successful
             INVALIDPARAMETER: Invalid parameter
 */
-bStatus_t GATTServApp_GetParameter( uint8 param, void* pValue )
+bStatus_t GATTServApp_GetParameter( uint8_t param, void* pValue )
 {
     bStatus_t status = SUCCESS;
 
     switch ( param )
     {
     case GATT_PARAM_NUM_PREPARE_WRITES:
-        *((uint8*)pValue) = maxNumPrepareWrites;
+        *((uint8_t*)pValue) = maxNumPrepareWrites;
         break;
 
     default:
@@ -475,10 +476,10 @@ bStatus_t GATTServApp_GetParameter( uint8 param, void* pValue )
     @return  SUCCESS: New number set successfully.
             bleMemAllocError: Memory allocation failed.
 */
-static bStatus_t gattServApp_SetNumPrepareWrites( uint8 numPrepareWrites )
+static bStatus_t gattServApp_SetNumPrepareWrites( uint8_t numPrepareWrites )
 {
     attPrepareWriteReq_t* pQueue;
-    uint16 queueSize = ( MAX_NUM_LL_CONN * numPrepareWrites * sizeof( attPrepareWriteReq_t ) );
+    uint16_t queueSize = ( MAX_NUM_LL_CONN * numPrepareWrites * sizeof( attPrepareWriteReq_t ) );
     // First make sure no one can get access to the Prepare Write Table
     maxNumPrepareWrites = 0;
 
@@ -490,7 +491,7 @@ static bStatus_t gattServApp_SetNumPrepareWrites( uint8 numPrepareWrites )
         #endif
 
         // Null out the prepare writes queues
-        for ( uint8 i = 0; i < MAX_NUM_LL_CONN; i++ )
+        for ( uint8_t i = 0; i < MAX_NUM_LL_CONN; i++ )
         {
             prepareWritesTbl[i].pPrepareWriteQ = NULL;
         }
@@ -506,16 +507,16 @@ static bStatus_t gattServApp_SetNumPrepareWrites( uint8 numPrepareWrites )
     if ( pQueue != NULL )
     {
         // Initialize the prepare write queues
-        VOID osal_memset( pQueue, 0, queueSize );
+        osal_memset( pQueue, 0, queueSize );
 
         // Set up the prepare write queue for each client (i.e., connection)
-        for ( uint8 i = 0; i < MAX_NUM_LL_CONN; i++ )
+        for ( uint8_t i = 0; i < MAX_NUM_LL_CONN; i++ )
         {
-            uint8 nextQ = i * numPrepareWrites; // Index of next available queue
+            uint8_t nextQ = i * numPrepareWrites; // Index of next available queue
             prepareWritesTbl[i].pPrepareWriteQ = &(pQueue[nextQ]);
 
             // Mark the prepare write request items as empty
-            for ( uint8 j = 0; j < numPrepareWrites; j++ )
+            for ( uint8_t j = 0; j < numPrepareWrites; j++ )
             {
                 prepareWritesTbl[i].pPrepareWriteQ[j].handle = GATT_INVALID_HANDLE;
             }
@@ -541,9 +542,9 @@ static bStatus_t gattServApp_SetNumPrepareWrites( uint8 numPrepareWrites )
 
     @return      Pointer to attribute record. NULL, if not found.
 */
-gattAttribute_t* GATTServApp_FindAttr( gattAttribute_t* pAttrTbl, uint16 numAttrs, uint8* pValue )
+gattAttribute_t* GATTServApp_FindAttr( gattAttribute_t* pAttrTbl, uint16_t numAttrs, uint8_t* pValue )
 {
-    for ( uint16 i = 0; i < numAttrs; i++ )
+    for ( uint16_t i = 0; i < numAttrs; i++ )
     {
         if ( pAttrTbl[i].pValue == pValue )
         {
@@ -568,9 +569,9 @@ gattAttribute_t* GATTServApp_FindAttr( gattAttribute_t* pAttrTbl, uint16 numAttr
             FAILURE: Not enough attribute handles available.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t GATTServApp_AddService( uint32 services )
+bStatus_t GATTServApp_AddService( uint32_t services )
 {
-    uint8 status = SUCCESS;
+    uint8_t status = SUCCESS;
 
     if ( services & GATT_SERVICE )
     {
@@ -593,9 +594,9 @@ bStatus_t GATTServApp_AddService( uint32 services )
     @return  SUCCESS: Service deleted successfully.
             FAILURE: Service not found.
 */
-bStatus_t GATTServApp_DelService( uint32 services )
+bStatus_t GATTServApp_DelService( uint32_t services )
 {
-    uint8 status = SUCCESS;
+    uint8_t status = SUCCESS;
 
     if ( services & GATT_SERVICE )
     {
@@ -618,7 +619,7 @@ bStatus_t GATTServApp_DelService( uint32 services )
             INVALIDPARAMETER: Invalid service CB field.
             bleMemAllocError: Memory allocation error occurred.
 */
-static bStatus_t gattServApp_RegisterServiceCBs( uint16 handle,
+static bStatus_t gattServApp_RegisterServiceCBs( uint16_t handle,
                                                  CONST gattServiceCBs_t* pServiceCBs )
 {
     serviceCBsList_t* pNewItem;
@@ -676,7 +677,7 @@ static bStatus_t gattServApp_RegisterServiceCBs( uint16 handle,
     @return  SUCCESS: Service CBs were deregistered successfully.
             FAILURE: Service CBs were not found.
 */
-static bStatus_t gattServApp_DeregisterServiceCBs( uint16 handle )
+static bStatus_t gattServApp_DeregisterServiceCBs( uint16_t handle )
 {
     serviceCBsList_t* pLoop = serviceCBsList;
     serviceCBsList_t* pPrev = NULL;
@@ -719,7 +720,7 @@ static bStatus_t gattServApp_DeregisterServiceCBs( uint16 handle )
 
     @return  Pointer to service record. NULL, otherwise.
 */
-static CONST gattServiceCBs_t* gattServApp_FindServiceCBs( uint16 handle )
+static CONST gattServiceCBs_t* gattServApp_FindServiceCBs( uint16_t handle )
 {
     serviceCBsList_t* pLoop = serviceCBsList;
 
@@ -748,8 +749,8 @@ static CONST gattServiceCBs_t* gattServApp_FindServiceCBs( uint16 handle )
 */
 static void gattServApp_ProcessMsg( gattMsgEvent_t* pMsg )
 {
-    uint16 errHandle = GATT_INVALID_HANDLE;
-    uint8 status;
+    uint16_t errHandle = GATT_INVALID_HANDLE;
+    uint8_t status;
     #if defined ( TESTMODES )
 
     if ( paramValue == GATT_TESTMODE_NO_RSP )
@@ -822,7 +823,7 @@ static void gattServApp_ProcessMsg( gattMsgEvent_t* pMsg )
             pRsp->reqOpcode = pMsg->method;
             pRsp->handle = errHandle;
             pRsp->errCode = status;
-            VOID ATT_ErrorRsp( pMsg->connHandle, pRsp );
+            ATT_ErrorRsp( pMsg->connHandle, pRsp );
         }
     }
 
@@ -860,7 +861,7 @@ static bStatus_t gattServApp_ProcessExchangeMTUReq( gattMsgEvent_t* pMsg )
         pRsp->serverRxMTU = g_ATT_MTU_SIZE_MAX;//ATT_MTU_SIZE;
 
     // Send response back
-    VOID ATT_ExchangeMTURsp( pMsg->connHandle, pRsp );
+    ATT_ExchangeMTURsp( pMsg->connHandle, pRsp );
     return ( SUCCESS );
 }
 
@@ -874,14 +875,14 @@ static bStatus_t gattServApp_ProcessExchangeMTUReq( gattMsgEvent_t* pMsg )
 
     @return      Success or Failure
 */
-static bStatus_t gattServApp_ProcessFindByTypeValueReq( gattMsgEvent_t* pMsg, uint16* pErrHandle )
+static bStatus_t gattServApp_ProcessFindByTypeValueReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle )
 {
     attFindByTypeValueReq_t* pReq = &pMsg->msg.findByTypeValueReq;
     attFindByTypeValueRsp_t* pRsp = &rsp.findByTypeValueRsp;
     gattAttribute_t* pAttr;
-    uint16 service;
+    uint16_t service;
     // Initialize the response
-    VOID osal_memset( pRsp, 0, sizeof( attFindByTypeValueRsp_t ) );
+    osal_memset( pRsp, 0, sizeof( attFindByTypeValueRsp_t ) );
     // Only attributes with attribute handles between and including the Starting
     // Handle parameter and the Ending Handle parameter that match the requested
     // attribute type and the attribute value will be returned.
@@ -893,7 +894,7 @@ static bStatus_t gattServApp_ProcessFindByTypeValueReq( gattMsgEvent_t* pMsg, ui
 
     while ( ( pAttr != NULL ) && ( pRsp->numInfo < g_ATT_MAX_NUM_HANDLES_INFO ) )
     {
-        uint16 grpEndHandle;
+        uint16_t grpEndHandle;
 
         // It is not possible to use this request on an attribute that has a value
         // that is longer than (ATT_MTU - 7).
@@ -936,7 +937,7 @@ static bStatus_t gattServApp_ProcessFindByTypeValueReq( gattMsgEvent_t* pMsg, ui
     if ( pRsp->numInfo > 0 )
     {
         // Send a response back
-        VOID ATT_FindByTypeValueRsp( pMsg->connHandle, pRsp );
+        ATT_FindByTypeValueRsp( pMsg->connHandle, pRsp );
         return ( SUCCESS );
     }
 
@@ -954,13 +955,13 @@ static bStatus_t gattServApp_ProcessFindByTypeValueReq( gattMsgEvent_t* pMsg, ui
 
     @return      Success or Failure
 */
-static bStatus_t gattServApp_ProcessReadByTypeReq( gattMsgEvent_t* pMsg, uint16* pErrHandle )
+static bStatus_t gattServApp_ProcessReadByTypeReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle )
 {
     attReadByTypeReq_t* pReq = &pMsg->msg.readByTypeReq;
     attReadByTypeRsp_t* pRsp = &rsp.readByTypeRsp;
-    uint16 startHandle = pReq->startHandle;
-    uint8 dataLen = 0;
-    uint8 status = SUCCESS;
+    uint16_t startHandle = pReq->startHandle;
+    uint8_t dataLen = 0;
+    uint8_t status = SUCCESS;
 
     // Only the attributes with attribute handles between and including the
     // Starting Handle and the Ending Handle with the attribute type that is
@@ -969,7 +970,7 @@ static bStatus_t gattServApp_ProcessReadByTypeReq( gattMsgEvent_t* pMsg, uint16*
     // Make sure there's enough room at least for an attribute handle (no value)
     while ( dataLen <= (gAttMtuSize[pMsg->connHandle]-4) )
     {
-        uint16 service;
+        uint16_t service;
         gattAttribute_t* pAttr;
         // All attribute types are effectively compared as 128-bit UUIDs, even if
         // a 16-bit UUID is provided in this request or defined for an attribute.
@@ -1027,7 +1028,7 @@ static bStatus_t gattServApp_ProcessReadByTypeReq( gattMsgEvent_t* pMsg, uint16*
         // Add the handle value pair to the response
         pRsp->dataList[dataLen++] = LO_UINT16( pAttr->handle );
         pRsp->dataList[dataLen++] = HI_UINT16( pAttr->handle );
-        VOID osal_memcpy( &(pRsp->dataList[dataLen]), attrValue, attrLen );
+        osal_memcpy( &(pRsp->dataList[dataLen]), attrValue, attrLen );
         dataLen += attrLen;
 
         if ( startHandle == GATT_MAX_HANDLE )
@@ -1045,7 +1046,7 @@ static bStatus_t gattServApp_ProcessReadByTypeReq( gattMsgEvent_t* pMsg, uint16*
         // Set the number of attribute handle-value pairs found
         pRsp->numPairs = dataLen / pRsp->len;
         // Send a response back
-        VOID ATT_ReadByTypeRsp( pMsg->connHandle, pRsp );
+        ATT_ReadByTypeRsp( pMsg->connHandle, pRsp );
         return ( SUCCESS );
     }
 
@@ -1069,12 +1070,12 @@ static bStatus_t gattServApp_ProcessReadByTypeReq( gattMsgEvent_t* pMsg, uint16*
 
     @return      Success or Failure
 */
-static bStatus_t gattServApp_ProcessReadReq( gattMsgEvent_t* pMsg, uint16* pErrHandle )
+static bStatus_t gattServApp_ProcessReadReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle )
 {
     attReadReq_t* pReq = &pMsg->msg.readReq;
     gattAttribute_t* pAttr;
-    uint16 service;
-    uint8 status;
+    uint16_t service;
+    uint8_t status;
     pAttr = GATT_FindHandle( pReq->handle, &service );
 
     if ( pAttr != NULL )
@@ -1089,7 +1090,7 @@ static bStatus_t gattServApp_ProcessReadReq( gattMsgEvent_t* pMsg, uint16* pErrH
         if ( status == SUCCESS )
         {
             // Send a response back
-            VOID ATT_ReadRsp( pMsg->connHandle, pRsp );
+            ATT_ReadRsp( pMsg->connHandle, pRsp );
         }
     }
     else
@@ -1115,12 +1116,12 @@ static bStatus_t gattServApp_ProcessReadReq( gattMsgEvent_t* pMsg, uint16* pErrH
 
     @return      Success or Failure
 */
-static bStatus_t gattServApp_ProcessReadBlobReq( gattMsgEvent_t* pMsg, uint16* pErrHandle )
+static bStatus_t gattServApp_ProcessReadBlobReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle )
 {
     attReadBlobReq_t* pReq = &pMsg->msg.readBlobReq;
     gattAttribute_t* pAttr;
-    uint16 service;
-    uint8 status;
+    uint16_t service;
+    uint8_t status;
     pAttr = GATT_FindHandle( pReq->handle, &service );
 
     if ( pAttr != NULL )
@@ -1135,7 +1136,7 @@ static bStatus_t gattServApp_ProcessReadBlobReq( gattMsgEvent_t* pMsg, uint16* p
         if ( status == SUCCESS )
         {
             // Send a response back
-            VOID ATT_ReadBlobRsp( pMsg->connHandle, pRsp );
+            ATT_ReadBlobRsp( pMsg->connHandle, pRsp );
         }
     }
     else
@@ -1161,17 +1162,17 @@ static bStatus_t gattServApp_ProcessReadBlobReq( gattMsgEvent_t* pMsg, uint16* p
 
     @return      Success or Failure
 */
-static bStatus_t gattServApp_ProcessReadMultiReq( gattMsgEvent_t* pMsg, uint16* pErrHandle )
+static bStatus_t gattServApp_ProcessReadMultiReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle )
 {
     attReadMultiReq_t* pReq = &pMsg->msg.readMultiReq;
     attReadMultiRsp_t* pRsp = &rsp.readMultiRsp;
-    uint8 status = SUCCESS;
+    uint8_t status = SUCCESS;
     pRsp->len = 0;
 
-    for ( uint8 i = 0; ( i < pReq->numHandles ) && ( pRsp->len < (((gAttMtuSize[pMsg->connHandle]))-1) ); i++ )
+    for ( uint8_t i = 0; ( i < pReq->numHandles ) && ( pRsp->len < (((gAttMtuSize[pMsg->connHandle]))-1) ); i++ )
     {
         gattAttribute_t* pAttr;
-        uint16 service;
+        uint16_t service;
         pAttr = GATT_FindHandle( pReq->handle[i], &service );
 
         if ( pAttr == NULL )
@@ -1202,14 +1203,14 @@ static bStatus_t gattServApp_ProcessReadMultiReq( gattMsgEvent_t* pMsg, uint16* 
         }
 
         // Append this value to the end of the response
-        VOID osal_memcpy( &(pRsp->values[pRsp->len]), attrValue, attrLen );
+        osal_memcpy( &(pRsp->values[pRsp->len]), attrValue, attrLen );
         pRsp->len += attrLen;
     }
 
     if ( status == SUCCESS )
     {
         // Send a response back
-        VOID ATT_ReadMultiRsp( pMsg->connHandle, pRsp );
+        ATT_ReadMultiRsp( pMsg->connHandle, pRsp );
     }
 
     return ( status );
@@ -1225,14 +1226,14 @@ static bStatus_t gattServApp_ProcessReadMultiReq( gattMsgEvent_t* pMsg, uint16* 
 
     @return      Success or Failure
 */
-static bStatus_t gattServApp_ProcessReadByGrpTypeReq( gattMsgEvent_t* pMsg, uint16* pErrHandle )
+static bStatus_t gattServApp_ProcessReadByGrpTypeReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle )
 {
     attReadByGrpTypeReq_t* pReq = &pMsg->msg.readByGrpTypeReq;
     attReadByGrpTypeRsp_t* pRsp = &rsp.readByGrpTypeRsp;
-    uint16 service;
+    uint16_t service;
     gattAttribute_t* pAttr;
-    uint16 dataLen = 0;
-    uint8 status = SUCCESS;
+    uint16_t dataLen = 0;
+    uint8_t status = SUCCESS;
     // Only the attributes with attribute handles between and including the
     // Starting Handle and the Ending Handle with the attribute type that is
     // the same as the Attribute Type given will be returned.
@@ -1244,7 +1245,7 @@ static bStatus_t gattServApp_ProcessReadByGrpTypeReq( gattMsgEvent_t* pMsg, uint
 
     while ( pAttr != NULL )
     {
-        uint16 endGrpHandle;
+        uint16_t endGrpHandle;
         // The service, include and characteristic declarations are readable and
         // require no authentication or authorization, therefore insufficient
         // authentication or read not permitted errors shall not occur.
@@ -1313,7 +1314,7 @@ static bStatus_t gattServApp_ProcessReadByGrpTypeReq( gattMsgEvent_t* pMsg, uint
         }
 
         // Add Attribute Value to the response
-        VOID osal_memcpy( &(pRsp->dataList[dataLen]), attrValue, attrLen );
+        osal_memcpy( &(pRsp->dataList[dataLen]), attrValue, attrLen );
         dataLen += attrLen;
     } // while
 
@@ -1323,7 +1324,7 @@ static bStatus_t gattServApp_ProcessReadByGrpTypeReq( gattMsgEvent_t* pMsg, uint
         // Set the number of attribute handle, end group handle and value sets found
         pRsp->numGrps = dataLen / pRsp->len;
         // Send a response back
-        VOID ATT_ReadByGrpTypeRsp( pMsg->connHandle, pRsp );
+        ATT_ReadByGrpTypeRsp( pMsg->connHandle, pRsp );
         return ( SUCCESS );
     }
 
@@ -1347,12 +1348,12 @@ static bStatus_t gattServApp_ProcessReadByGrpTypeReq( gattMsgEvent_t* pMsg, uint
 
     @return      Success or Failure
 */
-static bStatus_t gattServApp_ProcessWriteReq( gattMsgEvent_t* pMsg, uint16* pErrHandle )
+static bStatus_t gattServApp_ProcessWriteReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle )
 {
     attWriteReq_t* pReq = &(pMsg->msg.writeReq);
     gattAttribute_t* pAttr;
-    uint16 service;
-    uint8 status = SUCCESS;
+    uint16_t service;
+    uint8_t status = SUCCESS;
     // No Error Response or Write Response shall be sent in response to Write
     // Command. If the server cannot write this attribute for any reason the
     // command shall be ignored.
@@ -1387,7 +1388,7 @@ static bStatus_t gattServApp_ProcessWriteReq( gattMsgEvent_t* pMsg, uint16* pErr
             {
                 // Send a response back
                 //VOID ATT_WriteRsp( pMsg->connHandle );
-                //uint8 st=
+                //uint8_t st=
                 		ATT_WriteRsp( pMsg->connHandle );
 //        if(st)
 //        {
@@ -1419,12 +1420,12 @@ static bStatus_t gattServApp_ProcessWriteReq( gattMsgEvent_t* pMsg, uint16* pErr
 
     @return      Success or Failure
 */
-static bStatus_t gattServApp_ProcessPrepareWriteReq( gattMsgEvent_t* pMsg, uint16* pErrHandle )
+static bStatus_t gattServApp_ProcessPrepareWriteReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle )
 {
     attPrepareWriteReq_t* pReq = &pMsg->msg.prepareWriteReq;
     gattAttribute_t* pAttr;
-    uint16 service;
-    uint8 status = SUCCESS;
+    uint16_t service;
+    uint8_t status = SUCCESS;
     pAttr = GATT_FindHandle( pReq->handle, &service );
 
     if ( pAttr != NULL )
@@ -1462,7 +1463,7 @@ static bStatus_t gattServApp_ProcessPrepareWriteReq( gattMsgEvent_t* pMsg, uint1
             {
                 //LOG("pre off[%d] len[%d]\n", pReq->offset, pReq->len);
                 // Send a response back
-                VOID ATT_PrepareWriteRsp( pMsg->connHandle, (attPrepareWriteRsp_t*)pReq );
+                ATT_PrepareWriteRsp( pMsg->connHandle, (attPrepareWriteRsp_t*)pReq );
             }
         }
     }
@@ -1489,17 +1490,17 @@ static bStatus_t gattServApp_ProcessPrepareWriteReq( gattMsgEvent_t* pMsg, uint1
 
     @return      Success or Failure
 */
-static bStatus_t gattServApp_ProcessExecuteWriteReq( gattMsgEvent_t* pMsg, uint16* pErrHandle )
+static bStatus_t gattServApp_ProcessExecuteWriteReq( gattMsgEvent_t* pMsg, uint16_t* pErrHandle )
 {
     attExecuteWriteReq_t* pReq = &pMsg->msg.executeWriteReq;
     prepareWrites_t* pQueue;
-    uint8 status = SUCCESS;
+    uint8_t status = SUCCESS;
     // See if this client has a prepare write queue
     pQueue = gattServApp_FindPrepareWriteQ( pMsg->connHandle );
 
     if ( pQueue != NULL )
     {
-        for ( uint8 i = 0; i < maxNumPrepareWrites; i++ )
+        for ( uint8_t i = 0; i < maxNumPrepareWrites; i++ )
         {
             attPrepareWriteReq_t* pWriteReq = &(pQueue->pPrepareWriteQ[i]);
 
@@ -1535,7 +1536,7 @@ static bStatus_t gattServApp_ProcessExecuteWriteReq( gattMsgEvent_t* pMsg, uint1
             }
 
             // Clear the queue item
-            VOID osal_memset( pWriteReq, 0, sizeof( attPrepareWriteRsp_t ) );
+            osal_memset( pWriteReq, 0, sizeof( attPrepareWriteRsp_t ) );
             // Mark this item as empty
             pWriteReq->handle = GATT_INVALID_HANDLE;
         } // for loop
@@ -1547,7 +1548,7 @@ static bStatus_t gattServApp_ProcessExecuteWriteReq( gattMsgEvent_t* pMsg, uint1
     // Send a response back
     if ( status == SUCCESS )
     {
-        VOID ATT_ExecuteWriteRsp( pMsg->connHandle );
+        ATT_ExecuteWriteRsp( pMsg->connHandle );
     }
 
     return ( status );
@@ -1563,7 +1564,7 @@ static bStatus_t gattServApp_ProcessExecuteWriteReq( gattMsgEvent_t* pMsg, uint1
 
     @return      Success or Failure
 */
-static bStatus_t gattServApp_EnqueuePrepareWriteReq( uint16 connHandle, attPrepareWriteReq_t* pReq )
+static bStatus_t gattServApp_EnqueuePrepareWriteReq( uint16_t connHandle, attPrepareWriteReq_t* pReq )
 {
     prepareWrites_t* pQueue;
     // First see if there's queue already assocaited with this client
@@ -1583,12 +1584,12 @@ static bStatus_t gattServApp_EnqueuePrepareWriteReq( uint16 connHandle, attPrepa
     // If a queue is found for this client then enqueue the request
     if ( pQueue != NULL )
     {
-        for ( uint8 i = 0; i < maxNumPrepareWrites; i++ )
+        for ( uint8_t i = 0; i < maxNumPrepareWrites; i++ )
         {
             if ( pQueue->pPrepareWriteQ[i].handle == GATT_INVALID_HANDLE )
             {
                 // Store the request here
-                VOID osal_memcpy( &(pQueue->pPrepareWriteQ[i]), pReq, sizeof ( attPrepareWriteReq_t ) );
+                osal_memcpy( &(pQueue->pPrepareWriteQ[i]), pReq, sizeof ( attPrepareWriteReq_t ) );
                 //LOG("enq off[%d]len[%d]\n", pReq->offset, pReq->len);
                 return ( SUCCESS );
             }
@@ -1607,10 +1608,10 @@ static bStatus_t gattServApp_EnqueuePrepareWriteReq( uint16 connHandle, attPrepa
 
     @return      Pointer to queue. NULL, otherwise.
 */
-static prepareWrites_t* gattServApp_FindPrepareWriteQ( uint16 connHandle )
+static prepareWrites_t* gattServApp_FindPrepareWriteQ( uint16_t connHandle )
 {
     // First see if this client has already a queue
-    for ( uint8 i = 0; i < MAX_NUM_LL_CONN; i++ )
+    for ( uint8_t i = 0; i < MAX_NUM_LL_CONN; i++ )
     {
         if ( prepareWritesTbl[i].connHandle == connHandle )
         {
@@ -1631,14 +1632,14 @@ static prepareWrites_t* gattServApp_FindPrepareWriteQ( uint16 connHandle )
 
     @return      TRUE if queue in use. FALSE, otherwise.
 */
-static uint8 gattServApp_PrepareWriteQInUse( void )
+static uint8_t gattServApp_PrepareWriteQInUse( void )
 {
     // See if any prepare write queue is in use
-    for ( uint8 i = 0; i < MAX_NUM_LL_CONN; i++ )
+    for ( uint8_t i = 0; i < MAX_NUM_LL_CONN; i++ )
     {
         if ( prepareWritesTbl[i].connHandle != INVALID_CONNHANDLE )
         {
-            for ( uint8 j = 0; j < maxNumPrepareWrites; j++ )
+            for ( uint8_t j = 0; j < maxNumPrepareWrites; j++ )
             {
                 if ( prepareWritesTbl[i].pPrepareWriteQ[j].handle != GATT_INVALID_HANDLE )
                 {
@@ -1664,10 +1665,10 @@ static uint8 gattServApp_PrepareWriteQInUse( void )
 
     @return  pointer to the found item. NULL, otherwise.
 */
-static gattCharCfg_t* gattServApp_FindCharCfgItem( uint16 connHandle,
+static gattCharCfg_t* gattServApp_FindCharCfgItem( uint16_t connHandle,
                                                    gattCharCfg_t* charCfgTbl )
 {
-    for ( uint8 i = 0; i < GATT_MAX_NUM_CONN; i++ )
+    for ( uint8_t i = 0; i < GATT_MAX_NUM_CONN; i++ )
     {
         if ( charCfgTbl[i].connHandle == connHandle )
         {
@@ -1688,7 +1689,7 @@ static gattCharCfg_t* gattServApp_FindCharCfgItem( uint16 connHandle,
 
     @return  pointer to the found CB. NULL, otherwise.
 */
-static pfnGATTReadAttrCB_t gattServApp_FindReadAttrCB( uint16 handle )
+static pfnGATTReadAttrCB_t gattServApp_FindReadAttrCB( uint16_t handle )
 {
     CONST gattServiceCBs_t* pCBs = gattServApp_FindServiceCBs( handle );
     return ( ( pCBs == NULL ) ? NULL : pCBs->pfnReadAttrCB );
@@ -1703,7 +1704,7 @@ static pfnGATTReadAttrCB_t gattServApp_FindReadAttrCB( uint16 handle )
 
     @return  pointer to the found CB. NULL, otherwise.
 */
-static pfnGATTWriteAttrCB_t gattServApp_FindWriteAttrCB( uint16 handle )
+static pfnGATTWriteAttrCB_t gattServApp_FindWriteAttrCB( uint16_t handle )
 {
     CONST gattServiceCBs_t* pCBs = gattServApp_FindServiceCBs( handle );
     return ( ( pCBs == NULL ) ? NULL : pCBs->pfnWriteAttrCB );
@@ -1718,7 +1719,7 @@ static pfnGATTWriteAttrCB_t gattServApp_FindWriteAttrCB( uint16 handle )
 
     @return  pointer to the found CB. NULL, otherwise.
 */
-static pfnGATTAuthorizeAttrCB_t gattServApp_FindAuthorizeAttrCB( uint16 handle )
+static pfnGATTAuthorizeAttrCB_t gattServApp_FindAuthorizeAttrCB( uint16_t handle )
 {
     CONST gattServiceCBs_t* pCBs = gattServApp_FindServiceCBs( handle );
     return ( ( pCBs == NULL ) ? NULL : pCBs->pfnAuthorizeAttrCB );
@@ -1737,15 +1738,15 @@ static pfnGATTAuthorizeAttrCB_t gattServApp_FindAuthorizeAttrCB( uint16 handle )
 
     @return  Success or Failure
 */
-static bStatus_t gattServApp_WriteAttrCB( uint16 connHandle, gattAttribute_t* pAttr,
-                                          uint8* pValue, uint16 len, uint16 offset )
+static bStatus_t gattServApp_WriteAttrCB( uint16_t connHandle, gattAttribute_t* pAttr,
+                                          uint8_t* pValue, uint16_t len, uint16_t offset )
 {
     bStatus_t status = SUCCESS;
 
     if ( pAttr->type.len == ATT_BT_UUID_SIZE )
     {
         // 16-bit UUID
-        uint16 uuid = BUILD_UINT16( pAttr->type.uuid[0], pAttr->type.uuid[1]);
+        uint16_t uuid = BUILD_UINT16( pAttr->type.uuid[0], pAttr->type.uuid[1]);
 
         switch ( uuid )
         {
@@ -1785,11 +1786,11 @@ static bStatus_t gattServApp_WriteAttrCB( uint16 connHandle, gattAttribute_t* pA
 
     @return      Success or Failure
 */
-uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
-                            uint16 service, uint8* pValue, uint16* pLen,
-                            uint16 offset, uint8 maxLen )
+uint8_t GATTServApp_ReadAttr( uint16_t connHandle, gattAttribute_t* pAttr,
+                            uint16_t service, uint8_t* pValue, uint16_t* pLen,
+                            uint16_t offset, uint8_t maxLen )
 {
-    uint8 useCB = FALSE;
+    uint8_t useCB = FALSE;
     bStatus_t status = SUCCESS;
 
     // Authorization is handled by the application/profile
@@ -1818,7 +1819,7 @@ uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
     if ( pAttr->type.len == ATT_BT_UUID_SIZE )
     {
         // 16-bit UUID
-        uint16 uuid = BUILD_UINT16( pAttr->type.uuid[0], pAttr->type.uuid[1]);
+        uint16_t uuid = BUILD_UINT16( pAttr->type.uuid[0], pAttr->type.uuid[1]);
 
         switch ( uuid )
         {
@@ -1830,7 +1831,7 @@ uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
             {
                 gattAttrType_t* pType = (gattAttrType_t*)(pAttr->pValue);
                 *pLen = pType->len;
-                VOID osal_memcpy( pValue, pType->uuid, pType->len );
+                osal_memcpy( pValue, pType->uuid, pType->len );
             }
             else
             {
@@ -1862,14 +1863,14 @@ uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
                     pValue[1] = LO_UINT16( pCharValue->handle );
                     pValue[2] = HI_UINT16( pCharValue->handle );
                     // Attribute UUID
-                    VOID osal_memcpy( &(pValue[3]), pCharValue->type.uuid, pCharValue->type.len );
+                    osal_memcpy( &(pValue[3]), pCharValue->type.uuid, pCharValue->type.len );
                 }
                 else
                 {
                     // Should never get here!
                     *pLen += (2 + ATT_BT_UUID_SIZE);
                     // Set both Attribute Handle and UUID to 0
-                    VOID osal_memset( &(pValue[1]), 0, (2 + ATT_BT_UUID_SIZE) );
+                    osal_memset( &(pValue[1]), 0, (2 + ATT_BT_UUID_SIZE) );
                 }
             }
             else
@@ -1884,10 +1885,10 @@ uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
             // Make sure it's not a blob operation
             if ( offset == 0 )
             {
-                uint16 servHandle;
-                uint16 endGrpHandle;
+                uint16_t servHandle;
+                uint16_t endGrpHandle;
                 gattAttribute_t* pIncluded;
-                uint16 handle = *((uint16*)(pAttr->pValue));
+                uint16_t handle = *((uint16_t*)(pAttr->pValue));
                 // The Attribute Value of an Include Declaration is set the
                 // included service Attribute Handle, the End Group Handle,
                 // and the service UUID. The Service UUID shall only be present
@@ -1914,7 +1915,7 @@ uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
                     // Include only 16-bit Service UUID
                     if ( pServiceUUID->len == ATT_BT_UUID_SIZE )
                     {
-                        VOID osal_memcpy( &(pValue[4]), pServiceUUID->uuid, ATT_BT_UUID_SIZE );
+                        osal_memcpy( &(pValue[4]), pServiceUUID->uuid, ATT_BT_UUID_SIZE );
                         *pLen += ATT_BT_UUID_SIZE;
                     }
                 }
@@ -1940,7 +1941,7 @@ uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
             // Make sure it's not a blob operation
             if ( offset == 0 )
             {
-                uint16 value = GATTServApp_ReadCharCfg( connHandle,
+                uint16_t value = GATTServApp_ReadCharCfg( connHandle,
                                                         (gattCharCfg_t*)(pAttr->pValue) );
                 *pLen = 2;
                 pValue[0] = LO_UINT16( value );
@@ -1959,7 +1960,7 @@ uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
             // Make sure it's not a blob operation
             if ( offset == 0 )
             {
-                uint16 value = *((uint16*)(pAttr->pValue));
+                uint16_t value = *((uint16_t*)(pAttr->pValue));
                 *pLen = 2;
                 pValue[0] = LO_UINT16( value );
                 pValue[1] = HI_UINT16( value );
@@ -1973,7 +1974,7 @@ uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
 
         case GATT_CHAR_USER_DESC_UUID:
         {
-            uint8 len = osal_strlen( (char*)(pAttr->pValue) );  // Could be a long attribute
+            uint8_t len = osal_strlen( (char*)(pAttr->pValue) );  // Could be a long attribute
 
             // If the value offset of the Read Blob Request is greater than the
             // length of the attribute value, an Error Response shall be sent with
@@ -2002,7 +2003,7 @@ uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
                 }
 
                 *pLen = len;
-                VOID osal_memcpy( pValue, &(pAttr->pValue[offset]), len );
+                osal_memcpy( pValue, &(pAttr->pValue[offset]), len );
             }
             else
             {
@@ -2075,10 +2076,10 @@ uint8 GATTServApp_ReadAttr( uint16 connHandle, gattAttribute_t* pAttr,
 
     @return  Success or Failure
 */
-uint8 GATTServApp_WriteAttr( uint16 connHandle, uint16 handle,
-                             uint8* pValue, uint16 len, uint16 offset )
+uint8_t GATTServApp_WriteAttr( uint16_t connHandle, uint16_t handle,
+                             uint8_t* pValue, uint16_t len, uint16_t offset )
 {
-    uint16 service;
+    uint16_t service;
     gattAttribute_t* pAttr;
     bStatus_t status;
     // Find the owner of the attribute
@@ -2117,12 +2118,12 @@ uint8 GATTServApp_WriteAttr( uint16 connHandle, uint16 handle,
 
     @return  void
 */
-void GATTServApp_SetParamValue( uint16 value )
+void GATTServApp_SetParamValue( uint16_t value )
 {
     #if defined ( TESTMODES )
     paramValue = value;
     #else
-    VOID value;
+    UNUSED(value);
     #endif
 }
 
@@ -2135,7 +2136,7 @@ void GATTServApp_SetParamValue( uint16 value )
 
     @return  GATT Parameter value
 */
-uint16 GATTServApp_GetParamValue( void )
+uint16_t GATTServApp_GetParamValue( void )
 {
     #if defined ( TESTMODES )
     return ( paramValue );
@@ -2158,9 +2159,9 @@ uint16 GATTServApp_GetParamValue( void )
 
     @return  Success or Failure
 */
-bStatus_t GATTServApp_UpdateCharCfg( uint16 connHandle, uint16 attrHandle, uint16 value )
+bStatus_t GATTServApp_UpdateCharCfg( uint16_t connHandle, uint16_t attrHandle, uint16_t value )
 {
-    uint8 buf[2];
+    uint8_t buf[2];
     buf[0] = LO_UINT16( value );
     buf[1] = HI_UINT16( value );
     return ( GATTServApp_WriteAttr( connHandle, attrHandle, buf, 2, 0 ) );
@@ -2181,9 +2182,9 @@ bStatus_t GATTServApp_UpdateCharCfg( uint16 connHandle, uint16 attrHandle, uint1
             bleNotConnected: Connection is down.
             blePending: A confirmation is pending with this client.
 */
-bStatus_t GATTServApp_SendServiceChangedInd( uint16 connHandle, uint8 taskId )
+bStatus_t GATTServApp_SendServiceChangedInd( uint16_t connHandle, uint8_t taskId )
 {
-    uint16 value = GATTServApp_ReadCharCfg( connHandle, indCharCfg );
+    uint16_t value = GATTServApp_ReadCharCfg( connHandle, indCharCfg );
 
     if ( value & GATT_CLIENT_CFG_INDICATE )
     {
@@ -2208,12 +2209,12 @@ bStatus_t GATTServApp_SendServiceChangedInd( uint16 connHandle, uint8 taskId )
 
     @return  none
 */
-void GATTServApp_InitCharCfg( uint16 connHandle, gattCharCfg_t* charCfgTbl )
+void GATTServApp_InitCharCfg( uint16_t connHandle, gattCharCfg_t* charCfgTbl )
 {
     // Initialize Client Characteristic Configuration attributes
     if ( connHandle == INVALID_CONNHANDLE )
     {
-        for ( uint8 i = 0; i < GATT_MAX_NUM_CONN; i++ )
+        for ( uint8_t i = 0; i < GATT_MAX_NUM_CONN; i++ )
         {
             charCfgTbl[i].connHandle = INVALID_CONNHANDLE;
             charCfgTbl[i].value = GATT_CFG_NO_OPERATION;
@@ -2247,17 +2248,17 @@ void GATTServApp_InitCharCfg( uint16 connHandle, gattCharCfg_t* charCfgTbl )
 
     @return  attribute value
 */
-uint16 GATTServApp_ReadCharCfg( uint16 connHandle, gattCharCfg_t* charCfgTbl )
+uint16_t GATTServApp_ReadCharCfg( uint16_t connHandle, gattCharCfg_t* charCfgTbl )
 {
     gattCharCfg_t* pItem;
     pItem = gattServApp_FindCharCfgItem( connHandle, charCfgTbl );
 
     if ( pItem != NULL )
     {
-        return ( (uint16)(pItem->value) );
+        return ( (uint16_t)(pItem->value) );
     }
 
-    return ( (uint16)GATT_CFG_NO_OPERATION );
+    return ( (uint16_t)GATT_CFG_NO_OPERATION );
 }
 
 /*********************************************************************
@@ -2277,8 +2278,8 @@ uint16 GATTServApp_ReadCharCfg( uint16 connHandle, gattCharCfg_t* charCfgTbl )
 
     @return  Success or Failure
 */
-uint8 GATTServApp_WriteCharCfg( uint16 connHandle, gattCharCfg_t* charCfgTbl,
-                                uint16 value )
+uint8_t GATTServApp_WriteCharCfg( uint16_t connHandle, gattCharCfg_t* charCfgTbl,
+                                uint16_t value )
 {
     gattCharCfg_t* pItem;
     pItem = gattServApp_FindCharCfgItem( connHandle, charCfgTbl );
@@ -2315,9 +2316,9 @@ uint8 GATTServApp_WriteCharCfg( uint16 connHandle, gattCharCfg_t* charCfgTbl,
 
     @return  Success or Failure
 */
-bStatus_t GATTServApp_ProcessCCCWriteReq( uint16 connHandle, gattAttribute_t* pAttr,
-                                          uint8* pValue, uint8 len, uint16 offset,
-                                          uint16 validCfg )
+bStatus_t GATTServApp_ProcessCCCWriteReq( uint16_t connHandle, gattAttribute_t* pAttr,
+                                          uint8_t* pValue, uint8_t len, uint16_t offset,
+                                          uint16_t validCfg )
 {
     bStatus_t status = SUCCESS;
 
@@ -2326,7 +2327,7 @@ bStatus_t GATTServApp_ProcessCCCWriteReq( uint16 connHandle, gattAttribute_t* pA
     {
         if ( len == 2 )
         {
-            uint16 value = BUILD_UINT16( pValue[0], pValue[1] );
+            uint16_t value = BUILD_UINT16( pValue[0], pValue[1] );
 
             // Validate characteristic configuration bit field
             if ( ( value & ~validCfg ) == 0 ) // indicate and/or notify
@@ -2379,12 +2380,12 @@ bStatus_t GATTServApp_ProcessCCCWriteReq( uint16 connHandle, gattAttribute_t* pA
     @return  Success or Failure
 */
 #include "log.h"
-bStatus_t GATTServApp_ProcessCharCfg( gattCharCfg_t* charCfgTbl, uint8* pValue,
-                                      uint8 authenticated, gattAttribute_t* attrTbl,
-                                      uint16 numAttrs, uint8 taskId )
+bStatus_t GATTServApp_ProcessCharCfg( gattCharCfg_t* charCfgTbl, uint8_t* pValue,
+                                      uint8_t authenticated, gattAttribute_t* attrTbl,
+                                      uint16_t numAttrs, uint8_t taskId )
 {
     bStatus_t status = SUCCESS;
-//    for ( uint8 i = 0; i < GATT_MAX_NUM_CONN; i++ )
+//    for ( uint8_t i = 0; i < GATT_MAX_NUM_CONN; i++ )
     {
 //        gattCharCfg_t* pItem = &(charCfgTbl[i]);
         gattCharCfg_t* pItem = charCfgTbl;
@@ -2436,7 +2437,7 @@ bStatus_t GATTServApp_ProcessCharCfg( gattCharCfg_t* charCfgTbl, uint8* pValue,
 
     @return      none
 */
-static void gattServApp_HandleConnStatusCB( uint16 connHandle, uint8 changeType )
+static void gattServApp_HandleConnStatusCB( uint16_t connHandle, uint8_t changeType )
 {
     // Check to see if the connection has dropped
     if ( ( changeType == LINKDB_STATUS_UPDATE_REMOVED )      ||
@@ -2448,7 +2449,7 @@ static void gattServApp_HandleConnStatusCB( uint16 connHandle, uint8 changeType 
         // See if this client has a prepare write queue
         if ( pQueue != NULL )
         {
-            for ( uint8 i = 0; i < maxNumPrepareWrites; i++ )
+            for ( uint8_t i = 0; i < maxNumPrepareWrites; i++ )
             {
                 attPrepareWriteReq_t* pWriteReq = &(pQueue->pPrepareWriteQ[i]);
 
@@ -2459,7 +2460,7 @@ static void gattServApp_HandleConnStatusCB( uint16 connHandle, uint8 changeType 
                 }
 
                 // Clear the queue item
-                VOID osal_memset( pWriteReq, 0, sizeof( attPrepareWriteRsp_t ) );
+                osal_memset( pWriteReq, 0, sizeof( attPrepareWriteRsp_t ) );
             } // for loop
 
             // Mark this queue as empty
@@ -2483,13 +2484,13 @@ static void gattServApp_HandleConnStatusCB( uint16 connHandle, uint8 changeType 
 
     @return  none
 */
-void GATTServApp_SendCCCUpdatedEvent( uint16 connHandle, uint16 attrHandle, uint16 value )
+void GATTServApp_SendCCCUpdatedEvent( uint16_t connHandle, uint16_t attrHandle, uint16_t value )
 {
     if ( appTaskID != INVALID_TASK_ID )
     {
         // Allocate, build and send event
         gattClientCharCfgUpdatedEvent_t* pEvent =
-            (gattClientCharCfgUpdatedEvent_t*)osal_msg_allocate( (uint16)(sizeof ( gattClientCharCfgUpdatedEvent_t )) );
+            (gattClientCharCfgUpdatedEvent_t*)osal_msg_allocate( (uint16_t)(sizeof ( gattClientCharCfgUpdatedEvent_t )) );
 
         if ( pEvent )
         {
@@ -2499,7 +2500,7 @@ void GATTServApp_SendCCCUpdatedEvent( uint16 connHandle, uint16 attrHandle, uint
             pEvent->connHandle = connHandle;
             pEvent->attrHandle = attrHandle;
             pEvent->value = value;
-            VOID osal_msg_send( appTaskID, (uint8*)pEvent );
+            osal_msg_send( appTaskID, (uint8_t*)pEvent );
         }
     }
 }
@@ -2511,7 +2512,7 @@ bStatus_t gattServApp_RegisterCB(gattServMsgCB_t cb)
 }
 
 
-#endif // ( CENTRAL_CFG | PERIPHERAL_CFG )
+//#endif // ( CENTRAL_CFG | PERIPHERAL_CFG )
 
 /****************************************************************************
 ****************************************************************************/

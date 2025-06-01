@@ -13,8 +13,6 @@
 /*********************************************************************
     INCLUDES
 */
-#include "bcomdef.h"
-
 #include "att_internal.h"
 
 /*********************************************************************
@@ -67,9 +65,9 @@
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_ErrorRsp( uint16 connHandle, attErrorRsp_t* pRsp )
+bStatus_t ATT_ErrorRsp( uint16_t connHandle, attErrorRsp_t* pRsp )
 {
-    return ( attSendMsg( connHandle, ATT_BuildErrorRsp, ATT_ERROR_RSP, (uint8*)pRsp ) );
+    return ( attSendMsg( connHandle, ATT_BuildErrorRsp, ATT_ERROR_RSP, (uint8_t*)pRsp ) );
 }
 
 /*********************************************************************
@@ -86,12 +84,12 @@ bStatus_t ATT_ErrorRsp( uint16 connHandle, attErrorRsp_t* pRsp )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_ExchangeMTURsp( uint16 connHandle, attExchangeMTURsp_t* pRsp )
+bStatus_t ATT_ExchangeMTURsp( uint16_t connHandle, attExchangeMTURsp_t* pRsp )
 {
     // Validate Type field
     if ( pRsp->serverRxMTU >= ATT_MTU_SIZE_MIN )
     {
-        bStatus_t ret = attSendMsg( connHandle, ATT_BuildExchangeMTURsp, ATT_EXCHANGE_MTU_RSP, (uint8*)pRsp ) ;
+        bStatus_t ret = attSendMsg( connHandle, ATT_BuildExchangeMTURsp, ATT_EXCHANGE_MTU_RSP, (uint8_t*)pRsp ) ;
         #if 1
 
         if(ret==SUCCESS)
@@ -121,14 +119,14 @@ bStatus_t ATT_ExchangeMTURsp( uint16 connHandle, attExchangeMTURsp_t* pRsp )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_FindInfoRsp( uint16 connHandle, attFindInfoRsp_t* pRsp )
+bStatus_t ATT_FindInfoRsp( uint16_t connHandle, attFindInfoRsp_t* pRsp )
 {
     // Validate Type field
     if ( ( ( pRsp->format == ATT_HANDLE_BT_UUID_TYPE ) ||
             ( pRsp->format == ATT_HANDLE_UUID_TYPE ) )  &&
             ( pRsp->numInfo > 0 ) )
     {
-        return ( attSendMsg( connHandle, ATT_BuildFindInfoRsp, ATT_FIND_INFO_RSP, (uint8*)pRsp ) );
+        return ( attSendMsg( connHandle, ATT_BuildFindInfoRsp, ATT_FIND_INFO_RSP, (uint8_t*)pRsp ) );
     }
 
     return ( INVALIDPARAMETER );
@@ -148,13 +146,13 @@ bStatus_t ATT_FindInfoRsp( uint16 connHandle, attFindInfoRsp_t* pRsp )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_FindByTypeValueRsp( uint16 connHandle, attFindByTypeValueRsp_t* pRsp )
+bStatus_t ATT_FindByTypeValueRsp( uint16_t connHandle, attFindByTypeValueRsp_t* pRsp )
 {
     // Validate number of handle range field
     if ( pRsp->numInfo > 0 )
     {
         return ( attSendMsg( connHandle, ATT_BuildFindByTypeValueRsp,
-                             ATT_FIND_BY_TYPE_VALUE_RSP, (uint8*)pRsp ) );
+                             ATT_FIND_BY_TYPE_VALUE_RSP, (uint8_t*)pRsp ) );
     }
 
     return ( INVALIDPARAMETER );
@@ -174,11 +172,11 @@ bStatus_t ATT_FindByTypeValueRsp( uint16 connHandle, attFindByTypeValueRsp_t* pR
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_ReadByTypeRsp( uint16 connHandle, attReadByTypeRsp_t* pRsp )
+bStatus_t ATT_ReadByTypeRsp( uint16_t connHandle, attReadByTypeRsp_t* pRsp )
 {
     if ( pRsp->numPairs > 0 )
     {
-        return ( attSendMsg( connHandle, ATT_BuildReadByTypeRsp, ATT_READ_BY_TYPE_RSP, (uint8*)pRsp ) );
+        return ( attSendMsg( connHandle, ATT_BuildReadByTypeRsp, ATT_READ_BY_TYPE_RSP, (uint8_t*)pRsp ) );
     }
 
     return ( INVALIDPARAMETER );
@@ -198,9 +196,9 @@ bStatus_t ATT_ReadByTypeRsp( uint16 connHandle, attReadByTypeRsp_t* pRsp )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_ReadRsp( uint16 connHandle, attReadRsp_t* pRsp )
+bStatus_t ATT_ReadRsp( uint16_t connHandle, attReadRsp_t* pRsp )
 {
-    return ( attSendMsg( connHandle, ATT_BuildReadRsp, ATT_READ_RSP, (uint8*)pRsp ) );
+    return ( attSendMsg( connHandle, ATT_BuildReadRsp, ATT_READ_RSP, (uint8_t*)pRsp ) );
 }
 
 /*********************************************************************
@@ -217,9 +215,9 @@ bStatus_t ATT_ReadRsp( uint16 connHandle, attReadRsp_t* pRsp )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_ReadBlobRsp( uint16 connHandle, attReadBlobRsp_t* pRsp )
+bStatus_t ATT_ReadBlobRsp( uint16_t connHandle, attReadBlobRsp_t* pRsp )
 {
-    return ( attSendMsg( connHandle, ATT_BuildReadBlobRsp, ATT_READ_BLOB_RSP, (uint8*)pRsp ) );
+    return ( attSendMsg( connHandle, ATT_BuildReadBlobRsp, ATT_READ_BLOB_RSP, (uint8_t*)pRsp ) );
 }
 
 /*********************************************************************
@@ -236,9 +234,9 @@ bStatus_t ATT_ReadBlobRsp( uint16 connHandle, attReadBlobRsp_t* pRsp )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_ReadMultiRsp( uint16 connHandle, attReadMultiRsp_t* pRsp )
+bStatus_t ATT_ReadMultiRsp( uint16_t connHandle, attReadMultiRsp_t* pRsp )
 {
-    return ( attSendMsg( connHandle, ATT_BuildReadMultiRsp, ATT_READ_MULTI_RSP, (uint8*)pRsp ) );
+    return ( attSendMsg( connHandle, ATT_BuildReadMultiRsp, ATT_READ_MULTI_RSP, (uint8_t*)pRsp ) );
 }
 
 /*********************************************************************
@@ -255,11 +253,11 @@ bStatus_t ATT_ReadMultiRsp( uint16 connHandle, attReadMultiRsp_t* pRsp )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_ReadByGrpTypeRsp( uint16 connHandle, attReadByGrpTypeRsp_t* pRsp )
+bStatus_t ATT_ReadByGrpTypeRsp( uint16_t connHandle, attReadByGrpTypeRsp_t* pRsp )
 {
     if ( pRsp->numGrps > 0 )
     {
-        return ( attSendMsg( connHandle, ATT_BuildReadByGrpTypeRsp, ATT_READ_BY_GRP_TYPE_RSP, (uint8*)pRsp ) );
+        return ( attSendMsg( connHandle, ATT_BuildReadByGrpTypeRsp, ATT_READ_BY_GRP_TYPE_RSP, (uint8_t*)pRsp ) );
     }
 
     return ( INVALIDPARAMETER );
@@ -278,7 +276,7 @@ bStatus_t ATT_ReadByGrpTypeRsp( uint16 connHandle, attReadByGrpTypeRsp_t* pRsp )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_WriteRsp( uint16 connHandle )
+bStatus_t ATT_WriteRsp( uint16_t connHandle )
 {
     return ( attSendMsg( connHandle, NULL, ATT_WRITE_RSP, NULL ) );
 }
@@ -297,9 +295,9 @@ bStatus_t ATT_WriteRsp( uint16 connHandle )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_PrepareWriteRsp( uint16 connHandle, attPrepareWriteRsp_t* pRsp )
+bStatus_t ATT_PrepareWriteRsp( uint16_t connHandle, attPrepareWriteRsp_t* pRsp )
 {
-    return ( attSendMsg( connHandle, ATT_BuildPrepareWriteRsp, ATT_PREPARE_WRITE_RSP, (uint8*)pRsp ) );
+    return ( attSendMsg( connHandle, ATT_BuildPrepareWriteRsp, ATT_PREPARE_WRITE_RSP, (uint8_t*)pRsp ) );
 }
 
 /*********************************************************************
@@ -315,7 +313,7 @@ bStatus_t ATT_PrepareWriteRsp( uint16 connHandle, attPrepareWriteRsp_t* pRsp )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_ExecuteWriteRsp( uint16 connHandle )
+bStatus_t ATT_ExecuteWriteRsp( uint16_t connHandle )
 {
     return ( attSendMsg( connHandle, NULL, ATT_EXECUTE_WRITE_RSP, NULL ) );
 }
@@ -334,9 +332,9 @@ bStatus_t ATT_ExecuteWriteRsp( uint16 connHandle )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_HandleValueNoti( uint16 connHandle, attHandleValueNoti_t* pNoti )
+bStatus_t ATT_HandleValueNoti( uint16_t connHandle, attHandleValueNoti_t* pNoti )
 {
-    return ( attSendMsg( connHandle, ATT_BuildHandleValueInd, ATT_HANDLE_VALUE_NOTI, (uint8*)pNoti ) );
+    return ( attSendMsg( connHandle, ATT_BuildHandleValueInd, ATT_HANDLE_VALUE_NOTI, (uint8_t*)pNoti ) );
 }
 
 /*********************************************************************
@@ -353,9 +351,9 @@ bStatus_t ATT_HandleValueNoti( uint16 connHandle, attHandleValueNoti_t* pNoti )
             bleNotConnected: Connection is down.
             bleMemAllocError: Memory allocation error occurred.
 */
-bStatus_t ATT_HandleValueInd( uint16 connHandle, attHandleValueInd_t* pInd )
+bStatus_t ATT_HandleValueInd( uint16_t connHandle, attHandleValueInd_t* pInd )
 {
-    return ( attSendMsg( connHandle, ATT_BuildHandleValueInd, ATT_HANDLE_VALUE_IND, (uint8*)pInd ) );
+    return ( attSendMsg( connHandle, ATT_BuildHandleValueInd, ATT_HANDLE_VALUE_IND, (uint8_t*)pInd ) );
 }
 
 
