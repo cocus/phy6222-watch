@@ -5,20 +5,6 @@
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef uint8_t halDataAlign_t; //!< Used for byte alignment
-
-#ifdef __GCC
-#define ALIGN4_U8 _Alignas(4) uint8_t
-#define ALIGN4_U16 _Alignas(4) uint16_t
-#define ALIGN4_INT8 _Alignas(4) int8_t
-#define ALIGN4_INT16 _Alignas(4) int16_t
-#else
-#define ALIGN4_U8 __align(4) uint8_t
-#define ALIGN4_U16 __align(4) uint16_t
-#define ALIGN4_INT8 __align(4) int8_t
-#define ALIGN4_INT16 __align(4) int16_t
-#endif
-
 #define BIT(n) (1ul << (n))
 
 #define write_reg(addr, data) (*(volatile unsigned int *)(addr) = (unsigned int)(data))
@@ -79,31 +65,10 @@ typedef uint8_t halDataAlign_t; //!< Used for byte alignment
 // Return the 32bit little-endian formatted value pointed to by pBuf, and increment pBuf by 4
 #define BUF_TO_UINT32_LITTLE_ENDIAN(pBuf) (((pBuf) += 4), BUILD_UINT32((pBuf)[-4], (pBuf)[-3], (pBuf)[-2], (pBuf)[-1]))
 
-#ifndef GET_BIT
-#define GET_BIT(DISCS, IDX) (((DISCS)[((IDX) / 8)] & BV((IDX) % 8)) ? TRUE : FALSE)
-#endif
-#ifndef SET_BIT
-#define SET_BIT(DISCS, IDX) (((DISCS)[((IDX) / 8)] |= BV((IDX) % 8)))
-#endif
-#ifndef CLR_BIT
-#define CLR_BIT(DISCS, IDX) (((DISCS)[((IDX) / 8)] &= (BV((IDX) % 8) ^ 0xFF)))
-#endif
-
 /*  ------------------------------------------------------------------------------------------------
                                           Standard Defines
     ------------------------------------------------------------------------------------------------
 */
-#ifndef TRUE
-#define TRUE 1
-#endif
-
-#ifndef FALSE
-#define FALSE 0
-#endif
-
-#ifndef NULL
-#define NULL 0
-#endif
 
 #ifndef UNUSED
 #define UNUSED(x) (void)(x) // To avoid unused variable warnings

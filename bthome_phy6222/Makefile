@@ -3,6 +3,7 @@ PROJECT_NAME ?= phy6222_freertos
 PROJECT_DEFS ?=
 FREERTOS ?= 1
 OFFLOAD_GPIO ?= 1
+BTSTACK ?= 0
 ##############################################################################
 COM_PORT = COM32
 COM_SPEED = 250000
@@ -72,7 +73,7 @@ LIBS       += -Wl,--start-group -lgcc -lnosys -Wl,--end-group
 
 ##############################################################################
 
-INCLUDES += -Ibsp/ -Ibsp/CMSIS/include -Ibsp/log
+INCLUDES += -Ibsp/ -Ibsp/CMSIS/include -Ibsp/CMSIS/device/phyplus/ -Ibsp/log
 
 ###########################################
 # LIBs
@@ -103,23 +104,7 @@ SRCS += bsp/jump_table.c \
 
 # bsp/driver/spi/spi.c
 
-#SRCS += $(SDK_PATH)/lib/rf/patch.c
-#SRCS += $(SDK_PATH)/lib/ble_controller/rf_phy_driver.c
-#SRCS += $(SDK_PATH)/lib/sec/phy_sec_ext.c
-
-
-###########################################
-# SDK
-#SRCS += $(SDK_PATH)/components/driver/clock/clock.c
-#SRCS += $(SDK_PATH)/components/driver/flash/flash.c
-#SRCS += $(SDK_PATH)/components/driver/gpio/gpio.c
-#SRCS += $(SDK_PATH)/components/driver/pwrmgr/pwrmgr.c
-#SRCS += $(SDK_PATH)/components/driver/timer/timer.c
-#SRCS += $(SDK_PATH)/components/driver/uart/uart.c
-#SRCS += $(SDK_PATH)/components/driver/log/my_printf.c
-#SRCS += $(SDK_PATH)/misc/jump_table.c
-
-ifdef FREERTOS
+ifeq ($(FREERTOS),1)
 FREERTOS_PATH = ./freertos
 
 SRCS_FREERTOS = portable/GCC/ARM_CM0/port.c
@@ -138,6 +123,74 @@ INCLUDES += -I$(FREERTOS_PATH)/include
 INCLUDES += -I$(FREERTOS_PATH)/portable/GCC/ARM_CM0
 
 SRCS += $(addprefix $(FREERTOS_PATH)/, $(SRCS_FREERTOS))
+endif
+
+ifeq ($(BTSTACK),1)
+DEFINES += -DENABLE_BTSTACK
+BTSTACK_PATH = ./btstack
+
+SRCS_BTSTACK = 3rd-party/rijndael/rijndael.c
+SRCS_BTSTACK += 3rd-party/micro-ecc/uECC.c
+
+SRCS_BTSTACK += src/ad_parser.c \
+	src/ble/att_db.c \
+	src/ble/att_dispatch.c \
+	src/ble/att_server.c \
+	src/ble/gatt-service/ancs_client.c \
+	src/ble/gatt-service/battery_service_client.c \
+	src/ble/gatt-service/battery_service_server.c \
+	src/ble/gatt-service/device_information_service_client.c \
+	src/ble/gatt-service/device_information_service_server.c \
+	src/ble/gatt-service/hids_device.c \
+	src/ble/gatt_client.c \
+	src/ble/le_device_db_memory.c \
+	src/ble/le_device_db_tlv.c \
+	src/ble/sm.c \
+	src/btstack_audio.c \
+	src/btstack_crypto.c \
+	src/btstack_hid_parser.c \
+	src/btstack_linked_list.c \
+	src/btstack_memory.c \
+	src/btstack_memory_pool.c \
+	src/btstack_resample.c \
+	src/btstack_ring_buffer.c \
+	src/btstack_run_loop.c \
+	src/btstack_tlv.c \
+	src/btstack_tlv_none.c \
+	src/btstack_util.c \
+	src/hci.c \
+	src/hci_cmd.c \
+	src/hci_dump.c \
+	src/hci_event_builder.c \
+	src/hci_event.c \
+	src/l2cap.c \
+	src/l2cap_signaling.c \
+	src/hci_transport_h4.c \
+	platform/freertos/btstack_run_loop_freertos.c
+
+INCLUDES += -I$(OBJ_DIR)/btstack/example
+
+#SRCS += $(SRC_PATH)/gatt_battery_query.c
+SRCS += $(SRC_PATH)/gap_le_advertisements.c
+#SRCS += $(SRC_PATH)/gatt_counter.c
+SRCS += $(SRC_PATH)/btstack_port.c
+
+INCLUDES += -I$(BTSTACK_PATH)
+INCLUDES += -I$(BTSTACK_PATH)/src/ble
+INCLUDES += -I$(BTSTACK_PATH)/src/ble/gatt-service
+INCLUDES += -I$(BTSTACK_PATH)/src
+INCLUDES += -I$(BTSTACK_PATH)/3rd-party/micro-ecc
+INCLUDES += -I$(BTSTACK_PATH)/3rd-party/rijndael
+INCLUDES += -I$(BTSTACK_PATH)/platform/embedded
+INCLUDES += -I$(BTSTACK_PATH)/platform/freertos
+INCLUDES += -I$(BTSTACK_PATH)/example
+
+SRCS += $(addprefix $(BTSTACK_PATH)/, $(SRCS_BTSTACK))
+
+GATT_FILES = $(BTSTACK_PATH)/example/gatt_battery_query.gatt
+#GATT_FILES = $(BTSTACK_PATH)/example/gatt_counter.gatt
+
+GATT_OBJ = $(addprefix $(OBJ_DIR)/,$(GATT_FILES:.gatt=.h))
 endif
 
 ##############################################################################
@@ -160,6 +213,9 @@ DEPENDENCY_LIST = $(OBJS:%o=%d)
 .PHONY: all directory clean size flash erase_and_flash
 
 all: directory $(GATT_OBJ) $(SRC_O) $(OBJ_DIR)/$(PROJECT_NAME).elf $(OBJ_DIR)/$(PROJECT_NAME).hex $(BIN_OTA) $(OBJ_DIR)/$(PROJECT_NAME).asm size
+
+$(OBJ_DIR)/%.h: %.gatt
+	python3 ${BTSTACK_PATH}/tool/compile_gatt.py $< $@
 
 %.elf %.map: $(SRC_O) $(LDSCRIPT) Makefile
 	@echo LD: $@
@@ -208,6 +264,7 @@ reset:
 
 directory:
 	@mkdir -p $(OBJ_DIR)
+	@mkdir -p $(OBJ_DIR)/btstack/example
 
 size: $(OBJ_DIR)/$(PROJECT_NAME).elf
 	@echo size:

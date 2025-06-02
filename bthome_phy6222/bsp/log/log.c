@@ -430,10 +430,10 @@ void dbg_printf_init(void)
             .rts_pin = GPIO_DUMMY,
             .cts_pin = GPIO_DUMMY,
             .baudrate = 115200,
-            .use_fifo = TRUE,
-            .hw_fwctrl = FALSE,
-            .use_tx_buf = FALSE,
-            .parity = FALSE,
+            .use_fifo = true,
+            .hw_fwctrl = false,
+            .use_tx_buf = false,
+            .parity = false,
             .evt_handler = NULL,
         };
     hal_uart_init(cfg, UART0); // uart init

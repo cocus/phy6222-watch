@@ -131,7 +131,7 @@ static void spi_int_handle(uint8_t id, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
             if (trans_ptr->tx_offset == trans_ptr->xmit_len)
             {
                 Ssix->IMR = 0x10;
-                m_spiCtx[pctx->spi_info->spi_index].transmit.busy = FALSE;
+                m_spiCtx[pctx->spi_info->spi_index].transmit.busy = false;
                 break;
             }
         }
@@ -892,7 +892,7 @@ int hal_spi_transmit(
         hal_spi_ndf_set(spi_ptr, rx_len);
     }
 
-    if (pctx->cfg.force_cs == true /*&& pctx->is_slave_mode == FALSE*/)
+    if (pctx->cfg.force_cs == true /*&& pctx->is_slave_mode == false*/)
     {
         hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_DISABLE);
         hal_gpio_write(pctx->cfg.ssn_pin, 0);
@@ -902,7 +902,7 @@ int hal_spi_transmit(
     {
         ret = hal_spi_xmit_polling(spi_ptr, tx_buf, rx_buf, tx_len, rx_len);
 
-        if (pctx->cfg.force_cs == true && pctx->is_slave_mode == FALSE)
+        if (pctx->cfg.force_cs == true && pctx->is_slave_mode == false)
             hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_ENABLE);
 
         if (ret)

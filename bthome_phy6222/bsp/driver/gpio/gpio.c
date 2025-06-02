@@ -48,7 +48,7 @@ typedef struct
 
 static gpio_Ctx_t m_gpioCtx =
     {
-        .state = FALSE,
+        .state = false,
         .pin_assignments = {
             0,
         },
@@ -418,7 +418,7 @@ int hal_gpioin_disable(gpio_pin_e pin)
         return PPlus_ERR_NOT_SUPPORTED;
 #endif
 
-    p_irq_ctx[pin].enable = FALSE;
+    p_irq_ctx[pin].enable = false;
     m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_NONE;
     hal_gpio_pin_init(pin, GPIO_INPUT);
     return hal_gpio_interrupt_disable(pin);
@@ -630,7 +630,7 @@ int hal_gpioin_enable(gpio_pin_e pin)
         return PPlus_ERR_NOT_REGISTED;
 
     m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_IN;
-    p_irq_ctx[pin].enable = TRUE;
+    p_irq_ctx[pin].enable = true;
     hal_gpio_pin_init(pin, GPIO_INPUT);
 
     // hal_gpio_pull_set(pin, PULL_DOWN); //??need disccuss
@@ -688,7 +688,7 @@ int hal_gpio_init(void)
         return PPlus_ERR_INVALID_STATE;
 
     memset(&m_gpioCtx, 0, sizeof(m_gpioCtx));
-    m_gpioCtx.state = TRUE;
+    m_gpioCtx.state = true;
     // disable all channel irq,unmask all channel
     AP_GPIO->inten = 0;
     AP_GPIO->intmask = 0;

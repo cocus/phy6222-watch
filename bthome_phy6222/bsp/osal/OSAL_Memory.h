@@ -41,6 +41,8 @@ extern "C"
     TYPEDEFS
 */
 
+typedef uint8_t halDataAlign_t; //!< Used for byte alignment
+
 typedef struct
 {
     // The 15 LSB's of 'val' indicate the total item size, including the header, in 8-bit bytes.

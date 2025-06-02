@@ -37,10 +37,10 @@ typedef struct _uart_Context
 static uart_Ctx_t m_uartCtx[2] =
     {
         {
-            .enable = FALSE,
+            .enable = false,
         },
         {
-            .enable = FALSE,
+            .enable = false,
         },
 };
 
@@ -164,13 +164,13 @@ static void __ATTR_SECTION_SRAM__ irq_tx_empty_handler(UART_INDEX_e uart_index)
     uint16_t len;
     AP_UART_TypeDef *cur_uart = (AP_UART_TypeDef *)AP_UART0_BASE;
 
-    if (m_uartCtx[uart_index].enable == FALSE)
+    if (m_uartCtx[uart_index].enable == false)
         return;
 
-    if (m_uartCtx[uart_index].cfg.use_fifo == FALSE)
+    if (m_uartCtx[uart_index].cfg.use_fifo == false)
         return;
 
-    if (m_uartCtx[uart_index].cfg.use_tx_buf == FALSE)
+    if (m_uartCtx[uart_index].cfg.use_tx_buf == false)
         return;
 
     if (p_txbuf->tx_state != TX_STATE_TX)
@@ -278,7 +278,7 @@ static int uart_hw_init(UART_INDEX_e uart_index)
     pcfg = &(m_uartCtx[uart_index].cfg);
     hal_clk_gate_enable(mod);
     hal_clk_reset(mod);
-    //  if(m_uartCtx[uart_index].enable == FALSE){
+    //  if(m_uartCtx[uart_index].enable == false){
     //      hal_gpio_fmux(P9, Bit_DISABLE);
     //      hal_gpio_fmux(P10, Bit_DISABLE);
     //  }
@@ -344,7 +344,7 @@ void __ATTR_SECTION_SRAM__ __attribute__((used)) hal_UART0_IRQHandler(void)
 {
     uint8_t IRQ_ID = (AP_UART0->IIR & 0x0f);
 
-    // if(m_uartCtx[UART0].enable == FALSE)
+    // if(m_uartCtx[UART0].enable == false)
     //     return;
 
     switch (IRQ_ID)
@@ -377,7 +377,7 @@ void __ATTR_SECTION_SRAM__ __attribute__((used)) hal_UART1_IRQHandler(void)
 {
     uint8_t IRQ_ID = (AP_UART1->IIR & 0x0f);
 
-    // if(m_uartCtx[UART1].enable == FALSE)
+    // if(m_uartCtx[UART1].enable == false)
     //    return;
 
     switch (IRQ_ID)
@@ -429,7 +429,7 @@ int hal_uart_init(uart_Cfg_t cfg, UART_INDEX_e uart_index)
     memset(&(m_uartCtx[uart_index]), 0, sizeof(uart_Ctx_t));
     memcpy(&(m_uartCtx[uart_index].cfg), &cfg, sizeof(uart_Cfg_t));
     uart_hw_init(uart_index);
-    m_uartCtx[uart_index].enable = TRUE;
+    m_uartCtx[uart_index].enable = true;
 
     if (uart_index == UART0)
         hal_pwrmgr_register(MOD_UART0, NULL, uart_wakeup_process_0);
@@ -443,7 +443,7 @@ int hal_uart_deinit(UART_INDEX_e uart_index)
 {
     uart_hw_deinit(uart_index);
     memset(&(m_uartCtx[uart_index]), 0, sizeof(uart_Ctx_t));
-    m_uartCtx[uart_index].enable = FALSE;
+    m_uartCtx[uart_index].enable = false;
 
     if (uart_index == UART0)
         hal_pwrmgr_unregister(MOD_UART0);
@@ -457,10 +457,10 @@ int hal_uart_set_tx_buf(UART_INDEX_e uart_index, uint8_t *buf, uint16_t size)
 {
     uart_Tx_Buf_t *p_txbuf = &(m_uartCtx[uart_index].tx_buf);
 
-    if (m_uartCtx[uart_index].enable == FALSE)
+    if (m_uartCtx[uart_index].enable == false)
         return PPlus_ERR_INVALID_STATE;
 
-    if (m_uartCtx[uart_index].cfg.use_tx_buf == FALSE)
+    if (m_uartCtx[uart_index].cfg.use_tx_buf == false)
         return PPlus_ERR_NOT_SUPPORTED;
 
     if (p_txbuf->tx_state != TX_STATE_UNINIT)
@@ -478,7 +478,7 @@ int hal_uart_set_tx_buf(UART_INDEX_e uart_index, uint8_t *buf, uint16_t size)
 
 int hal_uart_get_tx_ready(UART_INDEX_e uart_index)
 {
-    if (m_uartCtx[uart_index].cfg.use_tx_buf == FALSE)
+    if (m_uartCtx[uart_index].cfg.use_tx_buf == false)
         return PPlus_SUCCESS;
 
     if (m_uartCtx[uart_index].tx_buf.tx_state == TX_STATE_IDLE)

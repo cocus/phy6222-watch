@@ -12,6 +12,7 @@
 #include <osal/osal_critical.h>
 #include <driver/pwrmgr/pwrmgr.h>
 
+#include <stddef.h> /* for NULL */
 #define SPIF_WAIT_IDLE_CYC (32)
 
 #define SPIF_STATUS_WAIT_IDLE(n)                    \
@@ -194,7 +195,7 @@ static void hal_cache_init(void)
 }
 
 FLASH_CHIP_INFO phy_flash = {
-	.init_flag = FALSE,
+	.init_flag = false,
 	.IdentificationID = 0x00,
 	.Capacity = 0x80000,
 };
@@ -204,7 +205,7 @@ int hal_get_flash_info(void)
 	uint32_t cs;
 	uint8_t data[4];
 
-	if (phy_flash.init_flag == TRUE)
+	if (phy_flash.init_flag == true)
 	{
 		return PPlus_SUCCESS;
 	}
@@ -230,7 +231,7 @@ int hal_get_flash_info(void)
 		*(volatile int *)0x1fff0898 = phy_flash.Capacity;
 	}
 
-	phy_flash.init_flag = TRUE;
+	phy_flash.init_flag = true;
 	return PPlus_SUCCESS;
 }
 

@@ -156,7 +156,7 @@ void efuse_init(void)
 const  unsigned char libRevisionDate[]=__DATE__;
 const  unsigned char libRevisionTime[]=__TIME__;
 
-uint8_t CreateConn_Flag = FALSE;
+uint8_t CreateConn_Flag = false;
 uint32_t g_t_llhwgo = 0;
 uint16_t g_lastSlaveLatency=0;
 
@@ -274,7 +274,7 @@ void ll_hw_go1(void)
 {
     //*(volatile uint32_t *)0x4000f0b8 = 0;  // pclk_clk_gate_en
     //20190115 ZQ recorded ll re-trigger
-    if(llWaitingIrq==TRUE)
+    if(llWaitingIrq==true)
     {
         g_pmCounters.ll_trigger_err++;
     }
@@ -287,7 +287,7 @@ void ll_hw_go1(void)
     if(CreateConn_Flag)
     {
         osal_memcpy((uint8_t*)&g_tx_adv_buf.data[0], &initInfo.ownAddr[0], 6);
-        CreateConn_Flag= FALSE;
+        CreateConn_Flag= false;
     }
 
     //2018-05-23 ZQ
@@ -496,7 +496,7 @@ void llConnTerminate1( llConnState_t* connPtr,
 //extern uint8_t llSetupSecAdvEvt0( void );
 uint8_t llSetupSecAdvEvt1( void )
 {
-    uint8_t ret = FALSE;
+    uint8_t ret = false;
 
     if (llState == LL_STATE_IDLE)
     {
@@ -509,7 +509,7 @@ uint8_t llSetupSecAdvEvt1( void )
 
         llSetupAdv();
         llSecondaryState = LL_SEC_STATE_IDLE;
-        return TRUE;
+        return true;
     }
     else
     {
@@ -526,7 +526,7 @@ uint8_t llSetupSecAdvEvt1( void )
         else if (adv_param.advEvtType == LL_ADV_SCANNABLE_UNDIRECTED_EVT)
             ret = llSetupSecScannableAdvEvt();
         else
-            return FALSE;          // other type adv should not here
+            return false;          // other type adv should not here
 
         g_rfPhyPktFmt = connPtr->llRfPhyPktFmt;
     }
@@ -592,7 +592,7 @@ void llSetupSecScan1( uint8_t chan )
     ll_hw_go();
     llScanT1 = read_current_fine_time();
     g_rfPhyPktFmt = connPtr->llRfPhyPktFmt;
-    llWaitingIrq = TRUE;
+    llWaitingIrq = true;
     HAL_EXIT_CRITICAL_SECTION();
 //    uint32_t remainTime = read_LL_remainder_time();
 //  LOG("<%d %d>", scanTime, remainTime);
@@ -690,9 +690,9 @@ void llMasterEvt_TaskEndOk1( void )
 
         //20181206 ZQ add phy change nofity
         //receiver ack notifty the host
-        if(connPtr->llPhyModeCtrl.isChanged==TRUE)
+        if(connPtr->llPhyModeCtrl.isChanged==true)
         {
-            connPtr->llPhyModeCtrl.isChanged = FALSE;
+            connPtr->llPhyModeCtrl.isChanged = false;
             llPhyModeCtrlUpdateNotify(connPtr,LL_STATUS_SUCCESS);
         }
     }
@@ -746,7 +746,7 @@ void llMasterEvt_TaskEndOk1( void )
     for ( i = 0; i < buffer_size; i ++)     // note: i < getRxBufferSize()  will fail the loop
     {
         // there is, so process it; check if data was processed
-        if ( llProcessRxData() == FALSE )
+        if ( llProcessRxData() == false )
         {
             // it wasn't, so we're done
 //        ll_scheduler(LL_INVALID_TIME);
@@ -900,13 +900,13 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
     {
         ll_debug_output(DEBUG_LL_HW_SRX);
         uint8_t  rpaListIndex = LL_RESOLVINGLIST_ENTRY_NUM;
-        uint8_t  bWlRlCheckOk = TRUE;
+        uint8_t  bWlRlCheckOk = true;
         uint8_t*  peerAddr;
 
         // ============= scan case
         if (llState == LL_STATE_SCAN)
         {
-            uint8_t   bSendingScanReq = FALSE;
+            uint8_t   bSendingScanReq = false;
 
             // check status
             if ((irq_status & LIRQ_RD) && (irq_status & LIRQ_COK))       // bug correct 2018-10-15
@@ -947,9 +947,9 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                     if (txAdd == LL_DEV_ADDR_TYPE_RANDOM  &&
                             (g_rx_adv_buf.data[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR)
                     {
-                        bWlRlCheckOk = TRUE;
+                        bWlRlCheckOk = true;
 
-                        if (g_llRlEnable == TRUE)
+                        if (g_llRlEnable == true)
                         {
                             rpaListIndex = ll_getRPAListEntry(&g_rx_adv_buf.data[0]);
 
@@ -960,17 +960,17 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                 // 0x02: Public Identity Address (Corresponds to Resolved Private Address)
                                 // 0x03: Random (static) Identity Address (Corresponds to Resolved Private Address)
                                 addrType = g_llResolvinglist[rpaListIndex].peerAddrType + 2;
-                                bWlRlCheckOk = TRUE;
+                                bWlRlCheckOk = true;
                             }
                             else
                             {
-                                bWlRlCheckOk = FALSE;
+                                bWlRlCheckOk = false;
                             }
                         }
                     }
                     else     // case 2: receive ScanA using device ID, or scan device not using RPA
                     {
-                        bWlRlCheckOk = TRUE;
+                        bWlRlCheckOk = true;
 
                         for (int i = 0; i < LL_RESOLVINGLIST_ENTRY_NUM; i++)
                         {
@@ -986,7 +986,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                         ll_isIrkAllZero(g_llResolvinglist[i].peerIrk))
                                     rpaListIndex = i;
                                 else
-                                    bWlRlCheckOk = FALSE;      // the device in the RPA list but not using RPA, reject it
+                                    bWlRlCheckOk = false;      // the device in the RPA list but not using RPA, reject it
 
                                 break;
                             }
@@ -996,7 +996,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                     // check white list
                     if ((pGlobal_config[LL_SWITCH] & LL_WHITELIST_ALLOW)
                             && (scanInfo.wlPolicy  == LL_SCAN_WL_POLICY_USE_WHITE_LIST)
-                            && (bWlRlCheckOk == TRUE))
+                            && (bWlRlCheckOk == true))
                     {
                         // check white list
                         bWlRlCheckOk = ll_isAddrInWhiteList(txAdd, peerAddr);
@@ -1004,10 +1004,10 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
 
                     /*  20201218 Jie,direct adv report when no whitelist filter
                         else if(pdu_type == ADV_DIRECT_IND)    // direct adv only report addr & addr type match the whitelist
-                        bWlRlCheckOk = FALSE;
+                        bWlRlCheckOk = false;
                     */
                     // if valid, trigger osal event to report adv
-                    if (bWlRlCheckOk == TRUE)
+                    if (bWlRlCheckOk == true)
                     {
                         uint8_t  advEventType;
                         int8_t   rssi;
@@ -1037,7 +1037,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
 
                                 if(retAdvFilter)
                                 {
-                                    g_same_rf_channel_flag = TRUE;
+                                    g_same_rf_channel_flag = true;
                                     ll_hw_set_tx_rx_interval(10);
                                     ll_hw_set_rx_timeout(158);
                                     set_max_length(0xFF);                    // add 2020-03-10
@@ -1050,7 +1050,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                                          pGlobal_config[LL_HW_PLL_DELAY]);        //RxAFE,PLL
                                     ll_hw_go();
                                     g_pmCounters.ll_send_scan_req_cnt++;
-                                    llWaitingIrq = TRUE;
+                                    llWaitingIrq = true;
                                     // reset Rx/Tx FIFO
                                     ll_hw_rst_rfifo();
                                     ll_hw_rst_tfifo();
@@ -1099,8 +1099,8 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                     //write Tx FIFO
                                     ll_hw_write_tfifo((uint8_t*)&(g_tx_adv_buf.txheader),
                                                       ((g_tx_adv_buf.txheader & 0xff00) >> 8) + 2);   // payload length + header length(2)
-                                    bSendingScanReq = TRUE;
-                                    g_same_rf_channel_flag = FALSE;
+                                    bSendingScanReq = true;
+                                    g_same_rf_channel_flag = false;
                                 }
                             }
                         }
@@ -1183,8 +1183,8 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
         // ===========  initiator case
         else if (llState == LL_STATE_INIT)
         {
-            uint8_t bConnecting = FALSE;
-            uint8_t bMatchAdv = FALSE;     // RPA checking OK in previous adv event, and new adv event identical to the old one
+            uint8_t bConnecting = false;
+            uint8_t bMatchAdv = false;     // RPA checking OK in previous adv event, and new adv event identical to the old one
             connPtr = &conn_param[initInfo.connId];           // connId is allocated when create conn
 
             // check status
@@ -1224,12 +1224,12 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                     if (txAdd == LL_DEV_ADDR_TYPE_RANDOM  &&
                             ((g_rx_adv_buf.data[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR))
                     {
-                        bWlRlCheckOk = TRUE;
+                        bWlRlCheckOk = true;
 
-                        if (g_llRlEnable == TRUE)
+                        if (g_llRlEnable == true)
                         {
                             // if the RPA checking is done in previous scan, compare
-                            if (isPeerRpaStore  == TRUE  &&
+                            if (isPeerRpaStore  == true  &&
                                     currentPeerRpa[0] == g_rx_adv_buf.data[0]
                                     && currentPeerRpa[1] == g_rx_adv_buf.data[1]
                                     && currentPeerRpa[2] == g_rx_adv_buf.data[2]
@@ -1240,8 +1240,8 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                 rpaListIndex = storeRpaListIndex;
                                 peerAddr = &g_llResolvinglist[rpaListIndex].peerAddr[0];
                                 g_currentPeerAddrType = g_llResolvinglist[rpaListIndex].peerAddrType + 2;
-                                bWlRlCheckOk = TRUE;
-                                bMatchAdv = TRUE;
+                                bWlRlCheckOk = true;
+                                bMatchAdv = true;
                             }
                             else   // resolve the address
                             {
@@ -1251,11 +1251,11 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                 {
                                     peerAddr = &g_llResolvinglist[rpaListIndex].peerAddr[0];
                                     g_currentPeerAddrType = g_llResolvinglist[rpaListIndex].peerAddrType + 2;
-                                    bWlRlCheckOk = TRUE;
+                                    bWlRlCheckOk = true;
                                 }
                                 else
                                 {
-                                    bWlRlCheckOk = FALSE;
+                                    bWlRlCheckOk = false;
                                 }
                             }
                         }
@@ -1275,7 +1275,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                 // the device ID in the RPA list
                                 if (g_llResolvinglist[i].privacyMode == NETWORK_PRIVACY_MODE &&
                                         !ll_isIrkAllZero(g_llResolvinglist[i].peerIrk))
-                                    bWlRlCheckOk = FALSE;
+                                    bWlRlCheckOk = false;
                                 else
                                     rpaListIndex = i;
                             }
@@ -1283,7 +1283,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                     }
 
                     // ====== for direct adv, also check initA == own addr
-                    if (pdu_type == ADV_DIRECT_IND && bWlRlCheckOk == TRUE && bMatchAdv != TRUE)
+                    if (pdu_type == ADV_DIRECT_IND && bWlRlCheckOk == true && bMatchAdv != true)
                     {
                         //20201228,Jie,add RXADD check for direct IND
                         uint8_t rxAdd = (g_rx_adv_buf.rxheader & RX_ADD_MASK) >> RX_ADD_SHIFT;
@@ -1293,12 +1293,12 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                         {
                             // should not use RPA case
                             if (initInfo.ownAddrType != LL_DEV_ADDR_TYPE_RPA_PUBLIC && initInfo.ownAddrType != LL_DEV_ADDR_TYPE_RPA_RANDOM)
-                                bWlRlCheckOk = FALSE;
+                                bWlRlCheckOk = false;
 
                             if (rpaListIndex >= LL_RESOLVINGLIST_ENTRY_NUM
                                     || (ll_isIrkAllZero(g_llResolvinglist[rpaListIndex].localIrk))    // all-0 local IRK
                                     || (ll_ResolveRandomAddrs(g_llResolvinglist[rpaListIndex].localIrk, &g_rx_adv_buf.data[6]) != SUCCESS))   // resolve failed
-                                bWlRlCheckOk = FALSE;
+                                bWlRlCheckOk = false;
                         }
                         else
                         {
@@ -1309,7 +1309,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                     && (rpaListIndex < LL_RESOLVINGLIST_ENTRY_NUM
                                         && !ll_isIrkAllZero(g_llResolvinglist[rpaListIndex].localIrk)))
                             {
-                                bWlRlCheckOk = FALSE;
+                                bWlRlCheckOk = false;
                             }
 
                             if (rxAdd == LL_DEV_ADDR_TYPE_RANDOM)
@@ -1324,7 +1324,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                     || g_rx_adv_buf.data[10] != localAddr[4]
                                     || g_rx_adv_buf.data[11] != localAddr[5])
                             {
-                                bWlRlCheckOk = FALSE;
+                                bWlRlCheckOk = false;
                             }
                         }
                     }
@@ -1332,7 +1332,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                     // initiator, 2 types of filter process: 1. connect to peer address set by host   2. connect to  address in whitelist only
                     // 1. connect to peer address set by host
                     if (initInfo.wlPolicy == LL_INIT_WL_POLICY_USE_PEER_ADDR
-                            && bWlRlCheckOk == TRUE)
+                            && bWlRlCheckOk == true)
                     {
                         if (peerAddr[0]  != peerInfo.peerAddr[0]
                                 || peerAddr[1]  != peerInfo.peerAddr[1]
@@ -1342,19 +1342,19 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                 || peerAddr[5]  != peerInfo.peerAddr[5])
                         {
                             // not match, not init connect
-                            bWlRlCheckOk = FALSE;
+                            bWlRlCheckOk = false;
                         }
                     }
                     // 2. connect to  address in whitelist only
                     else if (initInfo.wlPolicy == LL_INIT_WL_POLICY_USE_WHITE_LIST &&
-                             bWlRlCheckOk == TRUE)
+                             bWlRlCheckOk == true)
                     {
                         // if advA in whitelist list, connect
                         // check white list
                         bWlRlCheckOk = ll_isAddrInWhiteList(txAdd, peerAddr);
 
                         //2020.10.26,Jie,update peer addr
-                        if (bWlRlCheckOk == TRUE)
+                        if (bWlRlCheckOk == true)
                         {
                             peerInfo.peerAddrType = txAdd;
                             peerInfo.peerAddr[0] = peerAddr[0];
@@ -1366,9 +1366,9 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                         }
                     }
 
-                    if (bWlRlCheckOk == TRUE)
+                    if (bWlRlCheckOk == true)
                     {
-                        g_same_rf_channel_flag = TRUE;
+                        g_same_rf_channel_flag = true;
 
                         // channel selection algorithm decision
                         if ((pGlobal_config[LL_SWITCH] & CONN_CSA2_ALLOW)
@@ -1417,11 +1417,11 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                         if (delay > 118 - pGlobal_config[LL_ADV_TO_CONN_REQ_DELAY] - pGlobal_config[LL_HW_PLL_DELAY])   // not enough time
                         {
                             // not enough time to send conn req, store the RPA
-                            isPeerRpaStore = TRUE;
+                            isPeerRpaStore = true;
                             storeRpaListIndex = rpaListIndex;
                             osal_memcpy(&currentPeerRpa[0], &g_rx_adv_buf.data[0], 6);
 //                          LOG("store %d\n", storeRpaListIndex);
-                            g_same_rf_channel_flag = FALSE;
+                            g_same_rf_channel_flag = false;
                             //LOG("<%d>", delay);
                         }
                         else
@@ -1436,7 +1436,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                             // send conn req
                             ll_hw_set_stx();             // set LL HW as single Tx mode
                             ll_hw_go();
-                            llWaitingIrq = TRUE;
+                            llWaitingIrq = true;
                             // AdvA, offset 6
                             osal_memcpy((uint8_t*)&g_tx_adv_buf.data[6], &g_rx_adv_buf.data[0], 6);
                             //2020.8.11 Jie:add init req header for RxAdd
@@ -1452,9 +1452,9 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
                                 osal_memcpy( &g_currentLocalRpa[0],  &g_tx_adv_buf.data[0], 6);
 
                             move_to_master_function();
-                            isPeerRpaStore = FALSE;
-                            bConnecting = TRUE;
-                            g_same_rf_channel_flag = FALSE;
+                            isPeerRpaStore = false;
+                            bConnecting = true;
+                            g_same_rf_channel_flag = false;
                         }
                     }
                 }
@@ -1508,7 +1508,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
         ll_hw_clr_irq();
 
     HAL_EXIT_CRITICAL_SECTION();
-    return TRUE;
+    return true;
 }
 
 uint8_t llSetupStartEncRsp( llConnState_t* connPtr )
@@ -1539,7 +1539,7 @@ uint8_t llSetupStartEncRsp( llConnState_t* connPtr )
         connPtr->ctrlPktInfo.ctrlTimeout = connPtr->ctrlPktInfo.ctrlTimeoutVal;
     }
 
-    return( TRUE );
+    return( true );
 }
 
 uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
@@ -1553,7 +1553,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_TERMINATE_IND:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // we have already place packet on TX FIFO, so check if its been ACK'ed
                 if ( rfCounters.numTxCtrlAck )
@@ -1608,7 +1608,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_ENC_RSP:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
@@ -1676,7 +1676,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_START_ENC_REQ:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This only means the packet has been transmitted, not that it
@@ -1687,7 +1687,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                     // Note: We can not receive data once the encryption control
                     //       procedure has begun, so there is no risk of a race
                     //       condition here.
-                    connPtr->encEnabled = TRUE;
+                    connPtr->encEnabled = true;
                     // clear packet counters
                     connPtr->encInfo.txPktCount = 0;
                     connPtr->encInfo.rxPktCount = 0;
@@ -1701,7 +1701,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                 //       startEncRspRcved flag again. Since we can't get the
                 //       LL_START_ENC_RSP until we send the LL_CTRL_START_ENC_REQ,
                 //       this isn't an issue.
-                if ( connPtr->encInfo.startEncRspRcved == TRUE )
+                if ( connPtr->encInfo.startEncRspRcved == true )
                 {
                     // replace control procedure at head of queue to prevent interleaving
                     llReplaceCtrlPkt( connPtr, LL_CTRL_START_ENC_RSP );
@@ -1727,15 +1727,15 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
             else // control packet has not been put on the TX FIFO yet
             {
                 // first, check if the SK has been calculated
-                if ( connPtr->encInfo.SKValid == TRUE )
+                if ( connPtr->encInfo.SKValid == true )
                 {
                     // so try to begin the last step of the encryption procedure
-                    if ( llSetupStartEncReq( connPtr ) == TRUE )
+                    if ( llSetupStartEncReq( connPtr ) == true )
                     {
                         // ready the flag that indicates that we've received the response
-                        connPtr->encInfo.startEncRspRcved = FALSE;
+                        connPtr->encInfo.startEncRspRcved = false;
                         // the control packet is now active
-                        connPtr->ctrlPktInfo.ctrlPktActive = TRUE;
+                        connPtr->ctrlPktInfo.ctrlPktActive = true;
                     }
 
                     // Note: Two cases are possible:
@@ -1764,7 +1764,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                                            connPtr->encInfo.SKD,
                                            connPtr->encInfo.SK );
                         // indicate the SK is valid, and drop through
-                        connPtr->encInfo.SKValid = TRUE;
+                        connPtr->encInfo.SKValid = true;
                     }
                     else // not done yet
                     {
@@ -1779,7 +1779,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_START_ENC_RSP:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This only means the packet has been transmitted, not that it
@@ -1792,12 +1792,12 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
                     // set flag to allow outgoing data transmissions
-                    connPtr->txDataEnabled = TRUE;
+                    connPtr->txDataEnabled = true;
                     // okay to receive data again
-                    connPtr->rxDataEnabled = TRUE;
+                    connPtr->rxDataEnabled = true;
 
                     // notify the Host
-                    if ( connPtr->encInfo.encRestart == TRUE )
+                    if ( connPtr->encInfo.encRestart == true )
                     {
                         // a key change was requested
                         LL_EncKeyRefreshCback( connPtr->connId,
@@ -1816,10 +1816,10 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                     // Note: But in reality, there isn't a disable encryption in BLE,
                     //       so once encryption is enabled, any call to LL_StartEncrypt
                     //       will result in an encryption key change callback.
-                    connPtr->encInfo.encRestart       = FALSE;
-                    connPtr->encInfo.encReqRcved      = FALSE;
-                    connPtr->encInfo.pauseEncRspRcved = FALSE;
-                    connPtr->encInfo.startEncRspRcved = FALSE;
+                    connPtr->encInfo.encRestart       = false;
+                    connPtr->encInfo.encReqRcved      = false;
+                    connPtr->encInfo.pauseEncRspRcved = false;
+                    connPtr->encInfo.startEncRspRcved = false;
                 }
                 else // not done yet
                 {
@@ -1866,10 +1866,10 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_PAUSE_ENC_RSP:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // not done until the LL_CTRL_PAUSE_ENC_RSP is received, so check it
-                if ( connPtr->encInfo.pauseEncRspRcved == TRUE )
+                if ( connPtr->encInfo.pauseEncRspRcved == true )
                 {
                     // done with this control packet, so remove from the processing
                     // queue and drop through (so the encrypton response can be
@@ -1901,18 +1901,18 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                 // so try to put it there
                 // Note: All pending transmissions must also be finished before this
                 //       packet is placed in the TX FIFO.
-                if ( llSetupPauseEncRsp( connPtr ) == TRUE )
+                if ( llSetupPauseEncRsp( connPtr ) == true )
                 {
                     // clear the flag that indicates an Encryption Request has been
                     // received, which is used by this control procedure to restart the
                     // control procedure timeout
-                    connPtr->encInfo.pauseEncRspRcved = FALSE;
+                    connPtr->encInfo.pauseEncRspRcved = false;
                     // disable encryption
                     // Note: Not really necessary as no data is supposed to be sent
                     //       or received.
-                    connPtr->encEnabled = FALSE;
+                    connPtr->encEnabled = false;
                     // the control packet is now active; drop through
-                    connPtr->ctrlPktInfo.ctrlPktActive = TRUE;
+                    connPtr->ctrlPktInfo.ctrlPktActive = true;
                 }
                 else // not done yet
                 {
@@ -1926,7 +1926,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_REJECT_IND:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This only means the packet has been transmitted, not that it
@@ -1941,11 +1941,11 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                 {
                     // disable encryption
                     // Note: Never really enabled so this isn't necessary.
-                    connPtr->encEnabled = FALSE;
+                    connPtr->encEnabled = false;
                     // set flag to allow outgoing data transmissions
-                    connPtr->txDataEnabled = TRUE;
+                    connPtr->txDataEnabled = true;
                     // okay to receive data again
-                    connPtr->rxDataEnabled = TRUE;
+                    connPtr->rxDataEnabled = true;
                 }
 
                 // we have already place packet on TX FIFO, so check if its been ACK'ed
@@ -2000,11 +2000,11 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         // should be LL_CTRL_SLAVE_FEATURE_REQ
 //      case LL_CTRL_FEATURE_REQ:    // for v4.2, slave may send LL_CTRL_FEATURE_REQ msg. to be test later.........  HZF
 //        // check if the control packet procedure is active
-//        if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+//        if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
 //        {
 //          // we have already placed a packet on TX FIFO, so wait now until we
 //          // get the slave's LL_CTRL_FEATURE_RSP
-//          if ( connPtr->featureSetInfo.featureRspRcved == TRUE )
+//          if ( connPtr->featureSetInfo.featureRspRcved == true )
 //          {
 //            // notify the Host
 //            LL_ReadRemoteUsedFeaturesCompleteCback( LL_STATUS_SUCCESS,
@@ -2047,7 +2047,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
 //          // Note: It is okay to repeatedly set this flag in the event the
 //          //       setup routine hasn't completed yet (e.g. if the TX FIFO
 //          //       has not yet become empty).
-//          connPtr->featureSetInfo.featureRspRcved = FALSE;
+//          connPtr->featureSetInfo.featureRspRcved = false;
 
 //          // Note: Two cases are possible:
 //          //       a) We successfully placed the packet in the TX FIFO.
@@ -2072,7 +2072,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_FEATURE_RSP:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
@@ -2087,7 +2087,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                     //       is formed. This update will be used as long as a feature
                     //       response feature has not been performed by the Master. Once
                     //       performed, the connection feature set is fixed!
-                    connPtr->featureSetInfo.featureRspRcved = TRUE;
+                    connPtr->featureSetInfo.featureRspRcved = true;
                     // ALT: COULD RE-ACTIVATE SL (IF ENABLED) RIGHT HERE.
                     connPtr->slaveLatency = connPtr->slaveLatencyValue;
                     // remove control packet from processing queue and drop through
@@ -2141,13 +2141,13 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_VERSION_IND:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if the peer's version information is valid
-                if ( connPtr->verExchange.peerInfoValid == TRUE )
+                if ( connPtr->verExchange.peerInfoValid == true )
                 {
                     // yes, so check if the host has requested this information
-                    if ( connPtr->verExchange.hostRequest == TRUE )
+                    if ( connPtr->verExchange.hostRequest == true )
                     {
                         // yes, so provide it
                         LL_ReadRemoteVersionInfoCback( LL_STATUS_SUCCESS,
@@ -2189,7 +2189,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                 // since we are in the process of sending the version indication,
                 // it is okay to set this flag here even if it is set repeatedly
                 // in the of llSetupVersionIndReq failures
-                connPtr->verExchange.verInfoSent = TRUE;
+                connPtr->verExchange.verInfoSent = true;
                 // so try to put it there; being active depends on a success
                 connPtr->ctrlPktInfo.ctrlPktActive = llSetupVersionIndReq( connPtr );
                 // Note: Two cases are possible:
@@ -2215,13 +2215,13 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_LENGTH_REQ:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    connPtr->llPduLen.isWatingRsp=TRUE;
+                    connPtr->llPduLen.isWatingRsp=true;
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -2249,7 +2249,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                 // Note: There is no control procedure timeout associated with this
                 //       control packet.
                 connPtr->ctrlPktInfo.ctrlPktActive = llSetupDataLenghtReq( connPtr );
-                connPtr->llPduLen.isWatingRsp=FALSE;
+                connPtr->llPduLen.isWatingRsp=false;
                 // Note: Two cases are possible:
                 //       a) We successfully placed the packet in the TX FIFO.
                 //       b) We did not.
@@ -2273,13 +2273,13 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_LENGTH_RSP:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    connPtr->llPduLen.isProcessingReq=FALSE;
+                    connPtr->llPduLen.isProcessingReq=false;
                     llPduLengthUpdate((uint16_t)connPtr->connId);
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
@@ -2331,13 +2331,13 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_PHY_REQ:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    connPtr->llPhyModeCtrl.isWatingRsp=TRUE;
+                    connPtr->llPhyModeCtrl.isWatingRsp=true;
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -2365,7 +2365,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                 // Note: There is no control procedure timeout associated with this
                 //       control packet.
                 connPtr->ctrlPktInfo.ctrlPktActive = llSetupPhyReq( connPtr );
-                connPtr->llPhyModeCtrl.isWatingRsp=FALSE;
+                connPtr->llPhyModeCtrl.isWatingRsp=false;
                 // Note: Two cases are possible:
                 //       a) We successfully placed the packet in the TX FIFO.
                 //       b) We did not.
@@ -2389,14 +2389,14 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_PHY_RSP:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    connPtr->llPhyModeCtrl.isProcessingReq=FALSE;
-                    connPtr->llPhyModeCtrl.isWatingRsp=TRUE;
+                    connPtr->llPhyModeCtrl.isProcessingReq=false;
+                    connPtr->llPhyModeCtrl.isWatingRsp=true;
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -2424,7 +2424,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
                 // Note: There is no control procedure timeout associated with this
                 //       control packet.
                 connPtr->ctrlPktInfo.ctrlPktActive = llSetupPhyRsp( connPtr );
-                connPtr->llPhyModeCtrl.isWatingRsp=FALSE;
+                connPtr->llPhyModeCtrl.isWatingRsp=false;
                 // Note: Two cases are possible:
                 //       a) We successfully placed the packet in the TX FIFO.
                 //       b) We did not.
@@ -2448,13 +2448,13 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_CTE_REQ:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    //                 connPtr->llPhyModeCtrl.isWatingRsp=TRUE;
+                    //                 connPtr->llPhyModeCtrl.isWatingRsp=true;
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -2478,7 +2478,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
             else // control packet has not been put on the TX FIFO yet
             {
                 connPtr->ctrlPktInfo.ctrlPktActive = llSetupCTEReq( connPtr );
-                connPtr->llCTEModeCtrl.isWatingRsp = TRUE;
+                connPtr->llCTEModeCtrl.isWatingRsp = true;
                 return( LL_CTRL_PROC_STATUS_SUCCESS );
             }
 
@@ -2487,14 +2487,14 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_CTE_RSP:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    connPtr->llCTEModeCtrl.isWatingRsp = FALSE;
-                    connPtr->llCTEModeCtrl.isProcessingReq = FALSE;
+                    connPtr->llCTEModeCtrl.isWatingRsp = false;
+                    connPtr->llCTEModeCtrl.isProcessingReq = false;
                     // remove control packet from processing queue and drop through
                     // 2020-02-12 comment:after send CONN CTE RSP , then clear txSupp
                     ll_hw_set_cte_txSupp( CTE_SUPP_NULL);
@@ -2517,7 +2517,7 @@ uint8_t llProcessSlaveControlProcedures1( llConnState_t* connPtr )
             // try to place control packet in the TX FIFO
             // Note: Since there are no dependencies for this control packet, we
             //       do not have to bother with the active flag.
-            if ( llSetupUnknownRsp( connPtr ) == TRUE )
+            if ( llSetupUnknownRsp( connPtr ) == true )
             {
                 // all we have to do is put this control packet on the TX FIFO, so
                 // remove control packet from the processing queue and drop through
@@ -2557,7 +2557,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_TERMINATE_IND:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // we have already place packet on TX FIFO, so check if its been ACK'ed
                 if ( rfCounters.numTxCtrlAck )
@@ -2619,7 +2619,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
 
 //      LOG("CONN UPD");
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // we have already placed a packet on TX FIFO, so check if its been ACK'ed
                 if ( rfCounters.numTxCtrlAck )
@@ -2630,7 +2630,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                     connPtr->paramUpdate.connInterval <<= 1;
                     connPtr->paramUpdate.connTimeout  <<= 4;
                     // and activate the update
-                    connPtr->pendingParamUpdate = TRUE;
+                    connPtr->pendingParamUpdate = true;
                     // done with this control packet, so remove from the processing queue
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -2684,13 +2684,13 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_CHANNEL_MAP_REQ:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // we have already placed a packet on TX FIFO, so check if its been ACK'ed
                 if ( rfCounters.numTxCtrlAck )
                 {
                     // yes, so activate the update
-                    connPtr->pendingChanUpdate = TRUE;
+                    connPtr->pendingChanUpdate = true;
                     // done with this control packet, so remove from the processing queue
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -2745,29 +2745,29 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
 
 //          LOG("1 ENC_REQ->");
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
                     // set flag to discard all incoming data transmissions
-                    connPtr->rxDataEnabled = FALSE;
+                    connPtr->rxDataEnabled = false;
                 }
 
                 // we have already placed a packet on TX FIFO, so wait now until we
                 // get the slave's LL_START_ENC_REQ
-                if ( connPtr->encInfo.startEncReqRcved == TRUE )
+                if ( connPtr->encInfo.startEncReqRcved == true )
                 {
                     // clear packet counters
                     connPtr->encInfo.txPktCount = 0;
                     connPtr->encInfo.rxPktCount = 0;
                     // enable encryption
-                    connPtr->encEnabled = TRUE;
+                    connPtr->encEnabled = true;
                     // replace control procedure at head of queue to prevent interleaving
                     llReplaceCtrlPkt( connPtr, LL_CTRL_START_ENC_RSP );
                 }
-                else if ( connPtr->encInfo.rejectIndRcved  == TRUE )
+                else if ( connPtr->encInfo.rejectIndRcved  == true )
                 {
                     // the slave's Host has failed to provide an LTK, so the encryption
                     // setup has been rejected; end the start encryption procedure
@@ -2776,11 +2776,11 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                     // disable encryption
                     // Note: Not really necessary as no data is supposed to be sent
                     //       or received.
-                    connPtr->encEnabled = FALSE;
+                    connPtr->encEnabled = false;
                     // set flag to allow outgoing transmissions again
-                    connPtr->txDataEnabled = TRUE;
+                    connPtr->txDataEnabled = true;
                     // set flag to allow all incoming data transmissions
-                    connPtr->rxDataEnabled = TRUE;
+                    connPtr->rxDataEnabled = true;
 
                     // check the rejection indication error code
                     if ( connPtr->encInfo.encRejectErrCode == LL_STATUS_ERROR_PIN_OR_KEY_MISSING )
@@ -2798,7 +2798,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                                            LL_ENCRYPTION_OFF );
                     }
                 }
-                else if ( connPtr->termInfo.termIndRcvd == TRUE )
+                else if ( connPtr->termInfo.termIndRcvd == true )
                 {
                     // the slave's Host has failed to provide an LTK, so the encryption
                     // setup has been rejected; end the start encryption procedure
@@ -2812,7 +2812,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                     if ( --connPtr->ctrlPktInfo.ctrlTimeout == 0 )
                     {
                         // notify the Host
-                        if ( connPtr->encInfo.encRestart == TRUE )
+                        if ( connPtr->encInfo.encRestart == true )
                         {
                             // a key change was requested
                             LL_EncKeyRefreshCback( connPtr->connId,
@@ -2852,8 +2852,8 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                 // Note: It is okay to repeatedly set this flag in the event the
                 //       setup routine hasn't completed yet (e.g. if the TX FIFO
                 //       has not yet become empty).
-                connPtr->encInfo.startEncReqRcved = FALSE;
-                connPtr->encInfo.rejectIndRcved   = FALSE;
+                connPtr->encInfo.startEncReqRcved = false;
+                connPtr->encInfo.rejectIndRcved   = false;
                 // Note: Two cases are possible:
                 //       a) We successfully placed the packet in the TX FIFO.
                 //       b) We did not.
@@ -2881,20 +2881,20 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
 
 //          LOG("1 START_ENC_RSP->");
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // we have already placed a packet on TX FIFO, so wait now until we
                 // get the slave's LL_START_ENC_RSP
-                if ( connPtr->encInfo.startEncRspRcved == TRUE )
+                if ( connPtr->encInfo.startEncRspRcved == true )
                 {
                     // done with this control packet, so remove from the processing queue
                     llDequeueCtrlPkt( connPtr );
                     // we're done with encryption procedure, so clear flags
-                    connPtr->encInfo.encReqRcved      = FALSE;
-                    connPtr->encInfo.pauseEncRspRcved = FALSE;
-                    connPtr->encInfo.startEncReqRcved = FALSE;
-                    connPtr->encInfo.startEncRspRcved = FALSE;
-                    connPtr->encInfo.rejectIndRcved   = FALSE;
+                    connPtr->encInfo.encReqRcved      = false;
+                    connPtr->encInfo.pauseEncRspRcved = false;
+                    connPtr->encInfo.startEncReqRcved = false;
+                    connPtr->encInfo.startEncRspRcved = false;
+                    connPtr->encInfo.rejectIndRcved   = false;
                 }
                 else // no done yet
                 {
@@ -2903,7 +2903,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                     if ( --connPtr->ctrlPktInfo.ctrlTimeout == 0 )
                     {
                         // notify the Host
-                        if ( connPtr->encInfo.encRestart == TRUE )
+                        if ( connPtr->encInfo.encRestart == true )
                         {
                             // a key change was requested
                             LL_EncKeyRefreshCback( connPtr->connId,
@@ -2941,7 +2941,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                 // Note: It is okay to repeatedly set this flag in the event the
                 //       setup routine hasn't completed yet (e.g. if the TX FIFO
                 //       has not yet become empty).
-                connPtr->encInfo.startEncRspRcved = FALSE;
+                connPtr->encInfo.startEncRspRcved = false;
                 // Note: Two cases are possible:
                 //       a) We successfully placed the packet in the TX FIFO.
                 //       b) We did not.
@@ -2968,14 +2968,14 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_PAUSE_ENC_REQ:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // we have already placed a packet on TX FIFO, so wait now until we
                 // get the slave's LL_PAUSE_ENC_RSP
-                if ( connPtr->encInfo.pauseEncRspRcved == TRUE )
+                if ( connPtr->encInfo.pauseEncRspRcved == true )
                 {
                     // disable encryption
-                    connPtr->encEnabled = FALSE;
+                    connPtr->encEnabled = false;
                     // replace control procedure at head of queue to prevent interleaving
                     llReplaceCtrlPkt( connPtr, LL_CTRL_PAUSE_ENC_RSP );
                 }
@@ -2986,7 +2986,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                     if ( --connPtr->ctrlPktInfo.ctrlTimeout == 0 )
                     {
                         // notify the Host
-                        if ( connPtr->encInfo.encRestart == TRUE )
+                        if ( connPtr->encInfo.encRestart == true )
                         {
                             // a key change was requested
                             LL_EncKeyRefreshCback( connPtr->connId,
@@ -3024,7 +3024,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                 // Note: It is okay to repeatedly set this flag in the event the
                 //       setup routine hasn't completed yet (e.g. if the TX FIFO
                 //       has not yet become empty).
-                connPtr->encInfo.pauseEncRspRcved = FALSE;
+                connPtr->encInfo.pauseEncRspRcved = false;
                 // Note: Two cases are possible:
                 //       a) We successfully placed the packet in the TX FIFO.
                 //       b) We did not.
@@ -3051,7 +3051,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_PAUSE_ENC_RSP:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This only means the packet has been transmitted, not that it
@@ -3068,7 +3068,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                     if ( --connPtr->ctrlPktInfo.ctrlTimeout == 0 )
                     {
                         // notify the Host
-                        if ( connPtr->encInfo.encRestart == TRUE )
+                        if ( connPtr->encInfo.encRestart == true )
                         {
                             // a key change was requested
                             LL_EncKeyRefreshCback( connPtr->connId,
@@ -3124,11 +3124,11 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_FEATURE_REQ:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // we have already placed a packet on TX FIFO, so wait now until we
                 // get the slave's LL_CTRL_FEATURE_RSP
-                if ( connPtr->featureSetInfo.featureRspRcved == TRUE )
+                if ( connPtr->featureSetInfo.featureRspRcved == true )
                 {
                     // notify the Host
                     LL_ReadRemoteUsedFeaturesCompleteCback( LL_STATUS_SUCCESS,
@@ -3174,7 +3174,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                 // Note: It is okay to repeatedly set this flag in the event the
                 //       setup routine hasn't completed yet (e.g. if the TX FIFO
                 //       has not yet become empty).
-                connPtr->featureSetInfo.featureRspRcved = FALSE;
+                connPtr->featureSetInfo.featureRspRcved = false;
                 // Note: Two cases are possible:
                 //       a) We successfully placed the packet in the TX FIFO.
                 //       b) We did not.
@@ -3198,7 +3198,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_FEATURE_RSP:            // new for BLE4.2, feature req could be init by slave
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
@@ -3213,7 +3213,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                     //       is formed. This update will be used as long as a feature
                     //       response feature has not been performed by the Master. Once
                     //       performed, the connection feature set is fixed!
-                    connPtr->featureSetInfo.featureRspRcved = TRUE;
+                    connPtr->featureSetInfo.featureRspRcved = true;
                     // ALT: COULD RE-ACTIVATE SL (IF ENABLED) RIGHT HERE.
 //            connPtr->slaveLatency = connPtr->slaveLatencyValue;
                     // remove control packet from processing queue and drop through
@@ -3269,13 +3269,13 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_VERSION_IND:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if the peer's version information is valid
-                if ( connPtr->verExchange.peerInfoValid == TRUE )
+                if ( connPtr->verExchange.peerInfoValid == true )
                 {
                     // yes, so check if the host has requested this information
-                    if ( connPtr->verExchange.hostRequest == TRUE )
+                    if ( connPtr->verExchange.hostRequest == true )
                     {
                         // yes, so provide it
                         LL_ReadRemoteVersionInfoCback( LL_STATUS_SUCCESS,
@@ -3317,7 +3317,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                 // since we are in the process of sending the version indication,
                 // it is okay to set this flag here even if it is set repeatedly
                 // in the of llSetupVersionIndReq failures
-                connPtr->verExchange.verInfoSent = TRUE;
+                connPtr->verExchange.verInfoSent = true;
 //          // so try to put it there; being active depends on a success
 //          connPtr->ctrlPktInfo.ctrlPktActive = llSetupPingReq(connPtr);// llSetupVersionIndReq( connPtr );
                 connPtr->ctrlPktInfo.ctrlPktActive = llSetupVersionIndReq( connPtr );
@@ -3344,13 +3344,13 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_LENGTH_REQ:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    connPtr->llPduLen.isWatingRsp=TRUE;
+                    connPtr->llPduLen.isWatingRsp=true;
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -3378,7 +3378,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                 // Note: There is no control procedure timeout associated with this
                 //       control packet.
                 connPtr->ctrlPktInfo.ctrlPktActive = llSetupDataLenghtReq( connPtr );
-                connPtr->llPduLen.isWatingRsp=FALSE;
+                connPtr->llPduLen.isWatingRsp=false;
                 // Note: Two cases are possible:
                 //       a) We successfully placed the packet in the TX FIFO.
                 //       b) We did not.
@@ -3402,13 +3402,13 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_LENGTH_RSP:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    connPtr->llPduLen.isProcessingReq=FALSE;
+                    connPtr->llPduLen.isProcessingReq=false;
                     llPduLengthUpdate((uint16_t)connPtr->connId);
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
@@ -3461,13 +3461,13 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_PHY_REQ:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    connPtr->llPhyModeCtrl.isWatingRsp=TRUE;
+                    connPtr->llPhyModeCtrl.isWatingRsp=true;
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -3495,7 +3495,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                 // Note: There is no control procedure timeout associated with this
                 //       control packet.
                 connPtr->ctrlPktInfo.ctrlPktActive = llSetupPhyReq( connPtr );
-                connPtr->llPhyModeCtrl.isWatingRsp=FALSE;
+                connPtr->llPhyModeCtrl.isWatingRsp=false;
                 // Note: Two cases are possible:
                 //       a) We successfully placed the packet in the TX FIFO.
                 //       b) We did not.
@@ -3519,7 +3519,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_PHY_UPDATE_IND:
 
             // check if the control packet procedure is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // we have already placed a packet on TX FIFO, so check if its been ACK'ed
                 if ( rfCounters.numTxCtrlAck )
@@ -3535,11 +3535,11 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
                     else
                     {
                         // yes, so activate the update
-                        connPtr->pendingPhyModeUpdate = TRUE;
+                        connPtr->pendingPhyModeUpdate = true;
                     }
 
-                    connPtr->llPhyModeCtrl.isWatingRsp=FALSE;
-                    connPtr->llPhyModeCtrl.isProcessingReq=FALSE;
+                    connPtr->llPhyModeCtrl.isWatingRsp=false;
+                    connPtr->llPhyModeCtrl.isProcessingReq=false;
                     // done with this control packet, so remove from the processing queue
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -3591,13 +3591,13 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_REJECT_EXT_IND:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    connPtr->isCollision=TRUE;
+                    connPtr->isCollision=true;
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -3621,16 +3621,16 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
             }
             else // control packet has not been put on the TX FIFO yet
             {
-                if(connPtr->llPhyModeCtrl.isWatingRsp==TRUE)
+                if(connPtr->llPhyModeCtrl.isWatingRsp==true)
                 {
                     connPtr->ctrlPktInfo.ctrlPktActive = llSetupRejectExtInd( connPtr,LL_STATUS_ERROR_LL_PROCEDURE_COLLISION);
                 }
-                else if(connPtr->pendingChanUpdate==TRUE ||
-                        connPtr->pendingParamUpdate==TRUE )
+                else if(connPtr->pendingChanUpdate==true ||
+                        connPtr->pendingParamUpdate==true )
                 {
                     connPtr->ctrlPktInfo.ctrlPktActive = llSetupRejectExtInd( connPtr,LL_STATUS_ERROR_DIFF_TRANSACTION_COLLISION);
                 }
-                else if( connPtr->llCTEModeCtrl.isWatingRsp == TRUE)
+                else if( connPtr->llCTEModeCtrl.isWatingRsp == true)
                 {
                     // 2020-01-23 add for CTE
                     connPtr->ctrlPktInfo.ctrlPktActive = llSetupRejectExtInd( connPtr,connPtr->llCTEModeCtrl.errorCode );
@@ -3649,13 +3649,13 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_CTE_REQ:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    //  connPtr->llCTEModeCtrl.isWatingRsp = TRUE;
+                    //  connPtr->llCTEModeCtrl.isWatingRsp = true;
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -3680,7 +3680,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
             else // control packet has not been put on the TX FIFO yet
             {
                 connPtr->ctrlPktInfo.ctrlPktActive = llSetupCTEReq( connPtr );
-                connPtr->llCTEModeCtrl.isWatingRsp = TRUE;
+                connPtr->llCTEModeCtrl.isWatingRsp = true;
                 return( LL_CTRL_PROC_STATUS_SUCCESS );
             }
 
@@ -3689,13 +3689,13 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         case LL_CTRL_CTE_RSP:
 
             // check if the control packet procedure is is active
-            if ( connPtr->ctrlPktInfo.ctrlPktActive == TRUE )
+            if ( connPtr->ctrlPktInfo.ctrlPktActive == true )
             {
                 // yes, so check if it has been transmitted yet
                 // Note: This does not mean this packet has been ACK'ed or NACK'ed.
                 if ( rfCounters.numTxCtrl )
                 {
-                    connPtr->llCTEModeCtrl.isProcessingReq = FALSE;
+                    connPtr->llCTEModeCtrl.isProcessingReq = false;
                     // remove control packet from processing queue and drop through
                     llDequeueCtrlPkt( connPtr );
                 }
@@ -3720,7 +3720,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
             // try to place control packet in the TX FIFO
             // Note: Since there are no dependencies for this control packet, we
             //       do not have to bother with the active flag.
-            if ( llSetupUnknownRsp( connPtr ) == TRUE )
+            if ( llSetupUnknownRsp( connPtr ) == true )
             {
                 // all we have to do is put this control packet on the TX FIFO, so
                 // remove control packet from the processing queue and drop through
@@ -3767,7 +3767,7 @@ uint8_t llProcessMasterControlProcedures1( llConnState_t* connPtr )
         default:
 #ifdef DEBUG
             // fatal error - a unknown control procedure value was used
-            LL_ASSERT( FALSE );
+            LL_ASSERT( false );
 #endif // DEBUG
             break;
         }
@@ -3883,7 +3883,7 @@ uint8_t ll_processBasicIRQ_ScanTRX0(uint32_t              irq_status )
             uint8_t  addrType = (g_rx_adv_buf.rxheader & TX_ADD_MASK) >> TX_ADD_SHIFT;
             uint8_t  dataLen  = pktLen - 8;
             int8_t   rssi     =  -(pktFoot1 >> 24);
-            uint8_t  bCheckOk = TRUE;
+            uint8_t  bCheckOk = true;
             peerAddr = &g_rx_adv_buf.data[0];
 
             //===
@@ -3900,13 +3900,13 @@ uint8_t ll_processBasicIRQ_ScanTRX0(uint32_t              irq_status )
                     g_rx_adv_buf.data[4] != g_tx_adv_buf.data[10] ||
                     g_rx_adv_buf.data[5] != g_tx_adv_buf.data[11]
                )
-                bCheckOk = FALSE;
+                bCheckOk = false;
 
             // RPA checking. Note that we do not check whether it is the same RPA index
             if (addrType == LL_DEV_ADDR_TYPE_RANDOM  &&
                     (g_rx_adv_buf.data[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR)
             {
-                if (g_llRlEnable == TRUE)
+                if (g_llRlEnable == true)
                 {
                     rpaListIndex = ll_getRPAListEntry(&g_rx_adv_buf.data[0]);
 
@@ -3917,16 +3917,16 @@ uint8_t ll_processBasicIRQ_ScanTRX0(uint32_t              irq_status )
                         // 0x02: Public Identity Address (Corresponds to Resolved Private Address)
                         // 0x03: Random (static) Identity Address (Corresponds to Resolved Private Address)
                         addrType = g_llResolvinglist[rpaListIndex].peerAddrType + 2;
-                        bCheckOk = TRUE;
+                        bCheckOk = true;
                     }
                     else
-                        bCheckOk = FALSE;
+                        bCheckOk = false;
                 }
             }
 
             //===
 
-            if (bCheckOk == TRUE)
+            if (bCheckOk == true)
             {
                 advEventType = LL_ADV_RPT_SCAN_RSP;
                 // below function cost 51us/66us(measure with GPIO)
@@ -3972,7 +3972,7 @@ uint8_t ll_processBasicIRQ_ScanTRX0(uint32_t              irq_status )
         ll_hw_clr_irq();
 
     HAL_EXIT_CRITICAL_SECTION();
-    return TRUE;
+    return true;
 }
 
 uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
@@ -3988,7 +3988,7 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
     // 2021-02-23
     // bugfix for multi-role secondary advertising
     // bug-case : a device in advertising and receive another device's scan request
-    uint8_t adv_sch_flag = TRUE;
+    uint8_t adv_sch_flag = true;
     // read packet
     packet_len = ll_hw_read_rfifo((uint8_t*)(&(g_rx_adv_buf.rxheader)),
                                   &pktLen,
@@ -4029,30 +4029,30 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
 //===
             uint8_t  rpaListIndex, bWlRlCheckOk;
             uint8_t* peerAddr = &g_rx_adv_buf.data[0];      // ScanA
-            adv_sch_flag = FALSE;
+            adv_sch_flag = false;
 
             // === Resolving list checking
             if (txAdd == LL_DEV_ADDR_TYPE_RANDOM
                     && (g_rx_adv_buf.data[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR)
             {
-                bWlRlCheckOk = TRUE;
+                bWlRlCheckOk = true;
 
                 // if ScanA is resolvable private address
-                if (g_llRlEnable == TRUE)
+                if (g_llRlEnable == true)
                 {
-                    bWlRlCheckOk = FALSE;
+                    bWlRlCheckOk = false;
                     rpaListIndex = ll_getRPAListEntry(&g_rx_adv_buf.data[0]);
 
                     if (rpaListIndex < LL_RESOLVINGLIST_ENTRY_NUM)
                     {
                         peerAddr = &g_llResolvinglist[rpaListIndex].peerAddr[0];
-                        bWlRlCheckOk = TRUE;
+                        bWlRlCheckOk = true;
                     }
                 }
             }
             else   // ScanA is device Identity, if the device ID in the RPA list, check whether RPA should be used
             {
-                bWlRlCheckOk = TRUE;
+                bWlRlCheckOk = true;
 
                 for (int i = 0; i < LL_RESOLVINGLIST_ENTRY_NUM; i++)
                 {
@@ -4066,7 +4066,7 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
                     {
                         if (g_llResolvinglist[i].privacyMode == NETWORK_PRIVACY_MODE &&
                                 !ll_isIrkAllZero(g_llResolvinglist[i].peerIrk))
-                            bWlRlCheckOk = FALSE;
+                            bWlRlCheckOk = false;
 
                         break;
                     }
@@ -4077,13 +4077,13 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
             if ((pGlobal_config[LL_SWITCH] & LL_WHITELIST_ALLOW)
                     && (adv_param.wlPolicy  == LL_ADV_WL_POLICY_WL_SCAN_REQ
                         || adv_param.wlPolicy  == LL_ADV_WL_POLICY_WL_ALL_REQ)
-                    && (bWlRlCheckOk == TRUE))
+                    && (bWlRlCheckOk == true))
             {
                 // check white list
                 bWlRlCheckOk = ll_isAddrInWhiteList(txAdd, peerAddr);
             }
 
-            if (bWlRlCheckOk == FALSE)   // if not in white list, do nothing
+            if (bWlRlCheckOk == false)   // if not in white list, do nothing
             {
                 g_pmCounters.ll_filter_scan_req_cnt ++;
             }
@@ -4101,7 +4101,7 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
                 {
                     // send scan rsp
                     ll_hw_set_stx();             // set LL HW as single Tx mode
-                    g_same_rf_channel_flag = TRUE;
+                    g_same_rf_channel_flag = true;
                     // calculate the delay
                     T2 = read_current_fine_time();
                     delay = (T2 > ISR_entry_time) ? (T2 - ISR_entry_time) : (BASE_TIME_UNITS - ISR_entry_time + T2);
@@ -4111,8 +4111,8 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
                                          pGlobal_config[LL_HW_AFE_DELAY],
                                          pGlobal_config[LL_HW_PLL_DELAY]);        //RxAFE,PLL
                     ll_hw_go();
-                    llWaitingIrq = TRUE;
-                    g_same_rf_channel_flag = FALSE;
+                    llWaitingIrq = true;
+                    g_same_rf_channel_flag = false;
                     // reset Rx/Tx FIFO
                     ll_hw_rst_rfifo();
                     ll_hw_rst_tfifo();
@@ -4131,7 +4131,7 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
 //                   || llState == LL_STATE_ADV_DIRECTED))
     {
         uint8_t*  peerAddr;
-        uint8_t  bWlRlCheckOk = TRUE;
+        uint8_t  bWlRlCheckOk = true;
         // 2. connect req
         g_pmCounters.ll_recv_conn_req_cnt ++;
 
@@ -4149,17 +4149,17 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
         {
             uint8_t  rpaListIndex = LL_RESOLVINGLIST_ENTRY_NUM;
             peerAddr = &g_rx_adv_buf.data[0];        // initA
-            adv_sch_flag = FALSE;
+            adv_sch_flag = false;
 
             // ====== check Resolving list
             if (txAdd == LL_DEV_ADDR_TYPE_RANDOM   &&
                     (g_rx_adv_buf.data[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR)
             {
-                bWlRlCheckOk = TRUE;
+                bWlRlCheckOk = true;
 
-                if (g_llRlEnable == TRUE)
+                if (g_llRlEnable == true)
                 {
-                    bWlRlCheckOk = FALSE;
+                    bWlRlCheckOk = false;
                     rpaListIndex = ll_getRPAListEntry(&g_rx_adv_buf.data[0]);
 
                     if (rpaListIndex < LL_RESOLVINGLIST_ENTRY_NUM)
@@ -4169,14 +4169,14 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
                         // if resolved address success, map the peer address type to 0x02 or 0x03
                         g_currentPeerAddrType = g_llResolvinglist[rpaListIndex].peerAddrType + 2;
                         osal_memcpy( &g_currentPeerRpa[0],  &g_rx_adv_buf.data[0], 6);   // save latest peer RPA
-                        bWlRlCheckOk = TRUE;
+                        bWlRlCheckOk = true;
                     }
                 }
             }
             else   // InitA is device Identity, check whether the device Addr in the RPA list, if it is
             {
                 // in the RPA list and network privacy mode is selected and non all-0 IRK, check failed
-                bWlRlCheckOk = TRUE;
+                bWlRlCheckOk = true;
 
                 for (int i = 0; i < LL_RESOLVINGLIST_ENTRY_NUM; i++)
                 {
@@ -4190,7 +4190,7 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
                     {
                         if (g_llResolvinglist[i].privacyMode == NETWORK_PRIVACY_MODE &&
                                 !ll_isIrkAllZero(g_llResolvinglist[i].peerIrk))
-                            bWlRlCheckOk = FALSE;
+                            bWlRlCheckOk = false;
 
                         break;
                     }
@@ -4202,7 +4202,7 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
                     && (llState == LL_STATE_ADV_UNDIRECTED)
                     && (adv_param.wlPolicy   == LL_ADV_WL_POLICY_WL_CONNECT_REQ
                         || adv_param.wlPolicy  == LL_ADV_WL_POLICY_WL_ALL_REQ)
-                    && (bWlRlCheckOk == TRUE))
+                    && (bWlRlCheckOk == true))
             {
                 // check white list
                 bWlRlCheckOk = ll_isAddrInWhiteList(txAdd, peerAddr);
@@ -4219,11 +4219,11 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
                     || peerAddr[4]  != peerInfo.peerAddr[4]
                     || peerAddr[5]  != peerInfo.peerAddr[5])
                 {
-                    bWlRlCheckOk = FALSE;
+                    bWlRlCheckOk = false;
                 }
             }
 
-            if (bWlRlCheckOk == FALSE)   // if not in white list, do nothing
+            if (bWlRlCheckOk == false)   // if not in white list, do nothing
             {
                 g_pmCounters.ll_filter_conn_req_cnt ++;
             }
@@ -4267,7 +4267,7 @@ uint8_t ll_processBasicIRQ_secondaryAdvTRX0(uint32_t              irq_status )
         ll_hw_clr_irq();
 
     HAL_EXIT_CRITICAL_SECTION();
-    return TRUE;
+    return true;
 }
 
 uint8_t ll_processBasicIRQ_secondaryScanSRX0(uint32_t              irq_status )
@@ -4397,7 +4397,7 @@ uint8_t ll_processBasicIRQ_secondaryScanSRX0(uint32_t              irq_status )
         ll_hw_clr_irq();
 
     HAL_EXIT_CRITICAL_SECTION();
-    return TRUE;
+    return true;
 }
 
 uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
@@ -4405,7 +4405,7 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
     uint32_t      T2, delay;
     llConnState_t* connPtr;
     HAL_ENTER_CRITICAL_SECTION();
-    uint8_t bConnecting = FALSE;
+    uint8_t bConnecting = false;
 //          hal_gpio_write(GPIO_P18, 0);
     connPtr = &conn_param[initInfo.connId];           // connId is allocated when create conn
 
@@ -4437,7 +4437,7 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
         {
             uint8_t txAdd = (g_rx_adv_buf.rxheader & TX_ADD_MASK) >> TX_ADD_SHIFT;    // adv PDU header, bit 6: TxAdd, 0 - public, 1 - random
             uint8_t chSel = (g_rx_adv_buf.rxheader & CHSEL_MASK) >> CHSEL_SHIFT;
-            uint8_t bWlRlCheckOk = TRUE;
+            uint8_t bWlRlCheckOk = true;
             uint8_t* peerAddr;
             uint8_t rpaListIndex = LL_RESOLVINGLIST_ENTRY_NUM;
 //-====
@@ -4449,9 +4449,9 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
             if (txAdd == LL_DEV_ADDR_TYPE_RANDOM  &&
                     (g_rx_adv_buf.data[5] & RANDOM_ADDR_HDR) == PRIVATE_RESOLVE_ADDR_HDR)
             {
-                bWlRlCheckOk = FALSE;
+                bWlRlCheckOk = false;
 
-                if (g_llRlEnable == TRUE)
+                if (g_llRlEnable == true)
                 {
                     rpaListIndex = ll_getRPAListEntry(&g_rx_adv_buf.data[0]);
 
@@ -4460,13 +4460,13 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
                         peerAddr = &g_llResolvinglist[rpaListIndex].peerAddr[0];
                         g_currentPeerAddrType = g_llResolvinglist[rpaListIndex].peerAddrType + 2;
                         osal_memcpy(&g_currentPeerRpa[0], &g_rx_adv_buf.data[0], 6);
-                        bWlRlCheckOk = TRUE;
+                        bWlRlCheckOk = true;
                     }
                 }
             }
             else     // case 2: receive InitA using device ID, or init device not using RPA
             {
-                bWlRlCheckOk = TRUE;
+                bWlRlCheckOk = true;
 
                 for (int i = 0; i < LL_RESOLVINGLIST_ENTRY_NUM; i++)
                 {
@@ -4482,7 +4482,7 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
                                 ll_isIrkAllZero(g_llResolvinglist[i].peerIrk))
                             rpaListIndex = i;
                         else
-                            bWlRlCheckOk = FALSE;      // the device in the RPA list but not using RPA, reject it
+                            bWlRlCheckOk = false;      // the device in the RPA list but not using RPA, reject it
 
                         break;
                     }
@@ -4492,7 +4492,7 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
             // initiator, 2 types of filter process: 1. connect to peer address set by host   2. connect to  address in whitelist only
             // 1. connect to peer address set by host
             if (initInfo.wlPolicy == LL_INIT_WL_POLICY_USE_PEER_ADDR
-                    && bWlRlCheckOk == TRUE)
+                    && bWlRlCheckOk == true)
             {
                 if (//txAdd          != peerInfo.peerAddrType
                     peerAddr[0]  != peerInfo.peerAddr[0]
@@ -4503,21 +4503,21 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
                     || peerAddr[5]  != peerInfo.peerAddr[5])
                 {
                     // not match, not init connect
-                    bWlRlCheckOk = FALSE;
+                    bWlRlCheckOk = false;
                 }
             }
             // 2. connect to  address in whitelist only
             else if (initInfo.wlPolicy == LL_INIT_WL_POLICY_USE_WHITE_LIST &&
-                     bWlRlCheckOk == TRUE)
+                     bWlRlCheckOk == true)
             {
                 // if advA in whitelist list, connect
                 // check white list
                 bWlRlCheckOk = ll_isAddrInWhiteList(txAdd, peerAddr);
             }
 
-            if (bWlRlCheckOk == TRUE)
+            if (bWlRlCheckOk == true)
             {
-                g_same_rf_channel_flag = TRUE;
+                g_same_rf_channel_flag = true;
                 // calculate connPtr->curParam.winOffset and set tx buffer
                 uint16_t  win_offset;
                 uint32_t  remainder;
@@ -4641,7 +4641,7 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
                 // send conn req
                 ll_hw_set_stx();             // set LL HW as single Tx mode
                 ll_hw_go();
-                llWaitingIrq = TRUE;
+                llWaitingIrq = true;
                 // AdvA, offset 6
                 memcpy((uint8_t*)&g_tx_adv_buf.data[6], &g_rx_adv_buf.data[0], 6);
                 //write Tx FIFO
@@ -4650,8 +4650,8 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
                 move_to_master_function();
                 //LOG("win_off = %d\n", win_offset);
                 //LOG("remainder = %d\n", remainder);
-                bConnecting = TRUE;
-                g_same_rf_channel_flag = FALSE;
+                bConnecting = true;
+                g_same_rf_channel_flag = false;
             }
         }
         else if (packet_len   != 0
@@ -4701,7 +4701,7 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
         ll_hw_clr_irq();
 
     HAL_EXIT_CRITICAL_SECTION();
-    return TRUE;
+    return true;
 }
 
 volatile uint32_t ll_irq_numbers = 0;
@@ -4728,14 +4728,14 @@ void LL_IRQHandler1(void)
         return;
     }
 
-    llWaitingIrq = FALSE;
+    llWaitingIrq = false;
 
     if (llTaskState == LL_TASK_EXTENDED_ADV)
     {
         ret = ll_processExtAdvIRQ(irq_status);
 
         // TODO: consider whether need process secondary adv/scan here
-        if (ret == TRUE)
+        if (ret == true)
             return;
     }
     else if (llTaskState == LL_TASK_EXTENDED_SCAN)
@@ -4743,7 +4743,7 @@ void LL_IRQHandler1(void)
         ret = ll_processExtScanIRQ(irq_status);
 
         // TODO: consider whether need process secondary adv/scan here
-        if (ret == TRUE)
+        if (ret == true)
             return;
     }
     else if (llTaskState == LL_TASK_EXTENDED_INIT)
@@ -4751,7 +4751,7 @@ void LL_IRQHandler1(void)
         ret = ll_processExtInitIRQ(irq_status);
 
         // TODO: consider whether need process secondary adv/scan here
-        if (ret == TRUE)
+        if (ret == true)
             return;
     }
     else if (llTaskState == LL_TASK_PERIODIC_ADV)
@@ -4759,7 +4759,7 @@ void LL_IRQHandler1(void)
         ret = ll_processPrdAdvIRQ(irq_status);
 
         // TODO: consider whether need process secondary adv/scan here
-        if (ret == TRUE)
+        if (ret == true)
             return;
     }
     else if (llTaskState == LL_TASK_PERIODIC_SCAN)
@@ -4767,7 +4767,7 @@ void LL_IRQHandler1(void)
         ret = ll_processPrdScanIRQ(irq_status);
 
         // TODO: consider whether need process secondary adv/scan here
-        if (ret == TRUE)
+        if (ret == true)
             return;
     }
     else
@@ -5090,7 +5090,7 @@ void ll_scheduler1(uint32_t time)
     delta = LL_TIME_DELTA(T1, T2);
     LOG("time delta is %d", delta);
     HAL_ENTER_CRITICAL_SECTION();
-    uint8_t rem_l_delta_flag = FALSE;
+    uint8_t rem_l_delta_flag = false;
     uint8_t rem_l_delta_value = 0;
 
     if (g_ll_conn_ctx.scheduleInfo[next].remainder <= delta)          // TODO: should not go here, if this issue detected, root cause should be invest
@@ -5098,7 +5098,7 @@ void ll_scheduler1(uint32_t time)
 //      set_timer1(20);
         set_timer(AP_TIM1,20);
         g_ll_conn_ctx.current_timer = 20;
-        rem_l_delta_flag = TRUE;
+        rem_l_delta_flag = true;
         rem_l_delta_value = next;
 //      LOG("-T %d:20,",next);
     }
@@ -5129,7 +5129,7 @@ void ll_scheduler1(uint32_t time)
         {
 //          if( g_ll_conn_ctx.scheduleInfo[i].remainder >= delta )
 //              g_ll_conn_ctx.scheduleInfo[i].remainder -= delta;
-            if( ( g_ll_conn_ctx.scheduleInfo[i].remainder < delta ) && ( rem_l_delta_flag == FALSE))
+            if( ( g_ll_conn_ctx.scheduleInfo[i].remainder < delta ) && ( rem_l_delta_flag == false))
             {
                 if (g_ll_conn_ctx.scheduleInfo[i].linkRole == LL_ROLE_MASTER)
                     ll_processMissMasterEvt(i);
@@ -5137,7 +5137,7 @@ void ll_scheduler1(uint32_t time)
                     ll_processMissSlaveEvt(i);
             }
 
-            if( ( rem_l_delta_value == i ) && ( rem_l_delta_flag == TRUE) )
+            if( ( rem_l_delta_value == i ) && ( rem_l_delta_flag == true) )
                 g_ll_conn_ctx.scheduleInfo[i].remainder = 0;
             else
                 g_ll_conn_ctx.scheduleInfo[i].remainder -= delta;
@@ -5820,7 +5820,7 @@ void wakeupProcess1(void)
             //  next_time = 0xffff;
         }
 
-        g_llSleepContext.isTimer4RecoverRequired = FALSE;
+        g_llSleepContext.isTimer4RecoverRequired = false;
     }
 #ifdef STACK_MAX_SRAM
     extern uint32_t g_stack;
@@ -6090,7 +6090,7 @@ uint8_t LL_ENC_Decrypt1( llConnState_t* connPtr, uint8_t pktHdr, uint8_t pktLen,
                 || ((temp & LL_ENC_DECRYPT_SUCC_MASK) == 0))
         {
             hal_clk_gate_disable(MOD_AES);
-            return FALSE;
+            return false;
         }
 
         // disable AES
@@ -6114,7 +6114,7 @@ uint8_t LL_ENC_Decrypt1( llConnState_t* connPtr, uint8_t pktHdr, uint8_t pktLen,
         //       envision receiving 550 billion packets during a connection!
         connPtr->encInfo.rxPktCount++;
         hal_clk_gate_disable(MOD_AES);
-        return( TRUE );
+        return( true );
     }
 //    AP_PCR->SW_CLK    &= ~BIT(MOD_AES);
 //    return ret;
@@ -6379,7 +6379,7 @@ llStatus_t LL_PhyUpdate1( uint16_t connId )
     // check if an update control procedure is already pending
     if ( ((connPtr->ctrlPktInfo.ctrlPktCount > 0) &&
             (connPtr->ctrlPktInfo.ctrlPkts[0] == LL_CTRL_PHY_UPDATE_IND)) ||
-            (connPtr->pendingPhyModeUpdate == TRUE) )
+            (connPtr->pendingPhyModeUpdate == true) )
     {
         return( LL_STATUS_ERROR_CTRL_PROC_ALREADY_ACTIVE );
     }
@@ -6535,7 +6535,7 @@ llStatus_t LL_SetScanControl1( uint8_t scanMode,
         if ( llState == LL_STATE_IDLE )
         {
             // indicate Scan has not already been initalized
-            scanInfo.initPending = TRUE;
+            scanInfo.initPending = true;
             // save the scan filtering flag
             scanInfo.filterReports = filterReports;
             // add by HZF
@@ -6595,7 +6595,7 @@ llStatus_t LL_SetScanControl1( uint8_t scanMode,
         // HZF: should we stop scan task immediately, or wait scan IRQ then stop? Now use option 2.
         HAL_EXIT_CRITICAL_SECTION();
 
-        while((volatile uint32_t)llWaitingIrq == TRUE);
+        while((volatile uint32_t)llWaitingIrq == true);
 
         break;
 
@@ -6782,7 +6782,7 @@ llStatus_t LL_SetPhyMode1( uint16_t connId,uint8_t allPhy,uint8_t txPhy, uint8_t
     connPtr = &conn_param[connId];
 
     // check if a feature response control procedure has taken place
-    if ( connPtr->featureSetInfo.featureRspRcved == FALSE )
+    if ( connPtr->featureSetInfo.featureRspRcved == false )
     {
         // it hasn't so re-load this device's local Feature Set to the
         // connection as it may have been changed by the Host with HCI
@@ -6803,8 +6803,8 @@ llStatus_t LL_SetPhyMode1( uint16_t connId,uint8_t allPhy,uint8_t txPhy, uint8_t
     // check if an updated parameters control procedure is already what's pending
     if ( ((connPtr->ctrlPktInfo.ctrlPktCount > 0) &&
             (connPtr->ctrlPktInfo.ctrlPkts[0] == LL_CTRL_PHY_REQ)) ||
-            (connPtr->pendingPhyModeUpdate== TRUE) ||
-            (connPtr->llPhyModeCtrl.isWatingRsp == TRUE) || (connPtr->llPhyModeCtrl.isProcessingReq == TRUE) )
+            (connPtr->pendingPhyModeUpdate== true) ||
+            (connPtr->llPhyModeCtrl.isWatingRsp == true) || (connPtr->llPhyModeCtrl.isProcessingReq == true) )
     {
         return( LL_STATUS_ERROR_CTRL_PROC_ALREADY_ACTIVE );
     }
@@ -6912,7 +6912,7 @@ llStatus_t LL_CreateConn1( uint16_t scanInterval,
                            uint16_t minLength,        //  minimum length of connection needed for this LE conn, no use now
                            uint16_t maxLength )       //  maximum length of connection needed for this LE conn, no use now
 {
-    CreateConn_Flag = TRUE;
+    CreateConn_Flag = true;
 
     LOG("llState before %d", llState);
     LOG("llTaskState before %d", llTaskState);
@@ -7000,20 +7000,20 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
     // Start Encryption Request
     case LL_CTRL_START_ENC_REQ:
         // set a flag to indicate we've received this packet
-        connPtr->encInfo.startEncReqRcved = TRUE;
+        connPtr->encInfo.startEncReqRcved = true;
         break;
 
     // Start Encryption Response
     case LL_CTRL_START_ENC_RSP:
         // set flag to allow outgoing data transmissions
-        connPtr->txDataEnabled = TRUE;
+        connPtr->txDataEnabled = true;
         // okay to receive data again
-        connPtr->rxDataEnabled = TRUE;
+        connPtr->rxDataEnabled = true;
         // indicate we've received the start encryption response
-        connPtr->encInfo.startEncRspRcved = TRUE;
+        connPtr->encInfo.startEncRspRcved = true;
 
         // notify the Host
-        if ( connPtr->encInfo.encRestart == TRUE )
+        if ( connPtr->encInfo.encRestart == true )
         {
             // a key change was requested
             LL_EncKeyRefreshCback( connPtr->connId,
@@ -7031,14 +7031,14 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         // Note: But in reality, there isn't a disable encryption in BLE,
         //       so once encryption is enabled, any call to LL_StartEncrypt
         //       will result in an encryption key change callback.
-        connPtr->encInfo.encRestart = FALSE;
+        connPtr->encInfo.encRestart = false;
         //LOG("START_ENC_RSP ->");
         break;
 
     // Pause Encryption Response
     case LL_CTRL_PAUSE_ENC_RSP:
         // set a flag to indicate we have received LL_START_ENC_RSP
-        connPtr->encInfo.pauseEncRspRcved = TRUE;
+        connPtr->encInfo.pauseEncRspRcved = true;
         break;
 
     // Reject Encryption Indication
@@ -7051,7 +7051,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         connPtr->encInfo.encRejectErrCode = *pBuf;
 
         // and end the start encryption procedure
-        connPtr->encInfo.rejectIndRcved = TRUE;
+        connPtr->encInfo.rejectIndRcved = true;
 
         break;
     */
@@ -7121,14 +7121,14 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
     }
 
         // set flag to indicate the response has been received
-    connPtr->featureSetInfo.featureRspRcved = TRUE;
+    connPtr->featureSetInfo.featureRspRcved = true;
     break;
 
     // Version Information Indication
     case LL_CTRL_VERSION_IND:
 
         // check if the peer's version information has already been obtained
-        if ( connPtr->verExchange.peerInfoValid == TRUE )
+        if ( connPtr->verExchange.peerInfoValid == true )
         {
             // it has, so something is wrong as the spec indicates that
             // only one version indication should be sent for a connection
@@ -7147,10 +7147,10 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
             //PHY_READ_BYTE( (uint8_t *)&peerInfo.verInfo.subverNum, 2 );
             pBuf = llMemCopySrc( (uint8_t*)&connPtr->verInfo.subverNum, pBuf, 2 );
             // set a flag to indicate it is now valid
-            connPtr->verExchange.peerInfoValid = TRUE;
+            connPtr->verExchange.peerInfoValid = true;
 
             // check if a version indication has been sent
-            if ( connPtr->verExchange.verInfoSent == FALSE )
+            if ( connPtr->verExchange.verInfoSent == false )
             {
                 // no, so this is a peer's request for our version information
                 llEnqueueCtrlPkt( connPtr, LL_CTRL_VERSION_IND );
@@ -7164,7 +7164,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         // read the reason code
         connPtr->termInfo.reason = *pBuf;
         // set flag to indicate a termination indication was received
-        connPtr->termInfo.termIndRcvd = TRUE;
+        connPtr->termInfo.termIndRcvd = true;
         // received a terminate from peer host, so terminate after
         // confirming we have sent an ACK
         // Note: For the master, we have to ensure that this control
@@ -7184,7 +7184,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
 
         // check if the feature response procedure has already been performed
         // on this connection
-        if ( connPtr->featureSetInfo.featureRspRcved == FALSE )
+        if ( connPtr->featureSetInfo.featureRspRcved == false )
         {
             // it hasn't so re-load this device's local Feature Set to the
             // connection as it may have been changed by the Host with HCI
@@ -7206,13 +7206,13 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         }
         else
         {
-            if(connPtr->llPduLen.isProcessingReq==FALSE)
+            if(connPtr->llPduLen.isProcessingReq==false)
             {
                 pBuf = llMemCopySrc( (uint8_t*)& (connPtr->llPduLen.remote.MaxRxOctets), pBuf, 2 );
                 pBuf = llMemCopySrc( (uint8_t*)& (connPtr->llPduLen.remote.MaxRxTime), pBuf, 2 );
                 pBuf = llMemCopySrc( (uint8_t*)& (connPtr->llPduLen.remote.MaxTxOctets), pBuf, 2 );
                 pBuf = llMemCopySrc( (uint8_t*)& (connPtr->llPduLen.remote.MaxTxTime), pBuf, 2 );
-                connPtr->llPduLen.isProcessingReq=TRUE;
+                connPtr->llPduLen.isProcessingReq=true;
                 llEnqueueCtrlPkt( connPtr, LL_CTRL_LENGTH_RSP );
             }
         }
@@ -7233,14 +7233,14 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         }
         else
         {
-            if(connPtr->llPduLen.isWatingRsp==TRUE )
+            if(connPtr->llPduLen.isWatingRsp==true )
             {
                 pBuf = llMemCopySrc( (uint8_t*)& (connPtr->llPduLen.remote.MaxRxOctets), pBuf, 2 );
                 pBuf = llMemCopySrc( (uint8_t*)& (connPtr->llPduLen.remote.MaxRxTime), pBuf, 2 );
                 pBuf = llMemCopySrc( (uint8_t*)& (connPtr->llPduLen.remote.MaxTxOctets), pBuf, 2 );
                 pBuf = llMemCopySrc( (uint8_t*)& (connPtr->llPduLen.remote.MaxTxTime), pBuf, 2 );
                 llPduLengthUpdate((uint16_t)connPtr->connId);
-                connPtr->llPduLen.isWatingRsp=FALSE;
+                connPtr->llPduLen.isWatingRsp=false;
             }
         }
 
@@ -7251,7 +7251,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
 
         // check if the feature response procedure has already been performed
         // on this connection
-        if ( connPtr->featureSetInfo.featureRspRcved == FALSE )
+        if ( connPtr->featureSetInfo.featureRspRcved == false )
         {
             // it hasn't so re-load this device's local Feature Set to the
             // connection as it may have been changed by the Host with HCI
@@ -7275,18 +7275,18 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         {
             //process for the protocol collision
             //2018-11-10 by ZQ
-            if(connPtr->llPhyModeCtrl.isWatingRsp==TRUE ||
-                    connPtr->pendingChanUpdate==TRUE  ||
-                    connPtr->pendingParamUpdate==TRUE   )
+            if(connPtr->llPhyModeCtrl.isWatingRsp==true ||
+                    connPtr->pendingChanUpdate==true  ||
+                    connPtr->pendingParamUpdate==true   )
             {
-                connPtr->isCollision=TRUE;
+                connPtr->isCollision=true;
                 connPtr->rejectOpCode = LL_CTRL_PHY_REQ;
                 // schedule the output of the control packet
                 llEnqueueCtrlPkt( connPtr, LL_CTRL_REJECT_EXT_IND );
             }
             else
             {
-                if(connPtr->llPhyModeCtrl.isProcessingReq==FALSE)
+                if(connPtr->llPhyModeCtrl.isProcessingReq==false)
                 {
                     connPtr->llPhyModeCtrl.req.txPhy=*pBuf++;
                     connPtr->llPhyModeCtrl.req.rxPhy=*pBuf++;
@@ -7295,7 +7295,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
                     connPtr->llPhyModeCtrl.rsp.rxPhy=connPtr->llPhyModeCtrl.def.rxPhy;
                     //rsp and req will be used to determine the next phy mode
                     LL_PhyUpdate((uint16_t) connPtr->connId);
-                    connPtr->llPhyModeCtrl.isProcessingReq=TRUE;
+                    connPtr->llPhyModeCtrl.isProcessingReq=true;
                 }
                 else
                 {
@@ -7320,12 +7320,12 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         }
         else
         {
-            if(connPtr->llPhyModeCtrl.isWatingRsp==TRUE)
+            if(connPtr->llPhyModeCtrl.isWatingRsp==true)
             {
                 connPtr->llPhyModeCtrl.rsp.txPhy=*pBuf++;
                 connPtr->llPhyModeCtrl.rsp.rxPhy=*pBuf++;
                 LL_PhyUpdate((uint16_t) connPtr->connId);
-                connPtr->llPhyModeCtrl.isWatingRsp=FALSE;
+                connPtr->llPhyModeCtrl.isWatingRsp=false;
             }
             else
             {
@@ -7339,7 +7339,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
 
         // check if the feature response procedure has already been performed
         // on this connection
-        if ( connPtr->featureSetInfo.featureRspRcved == FALSE )
+        if ( connPtr->featureSetInfo.featureRspRcved == false )
         {
             // it hasn't so re-load this device's local Feature Set to the
             // connection as it may have been changed by the Host with HCI
@@ -7353,7 +7353,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         // check if supported CTE Response Feature
         //        if( connPtr->featureSetInfo.featureSet[LL_CTE_FEATURE_IDX] & LL_CONN_CTE_RSP)
         if(( ( connPtr->featureSetInfo.featureSet[LL_CTE_FEATURE_IDX] & LL_CONN_CTE_RSP) != LL_CONN_CTE_RSP) || \
-                ( connPtr->llCTE_RspFlag != TRUE ))
+                ( connPtr->llCTE_RspFlag != true ))
         {
             // unknown data PDU control packet received so save the type
             connPtr->unknownCtrlType = opcode;
@@ -7364,22 +7364,22 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         {
             // process for the protocol collision
             // if other ctrl command procedure in processing , then reject
-            if(connPtr->llCTEModeCtrl.isWatingRsp==TRUE)
+            if(connPtr->llCTEModeCtrl.isWatingRsp==true)
             {
-                connPtr->isCollision=TRUE;
+                connPtr->isCollision=true;
                 connPtr->rejectOpCode = LL_CTRL_CTE_REQ;
                 // schedule the output of the control packet
                 llEnqueueCtrlPkt( connPtr, LL_CTRL_REJECT_EXT_IND );
             }
             else
             {
-                if(connPtr->llCTEModeCtrl.isProcessingReq==FALSE)
+                if(connPtr->llCTEModeCtrl.isProcessingReq==false)
                 {
                     uint8_t CTE_tmp;
                     CTE_tmp = *pBuf++;
                     connPtr->llConnCTE.CTE_Length = CTE_tmp & 0x1F;
                     connPtr->llConnCTE.CTE_Type = CTE_tmp & 0xC0;
-                    connPtr->llCTEModeCtrl.isProcessingReq=TRUE;
+                    connPtr->llCTEModeCtrl.isProcessingReq=true;
 
                     if( ( connPtr->llConnCTE.enable ) && ( connPtr->llRfPhyPktFmt < LL_PHY_CODE ))
                     {
@@ -7407,7 +7407,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         break;
 
     case LL_CTRL_CTE_RSP:
-        if( connPtr->llCTEModeCtrl.isWatingRsp == TRUE )
+        if( connPtr->llCTEModeCtrl.isWatingRsp == true )
         {
             if( ( g_pLLcteISample != NULL ) && ( g_pLLcteQSample != NULL) )
                 iqCnt = ll_hw_get_iq_RawSample( g_pLLcteISample, g_pLLcteQSample );
@@ -7436,7 +7436,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
                 LL_CTE_Report_FailedCback(  0x0,connPtr->connId);
             }
 
-            connPtr->llCTEModeCtrl.isWatingRsp = FALSE;
+            connPtr->llCTEModeCtrl.isWatingRsp = false;
         }
 
         break;
@@ -7449,19 +7449,19 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
         if(connPtr->llPduLen.isWatingRsp)
         {
             llPduLengthUpdate((uint16_t)connPtr->connId);
-            connPtr->llPduLen.isWatingRsp=FALSE;//not support DLE
+            connPtr->llPduLen.isWatingRsp=false;//not support DLE
         }
 
         if(connPtr->llPhyModeCtrl.isWatingRsp)
         {
             llPhyModeCtrlUpdateNotify(connPtr,LL_STATUS_ERROR_UNSUPPORTED_REMOTE_FEATURE);
-            connPtr->llPhyModeCtrl.isWatingRsp=FALSE;//not support PHY_UPDATE
+            connPtr->llPhyModeCtrl.isWatingRsp=false;//not support PHY_UPDATE
         }
 
         // 2020-01-23 add for CTE
         if( connPtr->llCTEModeCtrl.isWatingRsp )
         {
-            connPtr->llCTEModeCtrl.isWatingRsp = FALSE;
+            connPtr->llCTEModeCtrl.isWatingRsp = false;
         }
 
         break;
@@ -7479,7 +7479,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
             //connPtr->encInfo.encRejectErrCode = PHY_READ_BYTE_VAL();
             connPtr->encInfo.encRejectErrCode = connPtr->rejectOpCode;
             // and end the start encryption procedure
-            connPtr->encInfo.rejectIndRcved = TRUE;
+            connPtr->encInfo.rejectIndRcved = true;
             LL_EncChangeCback( connPtr->connId,
                                errorcode,
                                LL_ENCRYPTION_OFF );
@@ -7489,7 +7489,7 @@ void llProcessMasterControlPacket1( llConnState_t* connPtr,
             //TBD
         }
 
-        //connPtr->isCollision=FALSE;
+        //connPtr->isCollision=false;
         break;
 
     // Our Device Received an Unknown Control Type
@@ -7524,7 +7524,7 @@ uint8_t llSecAdvAllow1(void)
 {
     uint32_t advTime, margin;
     uint32_t remainTime;
-    uint8_t ret = FALSE;
+    uint8_t ret = false;
     // Hold off interrupts.
     HAL_ENTER_CRITICAL_SECTION( );
     // read global config to get advTime and margin
@@ -7535,7 +7535,7 @@ uint8_t llSecAdvAllow1(void)
 
     if ((remainTime > advTime + margin)
             && !llWaitingIrq)
-        ret = TRUE;
+        ret = true;
     else
     {
         llSecondaryState = LL_SEC_STATE_ADV_PENDING;
@@ -7598,7 +7598,7 @@ llStatus_t LL_StartEncrypt1( uint16_t connId,
     connPtr = &conn_param[connId];
 
     // check if a feature response control procedure has taken place
-    if ( connPtr->featureSetInfo.featureRspRcved == FALSE )
+    if ( connPtr->featureSetInfo.featureRspRcved == false )
     {
         // it hasn't so re-load this device's local Feature Set to the
         // connection as it may have been changed by the Host with HCI
@@ -7653,24 +7653,24 @@ llStatus_t LL_StartEncrypt1( uint16_t connId,
     //  postRfOperations |= LL_POST_RADIO_CACHE_RANDOM_NUM;
     (void)LL_ENC_GenerateTrueRandNum( cachedTRNGdata, LL_ENC_TRUE_RAND_BUF_SIZE );
     // set flag to stop all outgoing transmissions
-    connPtr->txDataEnabled = FALSE;
+    connPtr->txDataEnabled = false;
     // invalidate the existing session key, if any
-    connPtr->encInfo.SKValid = FALSE;
+    connPtr->encInfo.SKValid = false;
     // indicate the LTK is not valid
-    connPtr->encInfo.LTKValid = FALSE;
+    connPtr->encInfo.LTKValid = false;
 
     // check if we are already in encryption mode
-    if ( connPtr->encEnabled == TRUE )
+    if ( connPtr->encEnabled == true )
     {
         // set a flag to indicate this is a restart (i.e. pause-then-start)
-        connPtr->encInfo.encRestart = TRUE;
+        connPtr->encInfo.encRestart = true;
         // setup a pause encryption control procedure
         llEnqueueCtrlPkt( connPtr, LL_CTRL_PAUSE_ENC_REQ );
     }
     else // no, so...
     {
         // clear flag to indicate this is an encryption setup
-        connPtr->encInfo.encRestart = FALSE;
+        connPtr->encInfo.encRestart = false;
         // setup an encryption control procedure
         llEnqueueCtrlPkt( connPtr, LL_CTRL_ENC_REQ );
     }
@@ -7885,7 +7885,7 @@ void pplus_enter_programming_mode(void)
     AP_CACHE->CTRL0 = 0x02;
     AP_PCR->CACHE_RST = 0x02;
     AP_PCR->CACHE_BYPASS = 1;
-    HAL_ISER |= BIT(11);
+    NVIC_EnableIRQ(UART0_IRQn);
     p_uart_init(115200,P9, P10,_cb_addr);
     *(volatile unsigned int*) 0x40004004 |= BIT(0);
     p_uart_tx("cmd:");
@@ -8052,7 +8052,7 @@ llStatus_t LL_ConnUpdate1( uint16_t connId,
     // check if an updated parameters control procedure is already what's pending
     if ( ((connPtr->ctrlPktInfo.ctrlPktCount > 0) &&
             (connPtr->ctrlPktInfo.ctrlPkts[0] == LL_CTRL_CONNECTION_UPDATE_REQ)) ||
-            (connPtr->pendingParamUpdate == TRUE) )
+            (connPtr->pendingParamUpdate == true) )
     {
         return( LL_STATUS_ERROR_CTRL_PROC_ALREADY_ACTIVE );
     }
@@ -8361,7 +8361,7 @@ llStatus_t LL_EncLtkReply( uint16_t connId,
     }
 
     // indicate the host has provided the key
-    connPtr->encInfo.LTKValid = TRUE;
+    connPtr->encInfo.LTKValid = true;
     // got the LTK, so schedule the start of encryption
     // ALT: COULD MAKE THIS A REPLACE IF A DUMMY IS SITTING AT THE HEAD OF
     //      THE QUEUE.
@@ -8415,7 +8415,7 @@ llStatus_t LL_EncLtkNegReply( uint16_t connId )
     }
 
     // check if this is during a start or a re-start encryption procedure
-    if ( connPtr->encInfo.encRestart == TRUE )
+    if ( connPtr->encInfo.encRestart == true )
     {
         // indicate the peer requested this termination
         connPtr->termInfo.reason = LL_ENC_KEY_REQ_REJECTED;
@@ -8502,7 +8502,7 @@ int efuse_write_x(EFUSE_block_t block,uint32_t* buf,uint32_t us)
     if(*(buf+1) > 0x3FFFFFFF)
         return PPlus_ERR_INVALID_PARAM;
 
-    if(efuse_get_lock_state(block) == TRUE)
+    if(efuse_get_lock_state(block) == true)
         return PPlus_ERR_ACCESS_REJECTED;
 
     if(efuse_read(block,temp_rd) != PPlus_ERR_UNINITIALIZED)
@@ -8534,7 +8534,7 @@ int efuse_write_x(EFUSE_block_t block,uint32_t* buf,uint32_t us)
 
 static bool efuse_get_lock_state(EFUSE_block_t block)
 {
-    return (AP_PCRM->SECURTY_STATE & BIT(block))?FALSE:TRUE;
+    return (AP_PCRM->SECURTY_STATE & BIT(block))?false:true;
 }
 
 static uint8_t get_even(volatile uint32_t* data)
