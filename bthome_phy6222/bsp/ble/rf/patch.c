@@ -392,6 +392,7 @@ void ll_scheduler2(uint32_t time)
     llConnState_t* connPtr;
     connPtr = &conn_param[g_ll_conn_ctx.currentConn];
 
+    LOG("called, time = %d", time);
     if(g_lastSlaveLatency > connPtr->lastSlaveLatency)
     {
         uint32_t delttime = connPtr->lastTimeToNextEvt * (g_lastSlaveLatency -connPtr->lastSlaveLatency) * 625;
@@ -893,6 +894,7 @@ uint8_t ll_processBasicIRQ_SRX0(uint32_t      irq_status)
     HAL_ENTER_CRITICAL_SECTION();
     mode = ll_hw_get_tr_mode();
 
+    LOG("ll_processBasicIRQ_SRX0: mode=%d, irq_status=0x%08x\n", mode, irq_status);
     if (mode == LL_HW_MODE_SRX
             && (llState == LL_STATE_SCAN || llState == LL_STATE_INIT))
     {
@@ -4702,16 +4704,23 @@ uint8_t ll_processBasicIRQ_secondaryInitSRX0(uint32_t              irq_status )
     return TRUE;
 }
 
+volatile uint32_t ll_irq_numbers = 0;
 void LL_IRQHandler1(void)
 {
 //     gpio_write(P32,1);
 // gpio_write(P32,0);
     uint32_t         irq_status;
     int8_t ret;
+    ll_irq_numbers++;
     ISR_entry_time = read_current_fine_time();
     //*(volatile uint32_t *)0x4000f0b8 = 1;  // pclk_clk_gate_en
     ll_debug_output(DEBUG_ISR_ENTRY);
     irq_status = ll_hw_get_irq_status();
+
+    if (llWaitingIrq)
+    {
+        LOG("A");
+    }
 
     if (!(irq_status & LIRQ_MD))          // only process IRQ of MODE DONE
     {
@@ -4766,6 +4775,8 @@ void LL_IRQHandler1(void)
         uint8_t         mode;
         mode = ll_hw_get_tr_mode();
 
+        LOG("LL IRQ: mode = %d, llState = %d, llSecondaryState = %d, irq_status = 0x%08x\n",
+            mode, llState, llSecondaryState, irq_status);
         if(mode == LL_HW_MODE_SRX && (llState == LL_STATE_SCAN || llState == LL_STATE_INIT))
         {
             ret = ll_processBasicIRQ_SRX(irq_status);
@@ -4841,7 +4852,6 @@ void LL_IRQHandler1(void)
 }
 
 //--------------------------------------
-extern uint32_t llWaitingIrq;
 extern uint32_t  g_wakeup_rtc_tick;
 
 extern uint32_t counter_tracking;
@@ -4915,6 +4925,7 @@ void ll_scheduler1(uint32_t time)
     uint8_t   i, next, temp,conn_temp;
     T1 = read_current_fine_time();
 
+    LOG("called! T1 = %d", T1);
     // timer1 is running, normally it should not occur
     if (isTimer1Running())
     {
@@ -5077,6 +5088,7 @@ void ll_scheduler1(uint32_t time)
     T2 = read_current_fine_time();
     // calculate the time elapse since enter this function.
     delta = LL_TIME_DELTA(T1, T2);
+    LOG("time delta is %d", delta);
     HAL_ENTER_CRITICAL_SECTION();
     uint8_t rem_l_delta_flag = FALSE;
     uint8_t rem_l_delta_value = 0;
@@ -5397,6 +5409,7 @@ void wakeup_init1()
 {
     uint8_t pktFmt = PKT_FMT_BLE1M;    // packet format 1: BLE 1M
     uint32_t  temp;
+    LOG("called!");
     efuse_init();
     __wdt_init();
 
@@ -5447,9 +5460,13 @@ void wakeup_init1()
     WaitRTCCount(pGlobal_config[WAKEUP_DELAY]);
 #else
     if(g_system_clk == SYS_CLK_XTAL_16M )
+    {
+        LOG("16M");
         WaitRTCCount(pGlobal_config[WAKEUP_DELAY]);
+    }
     else
     {
+        LOG("g_system_clk is %d", g_system_clk);
         uint32_t tracking_c1,tracking_c2;
         tracking_c1 = rtc_get_counter();
         WaitRTCCount(50);
@@ -5566,7 +5583,7 @@ void wakeup_init1()
 
 void config_RTC1(uint32_t time)
 {
-//    *((volatile uint32_t *)(0xe000e100)) |= INT_BIT_RTC;   // remove, we don't use RTC interrupt
+//    HAL_ISER |= INT_BIT_RTC;   // remove, we don't use RTC interrupt
     //align to rtc clock edge
     //WaitRTCCount(1);
 #if TEST_RTC_DELTA
@@ -5835,9 +5852,9 @@ void LL_ENC_AES128_Encrypt1( uint8_t* key,
                              uint8_t* ciphertext )
 {
     //only turn on while working
-    AP_PCR->SW_CLK    |= BIT(MOD_AES);
+    hal_clk_gate_enable(MOD_AES);
     LL_ENC_AES128_Encrypt0(key,plaintext,ciphertext);
-    AP_PCR->SW_CLK    &= ~BIT(MOD_AES);
+    hal_clk_gate_disable(MOD_AES);
 }
 
 #define LL_ENC_BASE         0x40040000               // LL HW AES engine Base address  
@@ -5850,7 +5867,7 @@ void LL_ENC_AES128_Encrypt1( uint8_t* key,
 extern void LL_ENC_LoadKey( uint8_t* key );
 void  LL_ENC_Encrypt1( llConnState_t* connPtr, uint8_t pktHdr, uint8_t pktLen, uint8_t* pBuf )
 {
-    AP_PCR->SW_CLK    |= BIT(MOD_AES);
+    hal_clk_gate_enable(MOD_AES);
 //    LL_ENC_Encrypt0(connPtr,  pktHdr,  pktLen, pBuf );
     {
         uint8_t* pByte = NULL;
@@ -5967,11 +5984,11 @@ void  LL_ENC_Encrypt1( llConnState_t* connPtr, uint8_t pktHdr, uint8_t pktLen, u
         connPtr->encInfo.txPktCount++;
 //      return;
     }
-    AP_PCR->SW_CLK    &= ~BIT(MOD_AES);
+    hal_clk_gate_disable(MOD_AES);
 }
 uint8_t LL_ENC_Decrypt1( llConnState_t* connPtr, uint8_t pktHdr, uint8_t pktLen, uint8_t* pBuf )
 {
-    AP_PCR->SW_CLK    |= BIT(MOD_AES);
+    hal_clk_gate_enable(MOD_AES);
 //    uint8_t ret = LL_ENC_Decrypt0( connPtr,  pktHdr,  pktLen, pBuf );
     {
         uint8_t* pByte = NULL;
@@ -6072,7 +6089,7 @@ uint8_t LL_ENC_Decrypt1( llConnState_t* connPtr, uint8_t pktHdr, uint8_t pktLen,
         if ((temp & LL_ENC_DECRYPT_FAIL_MASK)
                 || ((temp & LL_ENC_DECRYPT_SUCC_MASK) == 0))
         {
-            AP_PCR->SW_CLK    &= ~BIT(MOD_AES);
+            hal_clk_gate_disable(MOD_AES);
             return FALSE;
         }
 
@@ -6096,7 +6113,7 @@ uint8_t LL_ENC_Decrypt1( llConnState_t* connPtr, uint8_t pktHdr, uint8_t pktLen,
         // Note: This is supposed to be 39 bit counter, but for now, we don't
         //       envision receiving 550 billion packets during a connection!
         connPtr->encInfo.rxPktCount++;
-        AP_PCR->SW_CLK    &= ~BIT(MOD_AES);
+        hal_clk_gate_disable(MOD_AES);
         return( TRUE );
     }
 //    AP_PCR->SW_CLK    &= ~BIT(MOD_AES);
@@ -6448,7 +6465,7 @@ llStatus_t LL_SetScanParam1( uint8_t  scanType,
 llStatus_t LL_SetScanControl1( uint8_t scanMode,
                                uint8_t filterReports )
 {
-//  LOG("%s,scanMode %d\n",__func__,scanMode);
+    LOG("scanMode %d\n", scanMode);
     if (g_llScanMode == LL_MODE_EXTENDED )
         return LL_STATUS_ERROR_COMMAND_DISALLOWED;
 
@@ -6525,8 +6542,12 @@ llStatus_t LL_SetScanControl1( uint8_t scanMode,
             scanInfo.nextScanChan  = LL_SCAN_ADV_CHAN_37;
             // set LL state
             llState = LL_STATE_SCAN;
+            
+            LOG("schedule now! llWaitingIrq = %d, llTaskState = %d, V4 handler %08x, irq disable %08x, irq enable %08x, IRQ %d, critical %d", llWaitingIrq, llTaskState, JUMP_FUNCTION(V4_IRQ_HANDLER), JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE), JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE), NVIC_GetEnableIRQs() & BIT(BB_IRQn), m_in_critical_region);
             // Note: llState has been changed.
             LL_evt_schedule();
+            LOG("schedule after llWaitingIrq = %d, llTaskState = %d, V4 handler %08x, irq disable %08x, irq enable %08x, IRQ %d, critical %d", llWaitingIrq, llTaskState, JUMP_FUNCTION(V4_IRQ_HANDLER), JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE), JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE), NVIC_GetEnableIRQs() & BIT(BB_IRQn), m_in_critical_region);
+
         }
         else if ((llState == LL_STATE_CONN_SLAVE
                   || llState == LL_STATE_CONN_MASTER)     // HZF: if we should support adv + scan, add more state here
@@ -6582,6 +6603,8 @@ llStatus_t LL_SetScanControl1( uint8_t scanMode,
         // we have an invalid value for advertisement mode
         return( LL_STATUS_ERROR_BAD_PARAMETER );
     }
+
+    LOG("OK");
 
     return( LL_STATUS_SUCCESS );
 }
@@ -6890,7 +6913,11 @@ llStatus_t LL_CreateConn1( uint16_t scanInterval,
                            uint16_t maxLength )       //  maximum length of connection needed for this LE conn, no use now
 {
     CreateConn_Flag = TRUE;
-    return LL_CreateConn0(scanInterval,
+
+    LOG("llState before %d", llState);
+    LOG("llTaskState before %d", llTaskState);
+    LOG("llSecondaryState before %d", llSecondaryState);
+    llStatus_t status = LL_CreateConn0(scanInterval,
                           scanWindow,
                           initWlPolicy,
                           peerAddrType,
@@ -6902,6 +6929,17 @@ llStatus_t LL_CreateConn1( uint16_t scanInterval,
                           connTimeout,
                           minLength,
                           maxLength );
+
+    LOG("llState after %d", llState);
+    LOG("llTaskState after %d", llTaskState);
+    LOG("llSecondaryState after %d", llSecondaryState);
+
+    LOG("g_ll_conn_ctx.numLLConns %d, g_maxConnNum %d", g_ll_conn_ctx.numLLConns, g_maxConnNum);
+    LOG("status %d, scanInterval %d, scanWindow %d, initWlPolicy %d, peerAddrType %d, ownAddrType %d, connIntervalMin %d, connIntervalMax %d, connLatency %d, connTimeout %d, minLength %d, maxLength %d\n",
+        status, scanInterval, scanWindow, initWlPolicy, peerAddrType,
+        ownAddrType, connIntervalMin, connIntervalMax,
+        connLatency, connTimeout, minLength, maxLength);
+    return status;
 }
 
 #if USE_CODED_PHY
@@ -7693,26 +7731,27 @@ void init_patch(void)
     //--------------------------------------------------------------------
     JUMP_FUNCTION(LL_HW_GO)                         =   (uint32_t)&ll_hw_go1;
     JUMP_FUNCTION(V4_IRQ_HANDLER)                   =   (uint32_t)&LL_IRQHandler1;
-    //JUMP_FUNCTION(V11_IRQ_HANDLER)                =   (uint32_t)&hal_UART0_IRQHandler;
+    LOG("V4 irq handler %08X", JUMP_FUNCTION(V4_IRQ_HANDLER));
+    // SDK: JUMP_FUNCTION(V11_IRQ_HANDLER)                =   (uint32_t)&hal_UART0_IRQHandler;
     extern void rf_calibrate1(void);
     JUMP_FUNCTION(RF_CALIBRATTE)                    =   (uint32_t)&rf_calibrate1;
     JUMP_FUNCTION(RF_PHY_CHANGE)                    =   (uint32_t)&rf_phy_change_cfg0;
-    //JUMP_FUNCTION(LL_GEN_TRUE_RANDOM)             =   (uint32_t)&LL_ENC_GenerateTrueRandNum1;
+    // SDK: JUMP_FUNCTION(LL_GEN_TRUE_RANDOM)             =   (uint32_t)&LL_ENC_GenerateTrueRandNum1;
     JUMP_FUNCTION(LL_AES128_ENCRYPT)                =   (uint32_t)&LL_ENC_AES128_Encrypt1;
     JUMP_FUNCTION(LL_ENC_ENCRYPT)                   =   (uint32_t)&LL_ENC_Encrypt1;
     JUMP_FUNCTION(LL_ENC_DECRYPT)                   =   (uint32_t)&LL_ENC_Decrypt1;
-    //JUMP_FUNCTION(LL_PROCESS_SLAVE_CTRL_PROC)     =   (uint32_t)&llProcessSlaveControlProcedures1;
-    //JUMP_FUNCTION(LL_PROCESS_TX_DATA)             =   (uint32_t)&llProcessTxData1;
-    //JUMP_FUNCTION(OSAL_POWER_CONSERVE)            =   (uint32_t)&osal_pwrmgr_powerconserve1;
-    //JUMP_FUNCTION(ENTER_SLEEP_OFF_MODE)           =   (uint32_t)&enter_sleep_off_mode1;
+    // SDK: JUMP_FUNCTION(LL_PROCESS_SLAVE_CTRL_PROC)     =   (uint32_t)&llProcessSlaveControlProcedures1;
+    // SDK: JUMP_FUNCTION(LL_PROCESS_TX_DATA)             =   (uint32_t)&llProcessTxData1;
+    // SDK: JUMP_FUNCTION(OSAL_POWER_CONSERVE)            =   (uint32_t)&osal_pwrmgr_powerconserve1;
+    // SDK: JUMP_FUNCTION(ENTER_SLEEP_OFF_MODE)           =   (uint32_t)&enter_sleep_off_mode1;
 #if TEST_RTC_DELTA
     JUMP_FUNCTION(ENTER_SLEEP_PROCESS)              =   (uint32_t)&enterSleepProcess1;
 #endif
-    // TODO!!!: JUMP_FUNCTION(CONFIG_RTC)                       =   (uint32_t)&config_RTC1;
-    //JUMP_FUNCTION(V20_IRQ_HANDLER)                =   (uint32_t)&TIM1_IRQHandler1;
-//    JUMP_FUNCTION(LL_SCHEDULER)                   =   (uint32_t)&ll_scheduler1;
-    //JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE)             =   (uint32_t)&drv_enable_irq1;
-    //JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE)            =   (uint32_t)&drv_disable_irq1;
+    JUMP_FUNCTION(CONFIG_RTC)                       =   (uint32_t)&config_RTC1;
+    // SDK: JUMP_FUNCTION(V20_IRQ_HANDLER)                =   (uint32_t)&TIM1_IRQHandler1;
+    // SDK: JUMP_FUNCTION(LL_SCHEDULER)                   =   (uint32_t)&ll_scheduler1;
+    // SDK: JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE)             =   (uint32_t)&drv_enable_irq1;
+    // SDK: JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE)            =   (uint32_t)&drv_disable_irq1;
     JUMP_FUNCTION(WAKEUP_INIT)                      =   (uint32_t)&wakeup_init1;
     // TODO!!!: JUMP_FUNCTION(WAKEUP_PROCESS)                   =   (uint32_t)&wakeupProcess1;
     extern void l2capPocessFragmentTxData(uint16_t connHandle);
@@ -7733,8 +7772,8 @@ void init_patch(void)
 // ====================
     //disableSleep();
     //setSleepMode(MCU_SLEEP_MODE);//SYSTEM_SLEEP_MODE
-    enableSleep();
-    setSleepMode(SYSTEM_SLEEP_MODE);
+    //enableSleep();
+    //setSleepMode(SYSTEM_SLEEP_MODE);
 }
 
 //__ATTR_SECTION_XIP__
@@ -7846,7 +7885,7 @@ void pplus_enter_programming_mode(void)
     AP_CACHE->CTRL0 = 0x02;
     AP_PCR->CACHE_RST = 0x02;
     AP_PCR->CACHE_BYPASS = 1;
-    *(volatile unsigned int*) 0xe000e100 |= BIT(11);
+    HAL_ISER |= BIT(11);
     p_uart_init(115200,P9, P10,_cb_addr);
     *(volatile unsigned int*) 0x40004004 |= BIT(0);
     p_uart_tx("cmd:");

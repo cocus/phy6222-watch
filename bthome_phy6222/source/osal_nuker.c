@@ -10,6 +10,7 @@
 #include <osal/osal_critical.h>
 #include <osal/OSAL.h>
 #include <osal/OSAL_Tasks.h>
+#include <osal/OSAL_Clock.h>
 #include <osal/OSAL_Timers.h>
 #include <osal/OSAL_Memory.h>
 
@@ -24,9 +25,22 @@
 #include <ble/controller/ll.h>
 #include <ble/controller/rf_phy_driver.h>
 
-
 #include "FreeRTOS.h" /* for portX functions */
 #include "task.h"     /* for taskX functions */
+
+#ifdef ENABLE_BTSTACK
+#define BLE_MAX_ALLOW_CONNECTION 1
+#define BLE_MAX_ALLOW_PKT_PER_EVENT_TX 3
+#define BLE_MAX_ALLOW_PKT_PER_EVENT_RX 5
+
+#define BLE_PKT_VERSION BLE_PKT_VERSION_5_1
+#define BLE_PKT_BUF_SIZE (((BLE_PKT_VERSION == BLE_PKT_VERSION_5_1) ? 1 : 0) * BLE_PKT51_LEN + ((BLE_PKT_VERSION == BLE_PKT_VERSION_4_0) ? 1 : 0) * BLE_PKT40_LEN + (sizeof(struct ll_pkt_desc) - 2))
+#define BLE_MAX_ALLOW_PER_CONNECTION ((BLE_MAX_ALLOW_PKT_PER_EVENT_TX * BLE_PKT_BUF_SIZE * 2) + (BLE_MAX_ALLOW_PKT_PER_EVENT_RX * BLE_PKT_BUF_SIZE) + BLE_PKT_BUF_SIZE)
+#define BLE_CONN_BUF_SIZE (BLE_MAX_ALLOW_CONNECTION * BLE_MAX_ALLOW_PER_CONNECTION)
+
+ALIGN4_U8 g_pConnectionBuffer[BLE_CONN_BUF_SIZE];
+llConnState_t pConnContext[BLE_MAX_ALLOW_CONNECTION];
+#endif
 
 #define LARGE_HEAP_SIZE (4 * 1024)
 ALIGN4_U8 g_largeHeap[LARGE_HEAP_SIZE];
@@ -41,7 +55,7 @@ static void init_config(void)
 {
     int i;
 
-    for (i = 0; i < 256; i ++)
+    for (i = 0; i < 256; i++)
         pGlobal_config[i] = 0;
 
     // save the app initial_sp  which will be used in wakeupProcess 20180706 by ZQ
@@ -49,7 +63,7 @@ static void init_config(void)
     // LL switch setting
     global_config[LL_SWITCH] = /*LL_DEBUG_ALLOW |*/ SLAVE_LATENCY_ALLOW | LL_WHITELIST_ALLOW | SIMUL_CONN_ADV_ALLOW | SIMUL_CONN_SCAN_ALLOW;
 
-    if(g_clk32K_config == CLK_32K_XTAL)
+    if (g_clk32K_config == CLK_32K_XTAL)
         global_config[LL_SWITCH] &= 0xffffffee;
     else
         global_config[LL_SWITCH] |= LL_RC32K_SEL | RC32_TRACKINK_ALLOW;
@@ -84,7 +98,7 @@ static void init_config(void)
     // Tx2Rx and Rx2Tx interval
     // Tx2Rx could be advanced a little
     // Rx2Tx should be ensure T_IFS within150us+-2us
-    global_config[LL_HW_Rx_TO_TX_INTV] = 62-RF_PHY_EXT_PREAMBLE_US;
+    global_config[LL_HW_Rx_TO_TX_INTV] = 62 - RF_PHY_EXT_PREAMBLE_US;
     global_config[LL_HW_Tx_TO_RX_INTV] = 50; // 65
     //------------------------------------------------2MPHY
     // LL engine settle time
@@ -94,8 +108,8 @@ static void init_config(void)
     // Tx2Rx and Rx2Tx interval
     // Tx2Rx could be advanced a little
     // Rx2Tx should be ensure T_IFS within150us+-2us
-    global_config[LL_HW_Rx_TO_TX_INTV_2MPHY] = 73-RF_PHY_EXT_PREAMBLE_US;//20200822 ZQ
-    global_config[LL_HW_Tx_TO_RX_INTV_2MPHY] = 57; // 72
+    global_config[LL_HW_Rx_TO_TX_INTV_2MPHY] = 73 - RF_PHY_EXT_PREAMBLE_US; // 20200822 ZQ
+    global_config[LL_HW_Tx_TO_RX_INTV_2MPHY] = 57;                          // 72
     //------------------------------------------------CODEPHY 500K
     // LL engine settle time CODEPHY 500K
     global_config[LL_HW_BB_DELAY_500KPHY] = 50; // 54-8;
@@ -153,35 +167,35 @@ static void init_config(void)
     global_config[LL_SMART_WINDOW_ACTIVE_THD] = 8;
     global_config[LL_SMART_WINDOW_ACTIVE_RANGE] = 0; // 300
     global_config[LL_SMART_WINDOW_FIRST_WINDOW] = 5000;
-    extern  uint32_t  g_smartWindowSize;
-    g_smartWindowSize = global_config[LL_HW_RTLP_1ST_TIMEOUT] ;
+    extern uint32_t g_smartWindowSize;
+    g_smartWindowSize = global_config[LL_HW_RTLP_1ST_TIMEOUT];
 
     //====== A2 metal change add, for scanner & initiator
     if (g_system_clk == SYS_CLK_XTAL_16M)
     {
         // scan req -> scan rsp timing
-        global_config[SCAN_RSP_DELAY] = 13+RF_PHY_EXT_PREAMBLE_US;//21;
-        global_config[LL_ADV_TO_SCAN_REQ_DELAY]    = 18+RF_PHY_EXT_PREAMBLE_US;//26;      //  2019/3/19 A2: 20 --> 18
-        global_config[LL_ADV_TO_CONN_REQ_DELAY]    = 25+RF_PHY_EXT_PREAMBLE_US;//33;      //  2019/3/19 A2: 27 --> 25
+        global_config[SCAN_RSP_DELAY] = 13 + RF_PHY_EXT_PREAMBLE_US;           // 21;
+        global_config[LL_ADV_TO_SCAN_REQ_DELAY] = 18 + RF_PHY_EXT_PREAMBLE_US; // 26;      //  2019/3/19 A2: 20 --> 18
+        global_config[LL_ADV_TO_CONN_REQ_DELAY] = 25 + RF_PHY_EXT_PREAMBLE_US; // 33;      //  2019/3/19 A2: 27 --> 25
     }
     else if (g_system_clk == SYS_CLK_DBL_32M)
     {
-        global_config[SCAN_RSP_DELAY] = 8+RF_PHY_EXT_PREAMBLE_US;//16;
-        global_config[LL_ADV_TO_SCAN_REQ_DELAY]    = 12+RF_PHY_EXT_PREAMBLE_US;                //  2019/3/26 add
-        global_config[LL_ADV_TO_CONN_REQ_DELAY]    = 16+RF_PHY_EXT_PREAMBLE_US;
+        global_config[SCAN_RSP_DELAY] = 8 + RF_PHY_EXT_PREAMBLE_US;            // 16;
+        global_config[LL_ADV_TO_SCAN_REQ_DELAY] = 12 + RF_PHY_EXT_PREAMBLE_US; //  2019/3/26 add
+        global_config[LL_ADV_TO_CONN_REQ_DELAY] = 16 + RF_PHY_EXT_PREAMBLE_US;
     }
     else if (g_system_clk == SYS_CLK_DLL_48M)
     {
         // scan req -> scan rsp timing
-        global_config[SCAN_RSP_DELAY] = 6+RF_PHY_EXT_PREAMBLE_US;//20201207 set           //14;        // 12    //  2019/3/19 A2: 12 --> 9
-        global_config[LL_ADV_TO_SCAN_REQ_DELAY]    = 8+RF_PHY_EXT_PREAMBLE_US;//12;       //  2019/3/19 A2: 12 --> 10
-        global_config[LL_ADV_TO_CONN_REQ_DELAY]    = 11+RF_PHY_EXT_PREAMBLE_US;
+        global_config[SCAN_RSP_DELAY] = 6 + RF_PHY_EXT_PREAMBLE_US;           // 20201207 set           //14;        // 12    //  2019/3/19 A2: 12 --> 9
+        global_config[LL_ADV_TO_SCAN_REQ_DELAY] = 8 + RF_PHY_EXT_PREAMBLE_US; // 12;       //  2019/3/19 A2: 12 --> 10
+        global_config[LL_ADV_TO_CONN_REQ_DELAY] = 11 + RF_PHY_EXT_PREAMBLE_US;
     }
     else if (g_system_clk == SYS_CLK_DLL_64M)
     {
-        global_config[SCAN_RSP_DELAY] = 4+RF_PHY_EXT_PREAMBLE_US;//2020.12.07 set         //12;
-        global_config[LL_ADV_TO_SCAN_REQ_DELAY]    = 6+RF_PHY_EXT_PREAMBLE_US;                //  2019/3/26 add
-        global_config[LL_ADV_TO_CONN_REQ_DELAY]    = 8+RF_PHY_EXT_PREAMBLE_US;
+        global_config[SCAN_RSP_DELAY] = 4 + RF_PHY_EXT_PREAMBLE_US;           // 2020.12.07 set         //12;
+        global_config[LL_ADV_TO_SCAN_REQ_DELAY] = 6 + RF_PHY_EXT_PREAMBLE_US; //  2019/3/26 add
+        global_config[LL_ADV_TO_CONN_REQ_DELAY] = 8 + RF_PHY_EXT_PREAMBLE_US;
     }
 
     // TRLP timeout
@@ -190,10 +204,10 @@ static void init_config(void)
     global_config[LL_MOVE_TO_MASTER_DELAY] = 100;
     global_config[LL_CONN_REQ_WIN_SIZE] = 5;
     global_config[LL_CONN_REQ_WIN_OFFSET] = 2;
-    global_config[LL_MASTER_PROCESS_TARGET] = 200; // reserve time for preparing master conn event, delay should be insert if needn't so long time
-    global_config[LL_MASTER_TIRQ_DELAY] = 0;       // timer IRQ -> timer ISR delay
-    global_config[OSAL_SYS_TICK_WAKEUP_TRIM] = 56; // 0.125us
-    global_config[MAC_ADDRESS_LOC] = (uint32_t)ownPublicAddr; //0x11001F00;
+    global_config[LL_MASTER_PROCESS_TARGET] = 200;            // reserve time for preparing master conn event, delay should be insert if needn't so long time
+    global_config[LL_MASTER_TIRQ_DELAY] = 0;                  // timer IRQ -> timer ISR delay
+    global_config[OSAL_SYS_TICK_WAKEUP_TRIM] = 56;            // 0.125us
+    global_config[MAC_ADDRESS_LOC] = (uint32_t)ownPublicAddr; // 0x11001F00;
     // for simultaneous conn & adv/scan
     global_config[LL_NOCONN_ADV_EST_TIME] = 1400 * 3;
     global_config[LL_NOCONN_ADV_MARGIN] = 600;
@@ -229,8 +243,7 @@ static void Custom_SysTick_Handler(void)
 #endif
 }
 
-__attribute__((__used__))
-static void _hard_fault(void *arg)
+__attribute__((__used__)) static void _hard_fault(void *arg)
 {
     uint32_t *stk = (uint32_t *)arg;
     dbg_printf("\n[Hard fault handler]\n");
@@ -261,16 +274,14 @@ static void _hard_fault(void *arg)
   This contraption is used so GCC doesn't complain about _hard_fault using the
   indices of the argument "arg" beyond 1.
  */
-__attribute__((naked))
-static void gcc_shut_warn(void *arg)
+__attribute__((naked)) static void gcc_shut_warn(void *arg)
 {
     UNUSED(arg);
     __asm volatile(
         "B _hard_fault\n");
 }
 
-__attribute__((naked))
-static void Custom_HardFault_Handler(void)
+__attribute__((naked)) static void Custom_HardFault_Handler(void)
 {
     uint32_t arg = 0;
     gcc_shut_warn(&arg);
@@ -296,63 +307,63 @@ static int drv_disable_irq1(void)
 {
     NVIC_DisableIRQs(BIT(TIM1_IRQn) | BIT(TIM2_IRQn) | BIT(TIM4_IRQn) | BIT(BB_IRQn));
     /* TODO: maybe add a mutex here */
-    return m_in_critical_region++ + 1;
+    m_in_critical_region++;
+    return m_in_critical_region;
 }
 
 static int drv_enable_irq1(void)
 {
     /* TODO: maybe add a mutex here */
-    int result = m_in_critical_region-- - 1;
-    if (!m_in_critical_region)
+    m_in_critical_region--;
+
+    if (m_in_critical_region == 0)
     {
         NVIC_EnableIRQs(BIT(TIM1_IRQn) | BIT(TIM2_IRQn) | BIT(TIM4_IRQn) | BIT(BB_IRQn));
     }
-    return result;
+
+    return m_in_critical_region;
 }
 
-__ATTR_SECTION_SRAM__
+#ifdef ENABLE_BTSTACK
+//__ATTR_SECTION_SRAM__
 static const pTaskEventHandlerFn tasksArr[] =
-{
-    LL_ProcessEvent,
-    HCI_ProcessEvent,
-    //L2CAP_ProcessEvent,
-    //SM_ProcessEvent,
-    //GAP_ProcessEvent,
-    //GATT_ProcessEvent,
-    //GAPRole_ProcessEvent,
-    //GATTServApp_ProcessEvent,
+    {
+        LL_ProcessEvent,
+        HCI_ProcessEvent,
+        // L2CAP_ProcessEvent,
+        // SM_ProcessEvent,
+        // GAP_ProcessEvent,
+        // GATT_ProcessEvent,
+        // GAPRole_ProcessEvent,
+        // GATTServApp_ProcessEvent,
 };
 
-__ATTR_SECTION_SRAM__
-static const uint8_t tasksCnt = sizeof(tasksArr) / sizeof(tasksArr[0]);
+//__ATTR_SECTION_SRAM__
+static const uint8_t tasksCnt = 2; //sizeof(tasksArr) / sizeof(tasksArr[0]);
 
-__ATTR_SECTION_SRAM__
-static uint16_t *tasksEvents;
+//__ATTR_SECTION_SRAM__
+static uint16_t tasksEvents[] = { 0 };
 
 typedef struct
 {
-    uint8_t *task_id; // Task ID
-    uint16_t events; // Events for the task
+    uint8_t task_id;             // Task ID
+    uint16_t events;             // Events for the task
     pTaskEventHandlerFn handler; // Event handler function
-    const char *name; // Task name (optional, can be NULL)
+    const char *name;            // Task name (optional, can be NULL)
 } fake_task_t;
 
-static fake_task_t osal_fake_tasks_stuff[] =
-{
-    { &LL_TaskID, 0, LL_ProcessEvent, "LL" }, // LL task ID is 0
-    { &hciTaskID, 0, HCI_ProcessEvent, "HCI" } // HCI task ID is 1
+fake_task_t osal_fake_tasks_stuff[] =
+    {
+        {255, 0, LL_ProcessEvent, "LL"},  // LL task ID is 0
+        {255, 0, HCI_ProcessEvent, "HCI"} // HCI task ID is 1
 };
 
+__ATTR_SECTION_SRAM__
 fake_task_t *osal_get_fake_task_by_id(uint8_t task_id)
 {
     for (size_t i = 0; i < sizeof(osal_fake_tasks_stuff) / sizeof(osal_fake_tasks_stuff[0]); i++)
     {
-        if (!osal_fake_tasks_stuff[i].task_id)
-        {
-            continue;
-        }
-
-        if (*osal_fake_tasks_stuff[i].task_id == task_id)
+        if (osal_fake_tasks_stuff[i].task_id == task_id)
         {
             return &osal_fake_tasks_stuff[i];
         }
@@ -360,27 +371,50 @@ fake_task_t *osal_get_fake_task_by_id(uint8_t task_id)
     return NULL;
 }
 
+__ATTR_SECTION_SRAM__
 uint8_t Custom_osal_msg_send(uint8_t destination_task, uint8_t *msg_ptr)
 {
+    if (destination_task == hciTaskID)
+    {
+        /* Pass the HCI message to the BTstack */
+        extern uint8_t pplus_ble_recv_msg(uint8_t destination_task, uint8_t *msg_ptr);
+        pplus_ble_recv_msg(destination_task, msg_ptr);
+        goto dealloc;
+    }
+
     fake_task_t *t = osal_get_fake_task_by_id(destination_task);
     if (t == NULL)
     {
         LOG(" <<<<< send msg: destination_task %02X, msg_ptr %08X",
             destination_task, (uint32_t)msg_ptr);
+        osal_msg_deallocate(msg_ptr);
         return PPlus_ERR_NO_MEM;
     }
 
     LOG(" <<<<< msg send: destination_task %02X (%s), msg_ptr %08X, len %02X, id %08X",
         destination_task, t->name ? t->name : "null", (uint32_t)msg_ptr, OSAL_MSG_LEN(msg_ptr), OSAL_MSG_ID(msg_ptr));
 
+dealloc:
     // TODO!!!: hook here for HCI/BLE events
     osal_msg_deallocate(msg_ptr);
     return PPlus_SUCCESS;
 }
 
-uint8_t Custom_osal_set_event(uint8_t task_id, uint8_t event_flag)
+__ATTR_SECTION_SRAM__
+uint8_t Custom_osal_set_event(uint8_t task_id, uint16_t event_flag)
 {
-    fake_task_t *t = osal_get_fake_task_by_id(task_id);
+    if (task_id == hciTaskID)
+    {
+        if (event_flag & 0x8000)
+        {
+            uint8_t* msg = osal_msg_receive(hciTaskID);
+            LOG("msg pointer %08x", msg);
+            if (msg)
+                Custom_osal_msg_send(hciTaskID, msg);
+            return osal_set_event0(task_id, event_flag);
+        }
+    }
+    /*fake_task_t *t = osal_get_fake_task_by_id(task_id);
     if (t == NULL)
     {
         LOG(" <<<<< set event: task_id %02X, event_flag %04X",
@@ -392,7 +426,9 @@ uint8_t Custom_osal_set_event(uint8_t task_id, uint8_t event_flag)
         task_id, t->name ? t->name : "null", event_flag);
 
     // TODO!!!: guard this with a mutex?
-    t->events |= event_flag;
+    t->events |= event_flag;*/
+
+    return osal_set_event0(task_id, event_flag);
 
     return PPlus_ERR_NO_MEM;
 }
@@ -408,7 +444,7 @@ void osal_dump_timers(void)
         return;
     }
 
-    osalTimerRec_t *result = timerHead;
+    volatile osalTimerRec_t *result = timerHead;
     LOG("(%dsec) OSAL timers dump, timerHead = %08X", (uint32_t)timerHead, OSAL_timeSeconds);
     while (result != NULL)
     {
@@ -417,20 +453,33 @@ void osal_dump_timers(void)
             result->task_id, result->event_flag, result->timeout);
         result = result->next;
     }
-
 }
 
 void osal_fake_timer(void *arg)
 {
     (void)arg; // unused
 
-    //osal_dump_timers();
-    //osal_start_timerEx(0x69, 0x69, 1000); // start a timer for 1 second
+    // osal_dump_timers();
+    // osal_start_timerEx(0x69, 0x69, 1000); // start a timer for 1 second
 
+    uint32_t bb_irq = 0;
+    uint32_t count = 0;
     while (1)
     {
         osalTimeUpdate();
-        osal_dump_timers();
+        if ((NVIC_GetEnableIRQs() & BIT(BB_IRQn)) != bb_irq)
+        {
+            LOG("BB_IRQ change detected: was %d, now %d", bb_irq, NVIC_GetEnableIRQs() & BIT(BB_IRQn));
+            bb_irq = NVIC_GetEnableIRQs() & BIT(BB_IRQn);
+        }
+
+        extern volatile uint32_t ll_irq_numbers;
+        if (count != ll_irq_numbers)
+        {
+            LOG("ll_irq_numbers change to %d", ll_irq_numbers);
+            count = ll_irq_numbers;
+        }
+        // osal_dump_timers(); // TODO!!!: sleep the least amount of time for the set up timers, or wait for events
 
         for (int i = 0; i < sizeof(osal_fake_tasks_stuff) / sizeof(osal_fake_tasks_stuff[0]); i++)
         {
@@ -439,27 +488,30 @@ void osal_fake_timer(void *arg)
             {
                 uint16_t events = osal_fake_tasks_stuff[i].events;
                 osal_fake_tasks_stuff[i].events = 0;
-                LOG("osal_fake_tasks_stuff[%d] handler %p, task_id %02X, events %04X",
-                    i, osal_fake_tasks_stuff[i].handler, *osal_fake_tasks_stuff[i].task_id, events);
-                new_events = osal_fake_tasks_stuff[i].handler(*osal_fake_tasks_stuff[i].task_id, events);
+                // LOG("osal_fake_tasks_stuff[%d] handler %p, task_id %02X, events %04X",
+                //     i, osal_fake_tasks_stuff[i].handler, *osal_fake_tasks_stuff[i].task_id, events);
+
+                OSAL_current_task_id = osal_fake_tasks_stuff[i].task_id; // Set the current task ID
+                new_events = osal_fake_tasks_stuff[i].handler(osal_fake_tasks_stuff[i].task_id, events);
+                OSAL_current_task_id = -1; // Set the current task ID
             }
             osal_fake_tasks_stuff[i].events = new_events;
         }
 
-        vTaskDelay(pdMS_TO_TICKS(750));
-        //osal_simulate_task_event(0);
-        //osal_simulate_task_event(1);
-        //extern int OSAL_timeSeconds;
-        //LOG("tick OSAL_timeSeconds = %d", OSAL_timeSeconds);
+        vTaskDelay(pdMS_TO_TICKS(10));
+        // osal_simulate_task_event(0);
+        // osal_simulate_task_event(1);
+        // extern int OSAL_timeSeconds;
+        // LOG("tick OSAL_timeSeconds = %d", OSAL_timeSeconds);
     }
 }
-
+#endif
 
 bool _efuse_chip_version_check(void)
 {
     uint32_t buf[2];
-    //uint8_t key[16];
-    efuse_read(1,buf);
+    // uint8_t key[16];
+    efuse_read(1, buf);
 
     LOG("efuse read: %08X %08X", buf[0], buf[1]);
 
@@ -470,17 +522,18 @@ void _rom_sec_boot_init(void)
 {
     efuse_init();
 
-    if(_efuse_chip_version_check())
+    if (_efuse_chip_version_check())
     {
         typedef void (*my_function)(void);
         my_function pFunc = (my_function)(0xa2e1);
-        //ble_main();
+        // ble_main();
         pFunc();
         return;
     }
     else
     {
-        while(1);
+        while (1)
+            ;
     }
 }
 
@@ -517,7 +570,6 @@ void osal_nuker_interrupt_init(void)
     JUMP_FUNCTION(WAKEUP_PROCESS) = (uint32_t)&Custom_wakeup_process;
     LOG("New WAKEUP_PROCESS at %08x", JUMP_FUNCTION(WAKEUP_PROCESS));
 
-
     /* FreeRTOS requires the SVC, PendSV and SysTick handlers routed to them */
     JUMP_FUNCTION(SVC_HANDLER) = (uint32_t)&vPortSVCHandler;
     LOG("New SVC handler at %08x", JUMP_FUNCTION(SVC_HANDLER));
@@ -528,7 +580,6 @@ void osal_nuker_interrupt_init(void)
     JUMP_FUNCTION(SYSTICK_HANDLER) = (uint32_t)&Custom_SysTick_Handler;
     LOG("New SysTick handler at %08x", JUMP_FUNCTION(SYSTICK_HANDLER));
 
-
     /* Patch out the disable/enable IRQ functions that OSAL used to use */
     JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE) = (uint32_t)&drv_disable_irq1;
     LOG("New HAL_DRV_IRQ_DISABLE at %08x", JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE));
@@ -536,17 +587,13 @@ void osal_nuker_interrupt_init(void)
     JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE) = (uint32_t)&drv_enable_irq1;
     LOG("New HAL_DRV_IRQ_ENABLE at %08x", JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE));
 
-
-    JUMP_FUNCTION(OSAL_MSG_SEND) = (uint32_t)&Custom_osal_msg_send;
-    LOG("New OSAL_MSG_SEND at now %08X", (uint32_t)&Custom_osal_msg_send);
+#ifdef ENABLE_BTSTACK
+    //JUMP_FUNCTION(OSAL_MSG_SEND) = (uint32_t)&Custom_osal_msg_send;
+    //LOG("New OSAL_MSG_SEND at now %08X", (uint32_t)&Custom_osal_msg_send);
 
     JUMP_FUNCTION(OSAL_SET_EVENT) = (uint32_t)&Custom_osal_set_event;
     LOG("New OSAL_SET_EVENT at %08X", (uint32_t)&Custom_osal_set_event);
-
-    //JUMP_FUNCTION(TASKS_ARRAY) = (uint32_t)tasksArr;
-    //JUMP_FUNCTION(TASK_COUNT) = (uint32_t)&tasksCnt;
-    //JUMP_FUNCTION(TASK_EVENTS) = (uint32_t)&tasksEvents;
-
+#endif
 
     hal_clk_gate_enable(MOD_TIMER); /* systick */
 
@@ -556,7 +603,7 @@ void osal_nuker_interrupt_init(void)
 __ATTR_SECTION_SRAM__
 void osal_nuker_init(sysclk_t clk)
 {
-    //portDISABLE_INTERRUPTS();
+    // portDISABLE_INTERRUPTS();
 
     g_system_clk = clk;
     /* first of all, set the "m_in_critical_region" to zero as what drv_irq_init() would */
@@ -571,42 +618,56 @@ void osal_nuker_init(sysclk_t clk)
     LOG_INIT();
     LOG("HI");
 
-
     init_config();
     LOG("Config initialized");
 
-
+#ifdef ENABLE_BTSTACK
     extern void init_patch(void);
     init_patch();
     LOG("Patch initialized");
 
-    extern void ll_patch_slave(void);
-    ll_patch_slave();
+    // extern void ll_patch_slave(void);
+    // ll_patch_slave();
+    // extern void ll_patch_master(void);
+    // ll_patch_master();
+    extern void ll_patch_multi(void);
+    ll_patch_multi();
     LOG("LL patch slave initialized");
+#endif
 
     hal_rfphy_init();
     LOG("RF PHY initialized");
 
     /*
      1. boot_init: AON stuff
-     2. wakeup_init -> wakeup_init1(): clk_init, set_timer with TIM2 and 3, enable IRQ BB TIM1 TIM2 TIM4) 
+     2. wakeup_init -> wakeup_init1(): clk_init, set_timer with TIM2 and 3, enable IRQ BB TIM1 TIM2 TIM4)
      3. rf_init -> nothing
      4. rf_calibrate -> rf_calibrate1()
      */
     _rom_sec_boot_init();
     LOG("ROM security boot initialized");
 
-    osal_mem_set_heap((osalMemHdr_t*) g_largeHeap, LARGE_HEAP_SIZE);
+#ifdef ENABLE_BTSTACK
+    osal_mem_set_heap((osalMemHdr_t *)g_largeHeap, LARGE_HEAP_SIZE);
     LOG("OSAL memory heap set to %p, size %u", g_largeHeap, LARGE_HEAP_SIZE);
+
+    LL_InitConnectContext(pConnContext,
+                          g_pConnectionBuffer,
+                          BLE_MAX_ALLOW_CONNECTION,
+                          BLE_MAX_ALLOW_PKT_PER_EVENT_TX,
+                          BLE_MAX_ALLOW_PKT_PER_EVENT_RX,
+                          BLE_PKT_VERSION);
 
     /* so the osal_allocate and deallocate functions work */
     osal_init_system(); /* doesn't really do much */
     LOG("OSAL system initialized");
+#endif
 
     /* init interrupt stuff related to what OSAL used */
     osal_nuker_interrupt_init();
     LOG("OSAL nuker interrupt initialized");
 
+#ifdef ENABLE_BTSTACK
     ownPublicAddr[0] = 0xc0;
     ownPublicAddr[1] = 0xc0;
     ownPublicAddr[2] = 0xca;
@@ -618,61 +679,24 @@ void osal_nuker_init(sysclk_t clk)
         ownPublicAddr[0], ownPublicAddr[1], ownPublicAddr[2],
         ownPublicAddr[3], ownPublicAddr[4], ownPublicAddr[5]);
 
-    LL_Init(0xc1); // 0xc1 is the task ID for LL
+    JUMP_FUNCTION(TASKS_ARRAY) = (uint32_t)tasksArr;
+    JUMP_FUNCTION(TASK_COUNT) = (uint32_t)&tasksCnt;
+    JUMP_FUNCTION(TASK_EVENTS) = (uint32_t)&tasksEvents;
 
-    HCI_Init(0xc0);
+    osal_fake_tasks_stuff[0].task_id = 0;
+    LL_Init(osal_fake_tasks_stuff[0].task_id); // 0xc1 is the task ID for LL
+
+    //osal_fake_tasks_stuff[1].task_id = 1;
+    //HCI_Init(osal_fake_tasks_stuff[1].task_id);
+    HCI_Init(1);
 
     xTaskCreate(
-        osal_fake_timer, /* Task function */
-        "OSAL Fake Timer", /* Task name */
-        256, /* Stack size */
-        NULL, /* Task parameters */
+        osal_fake_timer,      /* Task function */
+        "OSAL Fake Timer",    /* Task name */
+        256,                  /* Stack size */
+        NULL,                 /* Task parameters */
         tskIDLE_PRIORITY + 1, /* Task priority */
-        NULL); /* Task handle */
-}
-#if 0
-void osal_nuker_ble_init(void)
-{
-#if (HOST_CONFIG & OBSERVER_CFG)
-    extern void ll_patch_advscan(void);
-#else
-    extern void ll_patch_slave(void);
-    ll_patch_slave();
-
-    //extern void ll_patch_master(void);
-    //ll_patch_master();
-
-    //extern void ll_patch_multi(void);
-    //ll_patch_multi();
-#endif
-
-//    extern void init_config(void);
-//    init_config();
-
-    hal_rfphy_init();
-
-    LL_Init(0xc1); // 0xc1 is the task ID for LL
-
-    HCI_Init(0xc0);
-}
-#endif
-
-#if 0
-
-
-uint8 osal_fake_set_event(uint8 task_id, uint16 events)
-{
-
-}
-void osal_simulate_task_event(uint8 idx)
-{
-    uint16_t buffered_ev = osal_fake_tasks_stuff[idx].events;
-    if (buffered_ev != 0)
-    {
-        LOG("Simulating task event for task %d with events %04x", *osal_fake_tasks_stuff[idx].task_id, buffered_ev);
-    }
-    osal_fake_tasks_stuff[idx].events = osal_fake_tasks_stuff[idx].handler(*osal_fake_tasks_stuff[idx].task_id, buffered_ev);
-}
-
+        NULL);                /* Task handle */
 
 #endif
+}

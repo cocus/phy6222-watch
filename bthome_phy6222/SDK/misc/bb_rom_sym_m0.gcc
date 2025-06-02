@@ -754,6 +754,7 @@ osal_run_system = 0x00015159;
 osal_self = 0x000151f5;
 osal_setClock = 0x00015201;
 osal_set_event = 0x0001520d;
+osal_set_event0 = 0x00015225;
 osal_start_reload_timer = 0x00015259;
 osal_start_system = 0x00015285;
 osal_start_timerEx = 0x0001528b;

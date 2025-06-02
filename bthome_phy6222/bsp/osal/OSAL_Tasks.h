@@ -59,6 +59,8 @@ extern void osalInitTasks( void );
 /*********************************************************************
 *********************************************************************/
 
+extern uint8_t OSAL_current_task_id;
+
 #ifdef __cplusplus
 }
 #endif

@@ -249,7 +249,7 @@ void enterSleepProcess0(uint32 time)
 */
 void config_RTC0(uint32 time)
 {
-//    *((volatile uint32_t *)(0xe000e100)) |= INT_BIT_RTC;   // remove, we don't use RTC interrupt
+//    HAL_ISER |= INT_BIT_RTC;   // remove, we don't use RTC interrupt
     // comparator configuration
 #if TEST_RTC_DELTA
     do

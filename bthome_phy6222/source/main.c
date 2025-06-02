@@ -159,7 +159,7 @@ void hal_lowpower_init(void)
 int main(void)
 {
     /* init stuff as if OSAL was in charge */
-    osal_nuker_init(SYS_CLK_DLL_48M);
+    osal_nuker_init(SYS_CLK_DLL_96M);//SYS_CLK_XTAL_16M);
 
     //hal_lowpower_init();
 
@@ -181,8 +181,10 @@ int main(void)
     xTaskCreate(genericTask, "genericTask", 256, NULL, 1, NULL);
     //xTaskCreate(genericTask2, "genericTask2", 256, NULL, 1, NULL);
 
-    //extern void port_thread(void *args);
-    //xTaskCreate(port_thread, "btstack_thread", 4096, NULL, 2, NULL);
+#ifdef ENABLE_BTSTACK
+    extern void port_thread(void *args);
+    xTaskCreate(port_thread, "btstack_thread", 1024, NULL, 2, NULL);
+#endif
 
     LOG("starting scheduler");
 

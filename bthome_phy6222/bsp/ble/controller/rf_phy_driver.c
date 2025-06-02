@@ -971,8 +971,8 @@ void rf_phy_direct_test(void)
     if(RF_PHY_DTM_BB_SUPPORT_MOD&RF_PHY_DTM_BB_SUPPORT_ZIGBEE)
         DTM_LOG("=== SUPPORT ZIGBEE  ===\n");
 
-    //*(volatile int *) 0xe000e100 |= 0x800;
-    *(volatile int*) 0xe000e100 = 0x800; //only use uart irq
+    //HAL_ISER |= 0x800;
+    HAL_ISER = 0x800; //only use uart irq
     *(volatile unsigned int*) 0x40004004 |= 0x01; //ENABLE_ERBFI;
     //set timer3 free run
     //AP_TIM3->ControlReg = 0x05;
@@ -2081,8 +2081,8 @@ void rf_calibrate1(void)
 
 static void rf_phy_dtm_init(void)
 {
-    //*(volatile int *) 0xe000e100 |= 0x800;
-    *(volatile int*) 0xe000e100 = 0x800; //only use uart irq
+    //HAL_ISER |= 0x800;
+    HAL_ISER = 0x800; //only use uart irq
     *(volatile unsigned int*) 0x40004004 |= 0x01; //ENABLE_ERBFI;
     //set timer3 free run
     //AP_TIM3->ControlReg = 0x05;

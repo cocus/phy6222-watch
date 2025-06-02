@@ -218,8 +218,7 @@ uint8  llGetNextAuxAdvChn0(uint8 current);
 
 
 //=============== OSAL
-uint8 osal_set_event0( uint8 task_id, uint16 event_flag );
-uint8 osal_msg_send0( uint8 destination_task, uint8* msg_ptr );
+
 
 //=============== _HAL_IRQ_
 void drv_irq_init0(void);

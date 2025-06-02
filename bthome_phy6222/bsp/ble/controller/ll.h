@@ -3507,7 +3507,7 @@ extern uint32_t g_new_master_delta;
 extern uint32_t sleep_flag;
 extern uint32_t ll_remain_time;
 
-extern uint32_t llWaitingIrq;
+extern volatile uint32_t llWaitingIrq;
 extern uint32_t ISR_entry_time;
 
 extern uint32_t counter_tracking;

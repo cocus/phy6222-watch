@@ -265,6 +265,10 @@ extern void osal_start_system(void);
     /*********************************************************************
     *********************************************************************/
 
+uint8_t osal_set_event0( uint8_t task_id, uint16_t event_flag );
+uint8_t osal_msg_send0( uint8_t destination_task, uint8_t* msg_ptr );
+
+
 void app_sleep_process(void);
 
 void app_wakeup_process(void);

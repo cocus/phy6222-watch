@@ -13,7 +13,6 @@
 #ifndef OSAL_BUFMGR_H
 #define OSAL_BUFMGR_H
 
-#include "comdef.h"
 #ifdef __cplusplus
 extern "C"
 {
@@ -22,6 +21,7 @@ extern "C"
 /*********************************************************************
     INCLUDES
 */
+#include <stdint.h>
 
 /*********************************************************************
     CONSTANTS
@@ -54,17 +54,17 @@ extern "C"
 /*
     Allocate a block of memory.
 */
-extern void* osal_bm_alloc( uint16 size );
+extern void* osal_bm_alloc( uint16_t size );
 
 /*
     Add or remove header space for the payload pointer.
 */
-extern void* osal_bm_adjust_header( void* payload_ptr, int16 size );
+extern void* osal_bm_adjust_header( void* payload_ptr, int16_t size );
 
 /*
     Add or remove tail space for the payload pointer.
 */
-extern void* osal_bm_adjust_tail( void* payload_ptr, int16 size );
+extern void* osal_bm_adjust_tail( void* payload_ptr, int16_t size );
 
 /*
     Free a block of memory.
