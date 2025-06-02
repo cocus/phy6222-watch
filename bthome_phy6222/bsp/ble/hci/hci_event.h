@@ -22,8 +22,8 @@ extern "C"
 */
 #include "hci_tl.h"
 
-extern uint32 bleEvtMask;
-extern uint8 pHciEvtMask[];
+extern uint32_t bleEvtMask;
+extern uint8_t pHciEvtMask[];
 
 /*******************************************************************************
     MACROS
@@ -83,7 +83,7 @@ extern void hciInitEventMasks( void );
 
     @return      None.
 */
-extern void HCI_DataBufferOverflowEvent( uint8 linkType );
+extern void HCI_DataBufferOverflowEvent( uint8_t linkType );
 
 
 /*******************************************************************************
@@ -107,9 +107,9 @@ extern void HCI_DataBufferOverflowEvent( uint8 linkType );
 
     @return      None.
 */
-extern void HCI_NumOfCompletedPacketsEvent( uint8 numHandles,
-                                            uint16* handlers,
-                                            uint16* numCompletedPackets );
+extern void HCI_NumOfCompletedPacketsEvent( uint8_t numHandles,
+                                            uint16_t* handlers,
+                                            uint16_t* numCompletedPackets );
 
 
 /*******************************************************************************
@@ -129,9 +129,9 @@ extern void HCI_NumOfCompletedPacketsEvent( uint8 numHandles,
 
     @return      None.
 */
-extern void HCI_CommandCompleteEvent( uint16 opcode,
-                                      uint8  numParam,
-                                      uint8*  param );
+extern void HCI_CommandCompleteEvent( uint16_t opcode,
+                                      uint8_t  numParam,
+                                      uint8_t*  param );
 
 
 /*******************************************************************************
@@ -152,9 +152,9 @@ extern void HCI_CommandCompleteEvent( uint16 opcode,
 
     @return      None.
 */
-extern void HCI_VendorSpecifcCommandCompleteEvent( uint16 opcode,
-                                                   uint8 len,
-                                                   uint8* param );
+extern void HCI_VendorSpecifcCommandCompleteEvent( uint16_t opcode,
+                                                   uint8_t len,
+                                                   uint8_t* param );
 
 
 /*******************************************************************************
@@ -173,8 +173,8 @@ extern void HCI_VendorSpecifcCommandCompleteEvent( uint16 opcode,
 
     @return      None.
 */
-extern void HCI_CommandStatusEvent( uint8 status,
-                                    uint16 opcode );
+extern void HCI_CommandStatusEvent( uint8_t status,
+                                    uint16_t opcode );
 
 
 /*******************************************************************************
@@ -192,7 +192,7 @@ extern void HCI_CommandStatusEvent( uint8 status,
 
     @return      None.
 */
-extern void HCI_HardwareErrorEvent( uint8 hwErrorCode );
+extern void HCI_HardwareErrorEvent( uint8_t hwErrorCode );
 
 
 /*******************************************************************************
@@ -213,9 +213,9 @@ extern void HCI_HardwareErrorEvent( uint8 hwErrorCode );
 
     @return      None.
 */
-extern void HCI_SendCommandStatusEvent ( uint8  eventCode,
-                                         uint16 status,
-                                         uint16 opcode );
+extern void HCI_SendCommandStatusEvent ( uint8_t  eventCode,
+                                         uint16_t status,
+                                         uint16_t opcode );
 
 
 /*******************************************************************************
@@ -237,10 +237,10 @@ extern void HCI_SendCommandStatusEvent ( uint8  eventCode,
 
     @return      None.
 */
-extern void HCI_SendCommandCompleteEvent ( uint8  eventCode,
-                                           uint16 opcode,
-                                           uint8  numParam,
-                                           uint8*  param );
+extern void HCI_SendCommandCompleteEvent ( uint8_t  eventCode,
+                                           uint16_t opcode,
+                                           uint8_t  numParam,
+                                           uint8_t*  param );
 
 
 /*******************************************************************************
@@ -260,9 +260,9 @@ extern void HCI_SendCommandCompleteEvent ( uint8  eventCode,
 
     @return      None.
 */
-extern void HCI_SendControllerToHostEvent( uint8 eventCode,
-                                           uint8 dataLen,
-                                           uint8* pData );
+extern void HCI_SendControllerToHostEvent( uint8_t eventCode,
+                                           uint8_t dataLen,
+                                           uint8_t* pData );
 
 #ifdef __cplusplus
 }

@@ -38,7 +38,7 @@ void genericTask(void *argument)
     hal_gpio_write(GPIO_LED, 1);
 //void (*p)(void) = (void(*)(void))0;
 //p();
-
+#if 0
     LOG("NVIC:");
     LOG("  ISER:       %08x ICER:   %08x",
             NVIC->ISER[0], NVIC->ICER[0]);
@@ -60,14 +60,14 @@ void genericTask(void *argument)
             SCB->SCR, SCB->CCR);
     LOG("  SHPR2:      %08x SHPR3:  %08x",
             SCB->SHP[0], SCB->SHP[1]);
-
+#endif
     for (;;)
     {
-        LOG("OFF");
+        // LOG("OFF");
         hal_gpio_write(GPIO_LED, 1);
         vTaskDelay(pdMS_TO_TICKS(500));
 
-        LOG("ON");
+        // LOG("ON");
         hal_gpio_write(GPIO_LED, 0);
         vTaskDelay(pdMS_TO_TICKS(500));
     }

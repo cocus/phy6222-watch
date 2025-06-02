@@ -34,10 +34,8 @@ int ll_hw_read_tfifo_packet0(uint8* pkt);
 
 void ll_hw_process_RTO0(uint32 ack_num);
 
-void LL_set_default_conn_params0(llConnState_t* connPtr);
 
 // =====
-void enterSleepProcess0(uint32 time);
 
 void wakeupProcess0(void);
 
@@ -47,7 +45,6 @@ void enter_sleep_off_mode0(Sleep_Mode mode);
 
 void llSlaveEvt_TaskEndOk0( void );
 
-uint8 llSetupNextSlaveEvent0( void );
 
 uint8 llCheckForLstoDuringSL0( llConnState_t* connPtr );
 
@@ -70,24 +67,7 @@ void LL_master_conn_event0(void);
 
 llStatus_t LL_SetScanControl0( uint8 scanMode,
                                uint8 filterReports );
-llStatus_t LL_SetScanParam0( uint8  scanType,
-                             uint16 scanInterval,
-                             uint16 scanWindow,
-                             uint8  ownAddrType,
-                             uint8  scanWlPolicy );
 
-llStatus_t LL_CreateConn0( uint16 scanInterval,
-                           uint16 scanWindow,
-                           uint8  initWlPolicy,
-                           uint8  peerAddrType,
-                           uint8*  peerAddr,
-                           uint8  ownAddrType,
-                           uint16 connIntervalMin,
-                           uint16 connIntervalMax,
-                           uint16 connLatency,
-                           uint16 connTimeout,
-                           uint16 minLength,
-                           uint16 maxLength );
 llStatus_t LL_CreateConnCancel0( void );
 
 llStatus_t LL_StartEncrypt0( uint16 connId,
@@ -103,14 +83,7 @@ uint16 LL_ProcessEvent0( uint8 task_id, uint16 events );
 llStatus_t LL_Reset0( void );
 llStatus_t LL_TxData0( uint16 connId, uint8* pBuf, uint8  pktLen, uint8  fragFlag );
 llStatus_t LL_Disconnect0( uint16 connId, uint8  reason );
-llStatus_t LL_SetAdvParam0( uint16 advIntervalMin,
-                            uint16 advIntervalMax,
-                            uint8  advEvtType,
-                            uint8  ownAddrType,
-                            uint8  directAddrType,
-                            uint8*  directAddr,
-                            uint8  advChanMap,
-                            uint8  advWlPolicy );
+
 llStatus_t LL_SetAdvData0( uint8  advDataLen, uint8* advData );
 llStatus_t LL_SetAdvControl0( uint8 advMode );
 
@@ -132,34 +105,14 @@ llStatus_t LL_DirectTestTxTest0( uint8 txFreq, uint8 payloadLen, uint8 payloadTy
 llStatus_t LL_DirectTestRxTest0( uint8 rxFreq );
 
 // ================ ll_common.c
-void llProcessTxData0( llConnState_t* connPtr, uint8 context );
 uint8 llProcessRxData0( void );
 uint8 llWriteTxData0( llConnState_t* connPtr,
                       uint8          pktHdr,
                       uint8          pktLen,
                       uint8*         pBuf );
-void llConnTerminate0( llConnState_t* connPtr, uint8 reason );
 void llReleaseConnId0( llConnState_t* connPtr );
 
 // ================ ll_enc.c
-void LL_ENC_AES128_Encrypt0( uint8* key,
-                             uint8* plaintext,
-                             uint8* ciphertext );
-uint8 LL_ENC_GenerateTrueRandNum0( uint8* buf,
-                                   uint8 len );
-void LL_ENC_GenDeviceSKD0( uint8* SKD );
-void LL_ENC_GenDeviceIV0( uint8* IV );
-void LL_ENC_GenerateNonce0( uint32 pktCnt,
-                            uint8  direction,
-                            uint8*  nonce );
-void LL_ENC_Encrypt0( llConnState_t* connPtr,
-                      uint8          pktHdr,
-                      uint8          pktLen,
-                      uint8*         pBuf );
-uint8 LL_ENC_Decrypt0( llConnState_t* connPtr,
-                       uint8          pktHdr,
-                       uint8          pktLen,
-                       uint8*         pBuf );
 
 // =================== osal
 void osal_pwrmgr_powerconserve0( void ) ;
@@ -182,9 +135,7 @@ uint16 HCI_ProcessEvent0( uint8 task_id, uint16 events );
 void osal_mem_init0(void);
 
 // =========== ROM -> APP function
-void app_sleep_process(void);
 
-void app_wakeup_process(void);
 
 void rf_init(void);
 
@@ -224,7 +175,7 @@ uint8 l2capSegmentBuffToLinkLayer0(uint16 connHandle, l2capSegmentBuff_t* pSegBu
 void l2capPocessFragmentTxData0(uint16 connHandle);
 
 //=============== DLE
-llStatus_t LL_SetDataLengh0( uint16 connId,uint16 TxOctets,uint16 TxTime );
+
 void llPduLengthUpdate0(uint16 connHandle);
 void llTrxNumAdaptiveConfig0(void);
 
@@ -242,7 +193,6 @@ llStatus_t LL_PLUS_DisableSlaveLatency0(uint8 connId);
 llStatus_t LL_PLUS_EnableSlaveLatency0(uint8 connId);
 
 // ================= BBB
-void ll_scheduler0(uint32 time);
 void ll_addTask0(uint8 connId, uint32 time);
 void ll_deleteTask0(uint8 connId);
 

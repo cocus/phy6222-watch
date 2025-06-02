@@ -6,10 +6,7 @@
 #ifndef _LL_H_
 #define _LL_H_
 
-#include "types.h"
-#include "mcu.h"
 #include "ll.h"
-#include "ll_def.h"
 
 #define LL_DATA_PDU( pktHdr )     ((pktHdr) != LL_DATA_PDU_HDR_LLID_CONTROL_PKT)
 #define LL_CTRL_PDU( pktHdr )     ((pktHdr) == LL_DATA_PDU_HDR_LLID_CONTROL_PKT)
@@ -46,16 +43,16 @@ void llMasterEvt_TaskEndOk( void );
 extern llConnState_t      *llAllocConnId( void );
 extern void               llReleaseConnId( llConnState_t *connPtr );
 extern void               llReleaseAllConnId( void );
-extern uint16             llGetMinCI( uint16 connInterval );
-extern uint8              llGetNextConn( void );
+extern uint16_t             llGetMinCI( uint16_t connInterval );
+extern uint8_t              llGetNextConn( void );
 extern void               llConnCleanup( llConnState_t *connPtr );
-extern void               llConnTerminate( llConnState_t *connPtr, uint8 reason );
-extern uint8              llPendingUpdateParam( void );
+extern void               llConnTerminate( llConnState_t *connPtr, uint8_t reason );
+extern uint8_t              llPendingUpdateParam( void );
 extern void               llInitFeatureSet( void );
-extern uint32             llGenerateValidAccessAddr( void );
-extern uint32             llGenerateCRC( void );
-extern  uint8             llEventInRange( uint16 curEvent, uint16 nextEvent, uint16 updateEvent );
-extern  uint16            llEventDelta( uint16 eventA, uint16 eventB );
+extern uint32_t             llGenerateValidAccessAddr( void );
+extern uint32_t             llGenerateCRC( void );
+extern  uint8_t             llEventInRange( uint16_t curEvent, uint16_t nextEvent, uint16_t updateEvent );
+extern  uint16_t            llEventDelta( uint16_t eventA, uint16_t eventB );
 extern void               llConvertLstoToEvent( llConnState_t *connPtr, connParam_t *connParams );
 extern void               llConvertCtrlProcTimeoutToEvent( llConnState_t *connPtr );
 
@@ -65,117 +62,117 @@ extern void               llSetupDirectedAdvEvt( void );
 extern void               llSetupUndirectedAdvEvt( void );
 extern void               llSetupNonConnectableAdvEvt( void );
 extern void               llSetupScannableAdvEvt( void );
-extern void               llSetupScan( uint8 chan );
+extern void               llSetupScan( uint8_t chan );
 extern void               llSetupScanInit( void );
-extern void               llSetupInit( uint8 connId );
+extern void               llSetupInit( uint8_t connId );
 extern void               llSetupConn( void );
 // A2 added
-extern uint8              llSetupSecNonConnectableAdvEvt( void );
+extern uint8_t              llSetupSecNonConnectableAdvEvt( void );
 // A2 multi-connection
-extern uint8              llSetupSecConnectableAdvEvt( void );
-extern uint8              llSetupSecScannableAdvEvt( void );
+extern uint8_t              llSetupSecConnectableAdvEvt( void );
+extern uint8_t              llSetupSecScannableAdvEvt( void );
 
 
-extern void               llSetupSecScan( uint8 chan );
-extern uint32             llCalcMaxScanTime(void);
-extern uint8              llSecAdvAllow(void);
+extern void               llSetupSecScan( uint8_t chan );
+extern uint32_t             llCalcMaxScanTime(void);
+extern uint8_t              llSecAdvAllow(void);
 // A2 multi-connection
-extern uint8              llSetupSecAdvEvt( void );
+extern uint8_t              llSetupSecAdvEvt( void );
 
-extern void               llSetupSecInit( uint8 chan );
+extern void               llSetupSecInit( uint8_t chan );
 extern uint8_t            ll_get_next_active_conn(uint8_t current_conn_id);
-extern uint32             ll_get_next_timer(uint8 current_conn_id);
+extern uint32_t             ll_get_next_timer(uint8_t current_conn_id);
 
-extern void               ll_scheduler(uint32 time);
+extern void               ll_scheduler(uint32_t time);
 
-extern void               ll_addTask(uint8 connId, uint32 time);
-extern void               ll_deleteTask(uint8 connId);
+extern void               ll_addTask(uint8_t connId, uint32_t time);
+extern void               ll_deleteTask(uint8_t connId);
 
 // extended adv scheduler functions
 void ll_adv_scheduler(void);
 
 void ll_add_adv_task(extAdvInfo_t *pExtAdv);
 
-void ll_delete_adv_task(uint8 index);
+void ll_delete_adv_task(uint8_t index);
 
-uint8 llSetupExtAdvEvent(extAdvInfo_t  *pAdvInfo);
+uint8_t llSetupExtAdvEvent(extAdvInfo_t  *pAdvInfo);
 
 // periodic adv functions
 void ll_add_adv_task_periodic(periodicAdvInfo_t *pPrdAdv, extAdvInfo_t *pExtAdv);
 
 void ll_add_adv_task_periodic(periodicAdvInfo_t *pPrdAdv, extAdvInfo_t *pExtAdv);
 
-void ll_delete_adv_task_periodic(uint8 index);
+void ll_delete_adv_task_periodic(uint8_t index);
 
-uint8 llSetupPrdAdvEvent(periodicAdvInfo_t *pPrdAdv, extAdvInfo_t *pExtAdv);
+uint8_t llSetupPrdAdvEvent(periodicAdvInfo_t *pPrdAdv, extAdvInfo_t *pExtAdv);
 
 void ll_adv_scheduler_periodic(void);
 
 
 // extended scan functions
-extern void llSetupExtScan( uint8 chan );
+extern void llSetupExtScan( uint8_t chan );
 
 extern void llSetupExtInit(void);
 
 extern void llSetupPrdScan( void );
 
-extern uint16 llAllocateSyncHandle(void);
+extern uint16_t llAllocateSyncHandle(void);
 
-extern uint8 llDeleteSyncHandle(uint16 sync_handle);
+extern uint8_t llDeleteSyncHandle(uint16_t sync_handle);
 
 
 
 // Data Management
-extern uint8              llEnqueueDataQ( llDataQ_t *pDataQ, txData_t *pTxData );
-extern uint8              llEnqueueHeadDataQ( llDataQ_t *pDataQ, txData_t *pTxData );
+extern uint8_t              llEnqueueDataQ( llDataQ_t *pDataQ, txData_t *pTxData );
+extern uint8_t              llEnqueueHeadDataQ( llDataQ_t *pDataQ, txData_t *pTxData );
 extern txData_t          *llDequeueDataQ( llDataQ_t *pDataQ );
-extern uint8              llDataQEmpty( llDataQ_t *pDataQ );
-extern uint8              llWriteTxData ( llConnState_t *connPtr, uint8 pktHdr, uint8 pktLen, uint8 *pBuf );
-extern uint8              *llMemCopySrc( uint8 *pDst, uint8 *pSrc, uint8 len );
-extern uint8              *llMemCopyDst( uint8 *pDst, uint8 *pSrc, uint8 len );
-extern void               llProcessMasterControlPacket( llConnState_t *connPtr, uint8 *pBuf );
-extern void               llProcessSlaveControlPacket( llConnState_t *connPtr, uint8 *pBuf );
-extern  void              llProcessTxData( llConnState_t *connPtr, uint8 context );
-extern  uint8             llProcessRxData( void );
+extern uint8_t              llDataQEmpty( llDataQ_t *pDataQ );
+extern uint8_t              llWriteTxData ( llConnState_t *connPtr, uint8_t pktHdr, uint8_t pktLen, uint8_t *pBuf );
+extern uint8_t              *llMemCopySrc( uint8_t *pDst, uint8_t *pSrc, uint8_t len );
+extern uint8_t              *llMemCopyDst( uint8_t *pDst, uint8_t *pSrc, uint8_t len );
+extern void               llProcessMasterControlPacket( llConnState_t *connPtr, uint8_t *pBuf );
+extern void               llProcessSlaveControlPacket( llConnState_t *connPtr, uint8_t *pBuf );
+extern  void              llProcessTxData( llConnState_t *connPtr, uint8_t context );
+extern  uint8_t             llProcessRxData( void );
 
 // Control Procedure Setup
-extern uint8              llSetupUpdateParamReq( llConnState_t *connPtr );  // M
-extern uint8              llSetupUpdateChanReq( llConnState_t *connPtr );   // M
-extern uint8              llSetupEncReq( llConnState_t *connPtr );          // M
-extern uint8              llSetupEncRsp( llConnState_t *connPtr );          // S
-extern uint8              llSetupStartEncReq( llConnState_t *connPtr );     // S
-extern uint8              llSetupStartEncRsp( llConnState_t *connPtr );     // M, S
-extern uint8              llSetupPauseEncReq( llConnState_t *connPtr );     // M
-extern uint8              llSetupPauseEncRsp( llConnState_t *connPtr );     // S
-extern uint8              llSetupRejectInd( llConnState_t *connPtr ,uint8 errCode);       // S
-extern uint8              llSetupFeatureSetReq( llConnState_t *connPtr );   // M, S
-extern uint8              llSetupFeatureSetRsp( llConnState_t *connPtr );   // M, S
-extern uint8              llSetupVersionIndReq( llConnState_t *connPtr );   // M
-extern uint8              llSetupTermInd( llConnState_t *connPtr );         // M, S
-extern uint8              llSetupUnknownRsp( llConnState_t *connPtr );      // M, S
+extern uint8_t              llSetupUpdateParamReq( llConnState_t *connPtr );  // M
+extern uint8_t              llSetupUpdateChanReq( llConnState_t *connPtr );   // M
+extern uint8_t              llSetupEncReq( llConnState_t *connPtr );          // M
+extern uint8_t              llSetupEncRsp( llConnState_t *connPtr );          // S
+extern uint8_t              llSetupStartEncReq( llConnState_t *connPtr );     // S
+extern uint8_t              llSetupStartEncRsp( llConnState_t *connPtr );     // M, S
+extern uint8_t              llSetupPauseEncReq( llConnState_t *connPtr );     // M
+extern uint8_t              llSetupPauseEncRsp( llConnState_t *connPtr );     // S
+extern uint8_t              llSetupRejectInd( llConnState_t *connPtr ,uint8_t errCode);       // S
+extern uint8_t              llSetupFeatureSetReq( llConnState_t *connPtr );   // M, S
+extern uint8_t              llSetupFeatureSetRsp( llConnState_t *connPtr );   // M, S
+extern uint8_t              llSetupVersionIndReq( llConnState_t *connPtr );   // M
+extern uint8_t              llSetupTermInd( llConnState_t *connPtr );         // M, S
+extern uint8_t              llSetupUnknownRsp( llConnState_t *connPtr );      // M, S
 
-extern uint8              llSetupDataLenghtReq( llConnState_t *connPtr );//M,S
-extern uint8              llSetupDataLenghtRsp( llConnState_t *connPtr );//M,S
-extern uint8              llSetupPhyReq( llConnState_t *connPtr );          //M,S
-extern uint8              llSetupPhyRsp( llConnState_t *connPtr );   //M,S
-extern uint8              llSetupPhyUpdateInd( llConnState_t *connPtr );//M
-extern uint8              llSetupRejectExtInd( llConnState_t *connPtr ,uint8 errCode);
+extern uint8_t              llSetupDataLenghtReq( llConnState_t *connPtr );//M,S
+extern uint8_t              llSetupDataLenghtRsp( llConnState_t *connPtr );//M,S
+extern uint8_t              llSetupPhyReq( llConnState_t *connPtr );          //M,S
+extern uint8_t              llSetupPhyRsp( llConnState_t *connPtr );   //M,S
+extern uint8_t              llSetupPhyUpdateInd( llConnState_t *connPtr );//M
+extern uint8_t              llSetupRejectExtInd( llConnState_t *connPtr ,uint8_t errCode);
 
 // Control Procedure Management
-extern void               llEnqueueCtrlPkt( llConnState_t *connPtr, uint8 ctrlType );
+extern void               llEnqueueCtrlPkt( llConnState_t *connPtr, uint8_t ctrlType );
 extern void               llDequeueCtrlPkt( llConnState_t *connPtr );
-extern void               llReplaceCtrlPkt( llConnState_t *connPtr, uint8 ctrlType );
+extern void               llReplaceCtrlPkt( llConnState_t *connPtr, uint8_t ctrlType );
 
 
 // Data Channel Management
-extern void               llProcessChanMap( llConnState_t *connPtr, uint8 *chanMap );
-extern  uint8    llGetNextDataChan( llConnState_t *connPtr, uint16 numEvents );
+extern void               llProcessChanMap( llConnState_t *connPtr, uint8_t *chanMap );
+extern  uint8_t    llGetNextDataChan( llConnState_t *connPtr, uint16_t numEvents );
 extern  void     llSetNextDataChan( llConnState_t *connPtr );
-extern uint8              llAtLeastTwoChans( uint8 *chanMap );
+extern uint8_t              llAtLeastTwoChans( uint8_t *chanMap );
 
 //2020-01-20 add for LL CTE 
-extern uint8 			llSetupCTEReq( llConnState_t *connPtr );
-extern uint8 			llSetupCTERsp( llConnState_t *connPtr );
+extern uint8_t 			llSetupCTEReq( llConnState_t *connPtr );
+extern uint8_t 			llSetupCTERsp( llConnState_t *connPtr );
 
 
 
@@ -188,22 +185,22 @@ void llSetNextDataChan( llConnState_t *connPtr );
 extern llStatus_t         llCheckWhiteListUsage( void );
 
 // function add by HZF
-void llResetConnId( uint8 connId );
+void llResetConnId( uint8_t connId );
 void llResetRfCounters(void);
 extern void               llInitFeatureSet( void );
 
 
-extern  uint16 llCalcScaFactor( uint8 masterSCA );
+extern  uint16_t llCalcScaFactor( uint8_t masterSCA );
 
 
-extern void llCalcTimerDrift( uint32    connInterval,
-                                 uint16    slaveLatency,
-                                 uint8     sleepClkAccuracy,
-                                 uint32 *timerDrift );
+extern void llCalcTimerDrift( uint32_t    connInterval,
+                                 uint16_t    slaveLatency,
+                                 uint8_t     sleepClkAccuracy,
+                                 uint32_t *timerDrift );
 
 
 // add by HZF
-uint8 llGetNextAdvChn(uint8 cur_chn);
+uint8_t llGetNextAdvChn(uint8_t cur_chn);
 
 // Tx loop buffer process
 void update_tx_write_ptr(llConnState_t *connPtr);
@@ -230,27 +227,27 @@ uint8_t get_rx_read_ptr(llConnState_t *connPtr);
 uint8_t get_rx_write_ptr(llConnState_t *connPtr);
 
 // reset buffer
-void reset_conn_buf(uint8 index);
+void reset_conn_buf(uint8_t index);
 
 void ll_schedule_next_event(int time);
 
-uint16 ll_generateTxBuffer(int txFifo_vacancy, uint16 *pSave_ptr);
+uint16_t ll_generateTxBuffer(int txFifo_vacancy, uint16_t *pSave_ptr);
 
 void ll_read_rxfifo(void);
 void ll_hw_read_tfifo_rtlp(void);
-int ll_hw_read_tfifo_packet(uint8 *pkt);
+int ll_hw_read_tfifo_packet(uint8_t *pkt);
 
 // function in ll_slaveEndCause.c
-uint8 llSetupNextSlaveEvent( void );
-uint8 llProcessSlaveControlProcedures( llConnState_t *connPtr );
-uint8 llCheckForLstoDuringSL( llConnState_t *connPtr );
+uint8_t llSetupNextSlaveEvent( void );
+uint8_t llProcessSlaveControlProcedures( llConnState_t *connPtr );
+uint8_t llCheckForLstoDuringSL( llConnState_t *connPtr );
 
 // function in ll_hwItf.c
-void ll_hw_process_RTO(uint32 ack_num);
+void ll_hw_process_RTO(uint32_t ack_num);
 #if defined(LL_DEBUG_NONE) && (LL_DEBUG_NONE == 1)
 #define ll_debug_output(a)
 #else
-void _ll_debug_output(uint32 state);
+void _ll_debug_output(uint32_t state);
 #define ll_debug_output(a) _ll_debug_output(a)
 #endif
 
@@ -259,43 +256,43 @@ void llAdjSlaveLatencyValue( llConnState_t *connPtr );
 //function for DLE add by ZQ
 void llPduLengthManagmentReset(void);
 void llTrxNumAdaptiveConfig(void);
-void llPduLengthUpdate(uint16 connHandle);
-//uint8 LL_PLUS_GetLocalPduDataLength(ll_pdu_length_ctrl_t * pduLen);
+void llPduLengthUpdate(uint16_t connHandle);
+//uint8_t LL_PLUS_GetLocalPduDataLength(ll_pdu_length_ctrl_t * pduLen);
 
 //function for PHY UPDATE add by ZQ
 void llPhyModeCtrlReset(void);
-void llPhyModeCtrlUpdateNotify(llConnState_t *connPtr, uint8 status);
+void llPhyModeCtrlUpdateNotify(llConnState_t *connPtr, uint8_t status);
 //llStatus_t LL_PLUS_GetLocalPhyMode(ll_phy_ctrl_t * phyCtrl);
 void llSetNextPhyMode( llConnState_t *connPtr );
-extern void llInitFeatureSetDLE(uint8 enable);
-extern void llInitFeatureSet2MPHY(uint8 enable);
-extern void llInitFeatureSetCodedPHY(uint8 enable);
+extern void llInitFeatureSetDLE(uint8_t enable);
+extern void llInitFeatureSet2MPHY(uint8_t enable);
+extern void llInitFeatureSetCodedPHY(uint8_t enable);
 
 // function for whitelist
-extern uint8 ll_isAddrInWhiteList(uint8 addrType, uint8 *addr);
+extern uint8_t ll_isAddrInWhiteList(uint8_t addrType, uint8_t *addr);
 
 // function for resolving list
-uint8 ll_readLocalIRK(uint8 **localIrk, uint8 *peerAddr, uint8 peerAddrType);
-uint8 ll_readPeerIRK(uint8 **peerIrk, uint8 *peerAddr, uint8 peerAddrType);
-uint8_t ll_getRPAListEntry(uint8 *peerAddr);
+uint8_t ll_readLocalIRK(uint8_t **localIrk, uint8_t *peerAddr, uint8_t peerAddrType);
+uint8_t ll_readPeerIRK(uint8_t **peerIrk, uint8_t *peerAddr, uint8_t peerAddrType);
+uint8_t ll_getRPAListEntry(uint8_t *peerAddr);
 
-uint8_t ll_isIrkAllZero(uint8 *irk);
+uint8_t ll_isIrkAllZero(uint8_t *irk);
 
-uint8_t ll_CalcRandomAddr( uint8 *pIRK, uint8 *pNewAddr );
-uint8_t ll_ResolveRandomAddrs(uint8 *pIRK, uint8 *pAddr);
+uint8_t ll_CalcRandomAddr( uint8_t *pIRK, uint8_t *pNewAddr );
+uint8_t ll_ResolveRandomAddrs(uint8_t *pIRK, uint8_t *pAddr);
 
-uint16  ll_generateExtAdvDid(uint16 old);
+uint16_t  ll_generateExtAdvDid(uint16_t old);
 
 // extended advertiser process
-uint8 LL_extAdvTimerExpProcess(void);
+uint8_t LL_extAdvTimerExpProcess(void);
 
-uint8 LL_prdAdvTimerExpProcess(void);
+uint8_t LL_prdAdvTimerExpProcess(void);
 
-uint8 LL_prdScanTimerExpProcess(void);
+uint8_t LL_prdScanTimerExpProcess(void);
 
-uint8 ll_isFirstAdvChn(uint8 chnMap, uint8 chan);
+uint8_t ll_isFirstAdvChn(uint8_t chnMap, uint8_t chan);
 
-uint8 ll_getFirstAdvChn(uint8 chnMap);
+uint8_t ll_getFirstAdvChn(uint8_t chnMap);
 
 void ll_ext_adv_schedule_next_event(int time);
 
@@ -308,22 +305,22 @@ void ll_ext_init_schedule_next_event(int time);
 void ll_prd_scan_schedule_next_event(int time);
 
 
-uint8 ll_allocAuxAdvTimeSlot(uint8 index);
+uint8_t ll_allocAuxAdvTimeSlot(uint8_t index);
 
-void ll_updateAuxAdvTimeSlot(uint8 index);
+void ll_updateAuxAdvTimeSlot(uint8_t index);
 
-void ll_updateExtAdvRemainderTime(uint32 time);
+void ll_updateExtAdvRemainderTime(uint32_t time);
 
 
-uint8 ll_allocAuxAdvTimeSlot_prd(uint8 index);
+uint8_t ll_allocAuxAdvTimeSlot_prd(uint8_t index);
 
 void LL_extScanTimerExpProcess(void);
 
 void LL_extInitTimerExpProcess(void);
 	
-void ll_parseExtHeader(uint8 *payload, uint16 length);
+void ll_parseExtHeader(uint8_t *payload, uint16_t length);
 
-uint8  llGetNextAuxAdvChn(uint8 current);
+uint8_t  llGetNextAuxAdvChn(uint8_t current);
 
 
 /******************************************************************************
@@ -341,10 +338,13 @@ uint8  llGetNextAuxAdvChn(uint8 current);
  * output parameters:	None
  * 
  * 
- * return		uint8			:	next channel index
+ * return		uint8_t			:	next channel index
  * 
  ******************************************************************************/
-uint8 llGetNextDataChanCSA2(uint16_t counter ,uint16_t chan_id,uint8 *chan_map,uint8 *cMap_tab,uint8 chanCnt);
+uint8_t llGetNextDataChanCSA2(uint16_t counter ,uint16_t chan_id,uint8_t *chan_map,uint8_t *cMap_tab,uint8_t chanCnt);
+
+void llConnTerminate0( llConnState_t* connPtr, uint8_t reason );
+
 
 #endif
 

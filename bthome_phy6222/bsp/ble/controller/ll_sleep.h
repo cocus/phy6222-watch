@@ -6,10 +6,7 @@
 #ifndef LL_SLEEP__H_
 #define LL_SLEEP__H_
 
-#include "OSAL_PwrMgr.h"
-
-#include "ll_def.h"
-#include "ll_common.h"
+#include <stdint.h>
 
 /*******************************************************************************
     MACROS
@@ -17,12 +14,12 @@
 
 // convert 625us units to 32kHz units without round: the ratio of 32 kHz ticks
 // to 625 usec ticks is 32768/1600 = 20.48 or 512/25
-#define LL_SLEEP_625US_TO_32KHZ( us )       ((((uint32) (us)) * 512) / 25)
+#define LL_SLEEP_625US_TO_32KHZ( us )       ((((uint32_t) (us)) * 512) / 25)
 
 // convert 31.25ns units to 32kHz units without round: the ratio of 31.25ns usec
 // ticks to 32 kHz ticks is 32M/32768 = 976.5625 or 15625/16, but using 976 is
 // close enough given the accuracy
-#define LL_SLEEP_31_25NS_TO_32KHZ( ns )     (((uint32) (ns)) / 976)
+#define LL_SLEEP_31_25NS_TO_32KHZ( ns )     (((uint32_t) (ns)) / 976)
 
 
 // 32KHz timer:
@@ -67,7 +64,7 @@ typedef enum
 */
 
 // is sleep allow
-uint8 isSleepAllow(void);
+uint8_t isSleepAllow(void);
 
 void enableSleep(void);
 
@@ -77,7 +74,7 @@ void setSleepMode(Sleep_Mode mode);
 
 Sleep_Mode getSleepMode(void);
 
-void enterSleepProcess(uint32 time);
+void enterSleepProcess(uint32_t time);
 
 void wakeupProcess(void);
 
@@ -85,7 +82,7 @@ void set_sleep_flag(int flag);
 
 unsigned int get_sleep_flag(void);
 
-void config_RTC(uint32 time);
+void config_RTC(uint32_t time);
 
 void enter_sleep_off_mode(Sleep_Mode mode);
 

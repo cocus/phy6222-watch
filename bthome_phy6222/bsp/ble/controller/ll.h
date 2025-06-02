@@ -28,6 +28,8 @@ extern "C"
  */
 
 #include "ll_def.h"
+#include "ll_sleep.h"
+
 /*******************************************************************************
  * MACROS
  */
@@ -3435,7 +3437,98 @@ llStatus_t LL_Set_Privacy_Mode(uint8_t  peerIdType,
 
 llStatus_t LL_Read_Transmit_Power( uint8_t *param);
 
+llStatus_t LL_SetAdvParam0( uint16_t advIntervalMin,
+                            uint16_t advIntervalMax,
+                            uint8_t  advEvtType,
+                            uint8_t  ownAddrType,
+                            uint8_t  directAddrType,
+                            uint8_t*  directAddr,
+                            uint8_t  advChanMap,
+                            uint8_t  advWlPolicy );
+
+llStatus_t LL_SetScanParam0( uint8_t  scanType,
+                             uint16_t scanInterval,
+                             uint16_t scanWindow,
+                             uint8_t  ownAddrType,
+                             uint8_t  scanWlPolicy );
+
+llStatus_t LL_CreateConn0( uint16_t scanInterval,
+                           uint16_t scanWindow,
+                           uint8_t  initWlPolicy,
+                           uint8_t  peerAddrType,
+                           uint8_t*  peerAddr,
+                           uint8_t  ownAddrType,
+                           uint16_t connIntervalMin,
+                           uint16_t connIntervalMax,
+                           uint16_t connLatency,
+                           uint16_t connTimeout,
+                           uint16_t minLength,
+                           uint16_t maxLength );
+
+llStatus_t LL_SetDataLengh0( uint16_t connId,uint16_t TxOctets,uint16_t TxTime );
+
 void LL_EXT_Init_IQ_pBuff(uint16_t *ibuf,uint16_t *qbuf);
+
+void LL_set_default_conn_params0(llConnState_t* connPtr);
+
+uint8_t llSetupNextSlaveEvent0( void );
+
+void llProcessTxData0( llConnState_t* connPtr, uint8_t context );
+
+void ll_scheduler0(uint32_t time);
+
+extern uint8_t   ll_processExtAdvIRQ(uint32_t      irq_status);
+extern uint8_t   ll_processPrdAdvIRQ(uint32_t      irq_status);
+extern uint8_t   ll_processExtScanIRQ(uint32_t      irq_status);
+extern uint8_t   ll_processExtInitIRQ(uint32_t      irq_status);
+extern uint8_t   ll_processPrdScanIRQ(uint32_t      irq_status);
+extern uint8_t   ll_processBasicIRQ(uint32_t      irq_status);
+
+
+extern uint8_t ll_processMissMasterEvt(uint8_t connId);
+extern uint8_t ll_processMissSlaveEvt(uint8_t connId);
+
+void enterSleepProcess0(uint32_t time);
+
+
+extern struct buf_tx_desc g_tx_adv_buf;
+//extern struct buf_tx_desc g_tx_ext_adv_buf;
+extern struct buf_tx_desc tx_scanRsp_desc;
+
+extern struct buf_rx_desc g_rx_adv_buf;
+
+//extern chipMAddr_t g_chipMAddr;
+
+extern uint8_t  g_llAdvMode;
+extern uint32_t g_llHdcDirAdvTime;
+
+extern uint32_t g_new_master_delta;
+
+extern uint32_t sleep_flag;
+extern uint32_t ll_remain_time;
+
+extern uint32_t llWaitingIrq;
+extern uint32_t ISR_entry_time;
+
+extern uint32_t counter_tracking;
+
+
+extern uint8_t  g_llScanMode;
+extern uint8_t g_currentPeerAddrType;
+extern uint8_t g_currentPeerRpa[LL_DEVICE_ADDR_LEN];
+extern uint8_t ownRandomAddr[];
+extern uint32_t llCurrentScanChn;
+extern uint8_t ownPublicAddr[];
+extern uint32_t llScanTime;
+extern uint32_t llScanT1;
+extern uint8_t    isPeerRpaStore;
+extern uint8_t    currentPeerRpa[LL_DEVICE_ADDR_LEN];
+extern uint8_t    storeRpaListIndex;
+extern uint8_t    g_currentLocalAddrType;
+extern uint8_t    g_currentLocalRpa[LL_DEVICE_ADDR_LEN];
+extern llPduLenManagment_t g_llPduLen;
+extern uint8_t  llSecondaryState;            // secondary state of LL
+extern int slave_conn_event_recv_delay;
 
 
 #ifdef __cplusplus

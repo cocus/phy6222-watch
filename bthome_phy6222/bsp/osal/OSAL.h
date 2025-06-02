@@ -265,6 +265,13 @@ extern void osal_start_system(void);
     /*********************************************************************
     *********************************************************************/
 
+void app_sleep_process(void);
+
+void app_wakeup_process(void);
+
+extern uint32_t  g_osal_tick_trim;
+extern uint32_t  g_osalTickTrim_mod;
+
 #ifdef __cplusplus
 }
 #endif

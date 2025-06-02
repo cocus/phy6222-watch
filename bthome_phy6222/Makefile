@@ -84,6 +84,22 @@ SRCS += bsp/jump_table.c \
 	bsp/driver/pwrmgr/pwrmgr.c \
 	bsp/driver/flash/flash.c \
 	bsp/driver/spi/spi.c \
+	bsp/ble/rf/patch.c \
+	bsp/ble/controller/rf_phy_driver.c \
+
+#	bsp/profiles/GATT/gattservapp.c
+#	bsp/ble/host/l2cap_task.c
+#	bsp/ble/host/sm_task.c
+#	bsp/ble/host/gap_task.c
+#	bsp/ble/host/gatt_task.c
+#	bsp/ble/host/gatt_server.c
+#	bsp/ble/host/att_server.c
+#	bsp/ble/host/att_util.c
+#	bsp/ble/host/sm_pairing.c
+#	bsp/ble/host/gap_configmgr.c
+#	bsp/ble/host/smp.c
+#	bsp/ble/host/sm_mgr.c
+#	bsp/ble/host/linkdb.c
 
 # bsp/driver/spi/spi.c
 

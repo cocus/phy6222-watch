@@ -6,10 +6,8 @@
 #ifndef _LL_HW_DRV_H_
 #define _LL_HW_DRV_H_
 
-#include "types.h"
-#include "ll_def.h"
-#include "bus_dev.h"
-#include "rf_phy_driver.h"
+#include <types.h>
+#include <phy62xx.h>
 
 // LL_HW_REGISTER_ADDRESS
 #define BB_HW_BASE 					        	0x40030000			//BB_HW Base address
@@ -145,7 +143,7 @@ void     ll_hw_set_loop_timeout(uint32_t loopTimeOut);
 void     ll_hw_set_loop_nack_num(uint8_t nAckNum);
 void 	 ll_hw_set_timing(uint8_t pktFmt);
 
-void     ll_hw_set_tfifo_space(uint16 space);
+void     ll_hw_set_tfifo_space(uint16_t space);
 
 void     ll_hw_set_ant_switch_mode(uint8_t mode);
 void     ll_hw_set_ant_switch_timing(uint8_t antWin,uint8_t antDly);
@@ -212,6 +210,12 @@ void set_whiten_seed(uint32_t channel);
 void set_max_length(uint32_t length);
 
 void calculate_whiten_seed(void);
+
+extern void ll_hw_tx2rx_timing_config(uint8_t pkt);
+extern uint16_t ll_hw_get_tfifo_wrptr(void);
+extern uint8_t ll_hw_get_tr_mode(void);
+extern int ll_hw_get_rfifo_depth(void);
+extern void move_to_master_function(void);
 
 
 #endif

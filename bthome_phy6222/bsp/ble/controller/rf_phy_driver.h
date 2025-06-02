@@ -15,12 +15,8 @@
     INCLUDES
 */
 
-
-#include "clock.h"
-#include "ll_hw_drv.h"
-#include "jump_function.h"
-#include "version.h"
-
+#include <types.h>
+#include <phy62xx.h>
 
 typedef enum  _RF_PHY_CLK_SEL
 {
@@ -48,7 +44,7 @@ extern volatile uint8_t g_rfPhyTpCal0_2Mbps;            //** two point calibraio
 extern volatile uint8_t g_rfPhyTpCal1_2Mbps;            //** two point calibraion result1            **//
 extern volatile uint8_t g_rfPhyTxPower;           //** rf pa output power setting [0x00 0x1f]  **//
 extern volatile uint8_t g_rfPhyPktFmt;            //** rf_phy pkt format config                **//
-extern volatile uint32  g_rfPhyRxDcIQ;            //** rx dc offset cal result                 **//
+extern volatile uint32_t g_rfPhyRxDcIQ;            //** rx dc offset cal result                 **//
 extern volatile int8_t  g_rfPhyFreqOffSet;
 
 //extern volatile sysclk_t g_system_clk;
@@ -367,7 +363,7 @@ uint8_t     rf_tp_cal       (uint8_t rfChn,uint8_t fDev);
 
     @return      none
 */
-void        rf_rxDcoc_cfg   (uint8_t rfChn,uint8_t bwSet,volatile uint32* dcCal);
+void        rf_rxDcoc_cfg   (uint8_t rfChn,uint8_t bwSet,volatile uint32_t* dcCal);
 
 /**************************************************************************************
     @fn          rf_tpCal_gen_cap_arrary
@@ -471,8 +467,8 @@ void        rf_phy_dtm_trigged  (void);
 
     @return      none
 */
-void        rf_phy_get_pktFoot  (uint8* rssi, uint16* foff,uint8* carrSens);
-void        rf_phy_get_pktFoot_fromPkt(uint32 pktFoot0, uint32 pktFoot1,uint8* rssi, uint16* foff,uint8* carrSens);
+void        rf_phy_get_pktFoot  (uint8_t* rssi, uint16_t* foff,uint8_t* carrSens);
+void        rf_phy_get_pktFoot_fromPkt(uint32_t pktFoot0, uint32_t pktFoot1,uint8_t* rssi, uint16_t* foff,uint8_t* carrSens);
 
 /**************************************************************************************
     @fn          rf_phy_set_txPower
@@ -489,11 +485,11 @@ void        rf_phy_get_pktFoot_fromPkt(uint32 pktFoot0, uint32 pktFoot1,uint8* r
 
     @return      none
 */
-void        rf_phy_set_txPower  (uint8 txPower);
+void        rf_phy_set_txPower  (uint8_t txPower);
 
 uint8_t     rf_phy_direct_test_ate(uint32_t cmdWord,uint8_t regPatchNum,uint32_t* regPatchAddr,uint32_t* regPatchVal,uint8_t* dOut);
 
-void    rf_phy_dtm_ext_rx_demod_burst(uint8_t rfChnIdx,int8_t rfFoff,uint8_t xtal_cap,uint8_t pktLength,uint32 rxTimeOut,uint32 rxWindow,
+void    rf_phy_dtm_ext_rx_demod_burst(uint8_t rfChnIdx,int8_t rfFoff,uint8_t xtal_cap,uint8_t pktLength,uint32_t rxTimeOut,uint32_t rxWindow,
                                       uint16_t* rxEstFoff,uint8_t* rxEstRssi,uint8_t* rxEstCarrSens,uint16_t* rxPktNum);
 
 void        rf_phy_dtm_zigbee_pkt_gen(void);

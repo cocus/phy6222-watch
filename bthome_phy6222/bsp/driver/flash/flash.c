@@ -495,6 +495,43 @@ int flash_write_word(unsigned int offset, uint32_t value)
 	return (hal_flash_write(offset, (uint8_t *)&temp, 4));
 }
 
+//__ATTR_SECTION_XIP__
+CHIP_ID_STATUS_e chip_id_one_bit_hot_convter(uint8_t* b, uint32_t w)
+{
+    uint16_t dh = w >> 16;
+    uint16_t dl = w & 0xffff;
+    uint16_t h1, h0, l1, l0;
+    h0 = l0 = 0xff;
+    h1 = l1 = 0;
+
+    for(int i = 0; i < 16; i++)
+    {
+        l1 += ((dl & (1 << i)) >> i);
+
+        if(l0 == 0xff && l1 == 1)
+            l0 = i;
+
+        h1 += ((dh & (1 << i)) >> i);
+
+        if(h0 == 0xff && h1 == 1)
+            h0 = i;
+    }
+
+    if(l1 == 1 && h1 == 1)
+    {
+        *b = ((h0 << 4) + l0);
+        return CHIP_ID_VALID;
+    }
+    else if(l1 == 16 && h1 == 16)
+    {
+        return CHIP_ID_EMPTY;
+    }
+    else
+    {
+        return CHIP_ID_INVALID;
+    }
+}
+
 CHIP_ID_STATUS_e read_chip_mAddr(uint8_t *mAddr)
 {
 	CHIP_ID_STATUS_e ret = CHIP_ID_UNCHECK;

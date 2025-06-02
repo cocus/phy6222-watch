@@ -21,6 +21,7 @@ extern "C"
 /*********************************************************************
     INCLUDES
 */
+#include <stdint.h>
 
 /*********************************************************************
     MACROS
@@ -43,12 +44,12 @@ typedef unsigned int  UTCTime;           // to confirm , int is 32bits long
 // To be used with
 typedef struct
 {
-    uint8 seconds;  // 0-59
-    uint8 minutes;  // 0-59
-    uint8 hour;     // 0-23
-    uint8 day;      // 0-30
-    uint8 month;    // 0-11
-    uint16 year;    // 2000+
+    uint8_t seconds;  // 0-59
+    uint8_t minutes;  // 0-59
+    uint8_t hour;     // 0-23
+    uint8_t day;      // 0-30
+    uint8_t month;    // 0-11
+    uint16_t year;    // 2000+
 } UTCTimeStruct;
 
 /*********************************************************************
@@ -100,7 +101,7 @@ extern UTCTime osal_ConvertUTCSecs( UTCTimeStruct* tm );
     Update/Adjust the osal clock and timers
     Msec - elapsed time in milli seconds
 */
-extern void osalAdjustTimer( uint32 Msec );
+extern void osalAdjustTimer( uint32_t Msec );
 
 /*********************************************************************
 *********************************************************************/

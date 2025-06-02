@@ -9,8 +9,7 @@
 extern "C" {
 #endif
 
-#include "types.h"
-#include "bus_dev.h"
+#include <phy62xx.h>
 
 #define FREE_TIMER_NUMBER 2
 
@@ -48,7 +47,16 @@ extern void set_timer(AP_TIM_TypeDef* TIMx, int time);
 
 extern uint32_t read_current_fine_time(void);
 
-extern uint32  read_LL_remainder_time(void);
+extern uint32_t  read_LL_remainder_time(void);
+
+extern int clear_timer_int(AP_TIM_TypeDef* TIMx);
+extern uint8_t isTimer1Running(void);
+extern uint8_t isTimer4Running(void);
+extern void clear_timer(AP_TIM_TypeDef* TIMx);
+
+extern uint32_t  g_TIM2_IRQ_TIM3_CurrCount;
+extern uint32_t  g_TIM2_IRQ_to_Sleep_DeltTick;
+extern uint32_t  g_TIM2_IRQ_PendingTick;
 
 #ifndef BASE_TIME_UINTS
 #define BASE_TIME_UNITS   (0x3fffff)

@@ -21,7 +21,7 @@ extern "C"
 /*********************************************************************
     INCLUDES
 */
-#include "comdef.h"
+#include <types.h>
 
 /*********************************************************************
     CONSTANTS
@@ -55,7 +55,7 @@ typedef union
         space on targets when the halDataAlign_t is smaller than a UINT16.
     */
     halDataAlign_t alignDummy;
-    uint32 val;            // uint16    // TODO: maybe due to 4 byte alignment requirement in M0, this union should be 4 byte, change from uint16 to uint32, investigate more later -  04-25
+    uint32_t val;            // uint16    // TODO: maybe due to 4 byte alignment requirement in M0, this union should be 4 byte, change from uint16 to uint32_t, investigate more later -  04-25
     osalMemHdrHdr_t hdr;
 } osalMemHdr_t;
 
@@ -80,7 +80,7 @@ void osal_mem_kick( void );
 /*
     Allocate a block of memory.
 */
-void* osal_mem_alloc( uint16 size );
+void* osal_mem_alloc( uint16_t size );
 
 /*
     Free a block of memory.
@@ -92,7 +92,7 @@ void osal_mem_free( void* ptr );
 /*
     Set osal memory buffer
 */
-void osal_mem_set_heap(osalMemHdr_t* hdr, uint32 size);
+void osal_mem_set_heap(osalMemHdr_t* hdr, uint32_t size);
 
 #if ( OSALMEM_METRICS )
 /*

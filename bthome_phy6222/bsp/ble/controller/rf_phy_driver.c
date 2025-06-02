@@ -14,11 +14,14 @@
     INCLUDES
 */
 
-#include "rf_phy_driver.h"
-#include "mcu.h"
-#include "clock.h"
-#include "timer.h"
-#include "ll_hw_drv.h"
+#include <ble/controller/rf_phy_driver.h>
+#include <ble/controller/ll_hw_drv.h>
+
+#include <driver/clock/clock.h>
+#include <driver/timer/timer.h>
+#include <driver/uart/uart.h>
+
+#include <jump_function.h>
 
 /*******************************************************************************
     BUILD CONFIG
@@ -59,7 +62,7 @@
 //volatile uint8_t        g_rfPhyTpCal1_2Mbps =   0x45;
 //volatile uint8_t        g_rfPhyTxPower      =   0x0f;
 //volatile uint8_t        g_rfPhyPktFmt       =   PKT_FMT_BLE1M;
-//volatile uint32         g_rfPhyRxDcIQ       =   0x20200000;
+//volatile uint32_t         g_rfPhyRxDcIQ       =   0x20200000;
 //volatile int8_t         g_rfPhyFreqOffSet   =   RF_PHY_FREQ_FOFF_00KHZ;
 //volatile sysclk_t       g_system_clk        =   SYS_CLK_XTAL_16M;
 //volatile rfphy_clk_t    g_rfPhyClkSel       =   RF_PHY_CLK_SEL_16M_XTAL;
@@ -125,7 +128,7 @@ volatile uint16_t g_rfPhy_ct_moniter_word_arry[CT_MONT_BUFF_SIZE] = {0};
 #endif
 
 
-void rf_tpCal_cfg_avg(uint8 rfChn,uint8 cnt);
+void rf_tpCal_cfg_avg(uint8_t rfChn,uint8_t cnt);
 /**************************************************************************************
     @fn          rf_phy_ini
 
@@ -148,7 +151,7 @@ void rf_phy_ini(void)
     rf_phy_ana_cfg();
     rf_phy_set_txPower(g_rfPhyTxPower);//set to max power
     rf_phy_bb_cfg(g_rfPhyPktFmt);
-    extern void ll_hw_tx2rx_timing_config(uint8 pkt);
+    extern void ll_hw_tx2rx_timing_config(uint8_t pkt);
     ll_hw_tx2rx_timing_config(g_rfPhyPktFmt);
 }
 
@@ -167,7 +170,7 @@ void rf_phy_ini(void)
 
     @return      None.
 */
-void rf_tpCal_cfg(uint8 rfChn)
+void rf_tpCal_cfg(uint8_t rfChn)
 {
     if(     g_rfPhyPktFmt==PKT_FMT_BLE1M
             ||  g_rfPhyPktFmt==PKT_FMT_BLR500K
@@ -204,7 +207,7 @@ void rf_tpCal_cfg(uint8 rfChn)
 
     @return      None.
 */
-void rf_tpCal_cfg_avg(uint8 rfChn,uint8 avgNum)
+void rf_tpCal_cfg_avg(uint8_t rfChn,uint8_t avgNum)
 {
     volatile uint8_t i = 0;
     volatile uint16_t tmp=0;
@@ -761,7 +764,7 @@ uint8_t rf_tp_cal(uint8_t rfChn, uint8_t fDev)
 
     @return      none
 */
-void rf_rxDcoc_cfg(uint8_t rfChn, uint8_t bwSet, volatile uint32* dcCal)
+void rf_rxDcoc_cfg(uint8_t rfChn, uint8_t bwSet, volatile uint32_t* dcCal)
 {
     //--------------------------------------------------------------
     //rf_ana_cfg should be called before doing dcoc calibration
@@ -785,7 +788,7 @@ void rf_rxDcoc_cfg(uint8_t rfChn, uint8_t bwSet, volatile uint32* dcCal)
     //--------------------------------------------------------------
     //set filter bw and rx gain,dcoc cal control
     //
-    uint16 fltPhy = 0;
+    uint16_t fltPhy = 0;
 
     if(bwSet==1)
     {
@@ -1933,7 +1936,7 @@ void rf_phy_dtm_zigbee_pkt_gen(void)
 
     @return      none
 */
-void rf_phy_get_pktFoot(uint8* rssi, uint16* foff,uint8* carrSens)
+void rf_phy_get_pktFoot(uint8_t* rssi, uint16_t* foff,uint8_t* carrSens)
 {
     uint32_t pktFoot0;
     uint32_t pktFoot1;
@@ -1945,8 +1948,8 @@ void rf_phy_get_pktFoot(uint8* rssi, uint16* foff,uint8* carrSens)
     *rssi           =   (pktFoot1>>24)     ;
     *carrSens       =   (pktFoot0>>24)     ;
 }
-void rf_phy_get_pktFoot_fromPkt(uint32 pktFoot0, uint32 pktFoot1,
-                                uint8* rssi, uint16* foff,uint8* carrSens)
+void rf_phy_get_pktFoot_fromPkt(uint32_t pktFoot0, uint32_t pktFoot1,
+                                uint8_t* rssi, uint16_t* foff,uint8_t* carrSens)
 {
     uint16_t tmpFoff;
 //    pktFoot0        = (*(volatile uint32_t *) 0x400300e4);
@@ -1971,7 +1974,7 @@ void rf_phy_get_pktFoot_fromPkt(uint32 pktFoot0, uint32 pktFoot1,
 
     @return      none
 */
-void rf_phy_set_txPower  (uint8 txPower)
+void rf_phy_set_txPower  (uint8_t txPower)
 {
     if(RF_PHY_TX_POWER_EXTRA_MAX==txPower)
     {
@@ -2010,7 +2013,7 @@ void rf_phy_set_txPower  (uint8 txPower)
     @return      rcCalCode
 
 */
-uint8 rc32k_calibration(void)
+uint8_t rc32k_calibration(void)
 {
     if(AON_LOAD_RC32K_CALIB_FLG)
     {
@@ -2021,7 +2024,7 @@ uint8 rc32k_calibration(void)
         AON_SAVE_RC32K_CALIB_FLG(1);
     }
 
-    uint8 delay = 10;
+    uint8_t delay = 10;
     uint32_t  temp=0;
     *(volatile uint32_t*) 0x4000f05c &= 0xfffffffe;	// disable RC32K calibration
     WaitRTCCount(6);
@@ -2042,7 +2045,7 @@ uint8 rc32k_calibration(void)
     }
 
     *(volatile uint32_t*) 0x4000f018 &= 0xffffff7f;             // set capbank controlled by AON
-    return (uint8)(0x7f&(temp>>1));
+    return (uint8_t)(0x7f&(temp>>1));
 }
 /*******************************************************************************
     @fn          rf_calibrate API
@@ -2120,7 +2123,7 @@ static void rf_phy_dtm_stop(void)
 
     @return      none
 */
-void    rf_phy_dtm_ext_tx_singleTone(uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff,uint32 testTimeUs)
+void    rf_phy_dtm_ext_tx_singleTone(uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff,uint32_t testTimeUs)
 {
     rf_phy_dtm_init();
     //======================================================================
@@ -2162,7 +2165,7 @@ void    rf_phy_dtm_ext_tx_singleTone(uint8_t txPower, uint8_t rfChnIdx,uint8_t x
 
     @return      none
 */
-void    rf_phy_dtm_ext_tx_modulation(uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff,uint8_t pktType,uint32 testTimeUs)
+void    rf_phy_dtm_ext_tx_modulation(uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff,uint8_t pktType,uint32_t testTimeUs)
 {
     rf_phy_dtm_init();
     //======================================================================
@@ -2208,7 +2211,7 @@ void    rf_phy_dtm_ext_tx_modulation(uint8_t txPower, uint8_t rfChnIdx,uint8_t x
     @return      none
 */
 void    rf_phy_dtm_ext_tx_mod_burst(uint8_t txPower, uint8_t rfChnIdx,uint8_t xtal_cap,int8_t rfFoff,
-                                    uint8_t pktType, uint8_t pktLength,uint32 txPktNum,uint32 txPktIntv)
+                                    uint8_t pktType, uint8_t pktLength,uint32_t txPktNum,uint32_t txPktIntv)
 {
     rf_phy_dtm_init();
     //======================================================================
@@ -2282,7 +2285,7 @@ void    rf_phy_dtm_ext_tx_mod_burst(uint8_t txPower, uint8_t rfChnIdx,uint8_t xt
 
     @return      none
 */
-void    rf_phy_dtm_ext_rx_demod_burst(uint8_t rfChnIdx,int8_t rfFoff,uint8_t xtal_cap,uint8_t pktLength,uint32 rxTimeOut,uint32 rxWindow,
+void    rf_phy_dtm_ext_rx_demod_burst(uint8_t rfChnIdx,int8_t rfFoff,uint8_t xtal_cap,uint8_t pktLength,uint32_t rxTimeOut,uint32_t rxWindow,
                                       uint16_t* rxEstFoff,uint8_t* rxEstRssi,uint8_t* rxEstCarrSens,uint16_t* rxPktNum)
 {
     rf_phy_dtm_init();
@@ -2302,7 +2305,7 @@ void    rf_phy_dtm_ext_rx_demod_burst(uint8_t rfChnIdx,int8_t rfFoff,uint8_t xta
     uint8_t rssi;
     uint16_t foff;
     uint8_t carrSens;
-    uint32 t0 = hal_systick();
+    uint32_t t0 = hal_systick();
     XTAL16M_CAP_SETTING(xtal_cap);
 
     while(hal_ms_intv(t0)<rxTimeOut)
@@ -2372,7 +2375,7 @@ void    rf_phy_dtm_ext_rx_demod_burst(uint8_t rfChnIdx,int8_t rfFoff,uint8_t xta
     output parameters
     @return      none
 */
-void    rf_phy_dtm_ext_acc_code_set(uint32 accCode)
+void    rf_phy_dtm_ext_acc_code_set(uint32_t accCode)
 {
     g_dtmAccessCode = accCode;
 }

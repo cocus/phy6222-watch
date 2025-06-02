@@ -24,8 +24,7 @@ extern "C"
 /*******************************************************************************
  * INCLUDES
  */
-#include "../include/bcomdef.h"
-#include "ll_def.h"    
+#include "ll_def.h"
 
 /*******************************************************************************
  * MACROS
@@ -39,7 +38,6 @@ extern "C"
 #define LL_ENC_TX_DIRECTION_SLAVE    0
 #define LL_ENC_RX_DIRECTION_MASTER   0
 #define LL_ENC_RX_DIRECTION_SLAVE    1
-  
 #define LL_ENC_DATA_BANK_MASK 0xFF7F
 
 #define LL_ENC_TRUE_RAND_BUF_SIZE     ((LL_ENC_IV_LEN/2) + (LL_ENC_SKD_LEN/2))
@@ -58,33 +56,52 @@ extern "C"
 /*******************************************************************************
  * GLOBAL VARIABLES
  */
-extern uint8 dataPkt[2*LL_ENC_BLOCK_LEN];
-extern uint8 cachedTRNGdata[ LL_ENC_TRUE_RAND_BUF_SIZE ];
+extern uint8_t dataPkt[2*LL_ENC_BLOCK_LEN];
+extern uint8_t cachedTRNGdata[ LL_ENC_TRUE_RAND_BUF_SIZE ];
 
 /*******************************************************************************
  * Functions
  */
 
 // Random Number Generation
-extern uint8 LL_ENC_GeneratePseudoRandNum( void );
-extern uint8 LL_ENC_GenerateTrueRandNum( uint8 *buf, uint8 len );
+extern uint8_t LL_ENC_GeneratePseudoRandNum( void );
+extern uint8_t LL_ENC_GenerateTrueRandNum( uint8_t *buf, uint8_t len );
 
 // CCM Encryption
-extern void  LL_ENC_AES128_Encrypt( uint8 *key, uint8 *plaintext,  uint8 *ciphertext );
-extern void  LL_ENC_AES128_Decrypt( uint8 *key, uint8 *ciphertext, uint8 *plaintext );
+extern void  LL_ENC_AES128_Encrypt( uint8_t *key, uint8_t *plaintext,  uint8_t *ciphertext );
+extern void  LL_ENC_AES128_Decrypt( uint8_t *key, uint8_t *ciphertext, uint8_t *plaintext );
 extern void  LL_ENC_LoadEmptyIV( void );
-extern void  LL_ENC_ReverseBytes( uint8 *buf, uint8 len );
-extern void  LL_ENC_GenDeviceSKD( uint8 *SKD );
-extern void  LL_ENC_GenDeviceIV( uint8 *IV );
-extern void  LL_ENC_GenerateNonce( uint32 pktCnt, uint8 direction, uint8 *nonce );
-extern void  LL_ENC_EncryptMsg( uint8 *nonce, uint8 pktLen, uint8 *pbuf, uint8 *mic );
-extern void  LL_ENC_DecryptMsg( uint8 *nonce, uint8 pktLen, uint8 *pBuf, uint8 *mic );
-extern void  LL_ENC_Encrypt( llConnState_t *connPtr, uint8 pktHdr, uint8 pktLen, uint8 *pBuf );
-extern uint8 LL_ENC_Decrypt( llConnState_t *connPtr, uint8 pktHdr, uint8 pktLen, uint8 *pBuf );
-extern void LL_ENC_sm_ah( uint8 *pK, uint8 *pR, uint8 *pAh );
+extern void  LL_ENC_ReverseBytes( uint8_t *buf, uint8_t len );
+extern void  LL_ENC_GenDeviceSKD( uint8_t *SKD );
+extern void  LL_ENC_GenDeviceIV( uint8_t *IV );
+extern void  LL_ENC_GenerateNonce( uint32_t pktCnt, uint8_t direction, uint8_t *nonce );
+extern void  LL_ENC_EncryptMsg( uint8_t *nonce, uint8_t pktLen, uint8_t *pbuf, uint8_t *mic );
+extern void  LL_ENC_DecryptMsg( uint8_t *nonce, uint8_t pktLen, uint8_t *pBuf, uint8_t *mic );
+extern void  LL_ENC_Encrypt( llConnState_t *connPtr, uint8_t pktHdr, uint8_t pktLen, uint8_t *pBuf );
+extern uint8_t LL_ENC_Decrypt( llConnState_t *connPtr, uint8_t pktHdr, uint8_t pktLen, uint8_t *pBuf );
+extern void LL_ENC_sm_ah( uint8_t *pK, uint8_t *pR, uint8_t *pAh );
 //
+void LL_ENC_AES128_Encrypt0( uint8_t* key,
+                             uint8_t* plaintext,
+                             uint8_t* ciphertext );
 
-extern void  LL_ENC_MoveData( uint8 *pDst, uint8 *pSrc, uint16 len );
+uint8_t LL_ENC_GenerateTrueRandNum0( uint8_t* buf,
+                                   uint8_t len );
+void LL_ENC_GenDeviceSKD0( uint8_t* SKD );
+void LL_ENC_GenDeviceIV0( uint8_t* IV );
+void LL_ENC_GenerateNonce0( uint32_t pktCnt,
+                            uint8_t  direction,
+                            uint8_t*  nonce );
+void LL_ENC_Encrypt0( llConnState_t* connPtr,
+                      uint8_t          pktHdr,
+                      uint8_t          pktLen,
+                      uint8_t*         pBuf );
+uint8_t LL_ENC_Decrypt0( llConnState_t* connPtr,
+                       uint8_t          pktHdr,
+                       uint8_t          pktLen,
+                       uint8_t*         pBuf );
+
+extern void  LL_ENC_MoveData( uint8_t *pDst, uint8_t *pSrc, uint16_t len );
 
 #ifdef __cplusplus
 }
