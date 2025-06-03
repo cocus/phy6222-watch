@@ -203,22 +203,22 @@ extern void osal_start_system(void);
     /*
         Memory copy
     */
-    extern void *osal_memcpy(void *, const void GENERIC *, unsigned int);
+    extern void *osal_memcpy(void *, const void *, unsigned int);
 
     /*
         Memory Duplicate - allocates and copies
     */
-    extern void *osal_memdup(const void GENERIC *src, unsigned int len);
+    extern void *osal_memdup(const void *src, unsigned int len);
 
     /*
         Reverse Memory copy
     */
-    extern void *osal_revmemcpy(void *, const void GENERIC *, unsigned int);
+    extern void *osal_revmemcpy(void *, const void *, unsigned int);
 
     /*
         Memory compare
     */
-    extern uint8_t osal_memcmp(const void GENERIC *src1, const void GENERIC *src2, unsigned int len);
+    extern uint8_t osal_memcmp(const void *src1, const void *src2, unsigned int len);
 
     /*
         Memory set

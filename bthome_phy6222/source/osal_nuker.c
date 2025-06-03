@@ -547,7 +547,7 @@ static void hal_rfphy_init(void)
     //============config RF Frequency Offset
     g_rfPhyFreqOffSet = RF_PHY_FREQ_FOFF_00KHZ; //	hal_rfPhyFreqOff_Set();
     //============config xtal 16M cap
-    XTAL16M_CAP_SETTING(0x09);
+    XTAL16M_CAP_SETTING(0x09); 					//	hal_xtal16m_cap_Set();
     XTAL16M_CURRENT_SETTING(0x01);
     hal_rc32k_clk_tracking_init();
 }

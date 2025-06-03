@@ -8,6 +8,12 @@
 #define BIT(n) (1ul << (n))
 
 #define write_reg(addr, data) (*(volatile unsigned int *)(addr) = (unsigned int)(data))
+// subWriteReg: write value to register zone: bit[high:low]
+#define subWriteReg(addr, high, low, value) write_reg(addr, (read_reg(addr) &                                                 \
+                                                             (~((((unsigned int)1 << ((high) - (low) + 1)) - 1) << (low)))) | \
+                                                                ((unsigned int)(value) << (low)))
+
+
 #define read_reg(addr) (*(volatile unsigned int *)(addr))
 
 // bit operations
@@ -73,41 +79,6 @@
 #ifndef UNUSED
 #define UNUSED(x) (void)(x) // To avoid unused variable warnings
 #endif
-
-#ifndef CONST
-#define CONST const
-#endif
-
-#ifndef GENERIC
-#define GENERIC
-#endif
-
-#define HAL_WAIT_CONDITION(condition) \
-    {                                 \
-        while (!(condition))          \
-        {                             \
-        }                             \
-    }
-
-#define HAL_WAIT_CONDITION_TIMEOUT(condition, timeout) \
-    {                                                  \
-        volatile int val = 0;                          \
-        while (!(condition))                           \
-        {                                              \
-            if (val++ > timeout)                       \
-                return PPlus_ERR_TIMEOUT;              \
-        }                                              \
-    }
-
-#define HAL_WAIT_CONDITION_TIMEOUT_WO_RETURN(condition, timeout) \
-    {                                                            \
-        volatile int val = 0;                                    \
-        while (!(condition))                                     \
-        {                                                        \
-            if (val++ > timeout)                                 \
-                break;                                           \
-        }                                                        \
-    }
 
 #define __ATTR_SECTION_SRAM__ __attribute__((section("_section_sram_code_")))
 #define __ATTR_SECTION_XIP__ __attribute__((section("_section_xip_code_")))

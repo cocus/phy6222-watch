@@ -80,9 +80,7 @@ typedef enum IRQn
   */
 
 #include "core_cm0.h" /* Processor and core peripherals */
-#include "types.h"
 #include <stdint.h>
-
 
 /** @addtogroup Peripheral_registers_structures
   * @{
@@ -428,7 +426,6 @@ typedef struct
   __IO uint32_t PCLK_CLK_GATE;    /*!< 0xb8 bit0 pclk_clk_gate_en */
   __IO uint32_t XTAL_16M_CTRL;    /*!< 0xbc */
   __IO uint32_t SLEEP_R[4];       /*!< 0xc0 c4 c8 cc */
-
 } AP_AON_TypeDef;
 
 /**
@@ -760,7 +757,8 @@ typedef struct
 #define AP_AES_BASE           (0x40040000UL)
 #define ADCC_BASE_ADDR        (0x40050000UL)
 
-#define SPIF_BASE_ADDR        (0x11000000)
+#define FLASH_BASE_ADDR       (0x11000000)
+#define SPIF_BASE_ADDR        (0x11080000)
 
 #define SRAM0_BASE_ADDRESS    (0x1FFF0000)
 #define SRAM1_BASE_ADDRESS    (0x1FFF4000)
@@ -835,6 +833,39 @@ typedef struct
 /******************************************************************************/
 /*                         Peripheral Registers_Bits_Definition               */
 /******************************************************************************/
+/******************************************************************************/
+/*                                                                            */
+/*                       RTC Control in AON register                          */
+/*                                                                            */
+/******************************************************************************/
+
+/*!< Endpoint-specific registers */
+#define AON_PWROFF                          (AP_AON->PWROFF)
+#define AON_RTCCTL                          (AP_AON->RTCCTL)
+#define AON_PMCTL0                          (AP_AON->PMCTL0)
+#define AON_SLEEPR0                         (AP_AON->SLEEP_R[0])
+#define AON_SLEEPR1                         (AP_AON->SLEEP_R[1])
+
+/*******************  Bit definition for RTCCTL register  *********************/
+#define AON_RTCCTL_RTC_Pos                  (0U)
+#define AON_RTCCTL_RTC_Msk                  (0x1UL << AON_RTCCTL_RTC_Pos)       /*!< 0x00000001 */
+#define AON_RTCCTL_RTC                      AON_RTCCTL_RTC_Msk                  /*!< RTC Run/Stop Control Flag */
+
+#define AON_RTCCTL_RTCCLR_Pos               (1U)
+#define AON_RTCCTL_RTCCLR_Msk               (0x1UL << AON_RTCCTL_RTCCLR_Pos)    /*!< 0x00000002 */
+#define AON_RTCCTL_RTCCLR                   AON_RTCCTL_RTCCLR_Msk               /*!< RTC Count Clear Flag */
+
+#define AON_RTCCTL_COMP0INT_Pos             (15U)
+#define AON_RTCCTL_COMP0INT_Msk             (0x1UL << AON_RTCCTL_COMP0INT_Pos)  /*!< 0x0008000 */
+#define AON_RTCCTL_COMP0INT                 AON_RTCCTL_COMP0INT_Msk             /*!< Enable Comparator 0 Interrupt */
+
+#define AON_RTCCTL_COUNTOVF_Pos             (18U)
+#define AON_RTCCTL_COUNTOVF_Msk             (0x1UL << AON_RTCCTL_COUNTOVF_Pos)  /*!< 0x0040000 */
+#define AON_RTCCTL_COUNTOVF                 AON_RTCCTL_COUNTOVF_Msk             /*!< Enable Counter Overflow Interrupt */
+
+#define AON_RTCCTL_COMP0EVT_Pos             (20U)
+#define AON_RTCCTL_COMP0EVT_Msk             (0x1UL << AON_RTCCTL_COMP0EVT_Pos)  /*!< 0x0100000 */
+#define AON_RTCCTL_COMP0EVT                 AON_RTCCTL_COMP0EVT_Msk             /*!< Enable Comparator 0 Event Flag */
 
 /******************************************************************************/
 /*                                                                            */
@@ -842,27 +873,87 @@ typedef struct
 /*                                                                            */
 /******************************************************************************/
 
+/*!< Endpoint-specific registers */
+#define PCR_SWCTL                           (AP_PCR->SW_CLK)
+#define PCR_SWCTL1                          (AP_PCR->SW_CLK1)
+#define PCR_CACHE_CLOCK_GATE                (AP_PCR->CACHE_CLOCK_GATE)
+#define PCR_SW_RESET0                       (AP_PCR->SW_RESET0)
+#define PCR_SW_RESET1                       (AP_PCR->SW_RESET1)
+#define PCR_SW_RESET2                       (AP_PCR->SW_RESET2)
+#define PCR_CACHE_RST                       (AP_PCR->CACHE_RST)
+
 /*******************  Bit definition for SW_CLK register  *********************/
-// SW_CLK -->0x4000f008
-#define _CLK_NONE                           (BIT(0))
-#define _CLK_CK802_CPU                      (BIT(0))
-#define _CLK_DMA                            (BIT(3))
-#define _CLK_AES                            (BIT(4))
-#define _CLK_IOMUX                          (BIT(7))
-#define _CLK_UART0                          (BIT(8))
-#define _CLK_I2C0                           (BIT(9))
-#define _CLK_I2C1                           (BIT(10))
-#define _CLK_SPI0                           (BIT(11))
-#define _CLK_SPI1                           (BIT(12))
-#define _CLK_GPIO                           (BIT(13))
-#define _CLK_QDEC                           (BIT(15))
-#define _CLK_ADCC                           (BIT(17))
-#define _CLK_PWM                            (BIT(18))
-#define _CLK_SPIF                           (BIT(19))
-#define _CLK_VOC                            (BIT(20))
-#define _CLK_TIMER5                         (BIT(21))
-#define _CLK_TIMER6                         (BIT(22))
-#define _CLK_UART1                          (BIT(25))
+#define PCR_SWCTL_CK802_Pos                 (0U)
+#define PCR_SWCTL_CK802_Msk                 (0x1UL << PCR_SWCTL_CK802_Pos)      /*!< 0x00000001 */
+#define PCR_SWCTL_CK802                     PCR_SWCTL_CK802_Msk                 /*!< Unknown CK802 CPU clock gate control  */
+
+#define PCR_SWCTL_DMA_Pos                   (3U)
+#define PCR_SWCTL_DMA_Msk                   (0x1UL << PCR_SWCTL_DMA_Pos)        /*!< 0x00000008 */
+#define PCR_SWCTL_DMA                       PCR_SWCTL_DMA_Msk                   /*!< DMA clock gate control  */
+
+#define PCR_SWCTL_AES_Pos                   (4U)
+#define PCR_SWCTL_AES_Msk                   (0x1UL << PCR_SWCTL_AES_Pos)        /*!< 0x00000010 */
+#define PCR_SWCTL_AES                       PCR_SWCTL_AES_Msk                   /*!< AES128 clock gate control  */
+
+#define PCR_SWCTL_IOMUX_Pos                 (7U)
+#define PCR_SWCTL_IOMUX_Msk                 (0x1UL << PCR_SWCTL_IOMUX_Pos)      /*!< 0x00000080 */
+#define PCR_SWCTL_IOMUX                     PCR_SWCTL_IOMUX_Msk                 /*!< IOMUX clock gate control  */
+
+#define PCR_SWCTL_UART0_Pos                 (8U)
+#define PCR_SWCTL_UART0_Msk                 (0x1UL << PCR_SWCTL_UART0_Pos)      /*!< 0x00000100 */
+#define PCR_SWCTL_UART0                     PCR_SWCTL_UART0_Msk                 /*!< UART0 clock gate control  */
+
+#define PCR_SWCTL_I2C0_Pos                  (9U)
+#define PCR_SWCTL_I2C0_Msk                  (0x1UL << PCR_SWCTL_I2C0_Pos)       /*!< 0x00000200 */
+#define PCR_SWCTL_I2C0                      PCR_SWCTL_I2C0_Msk                  /*!< I2C0 clock gate control  */
+
+#define PCR_SWCTL_I2C1_Pos                  (10U)
+#define PCR_SWCTL_I2C1_Msk                  (0x1UL << PCR_SWCTL_I2C1_Pos)       /*!< 0x00000400 */
+#define PCR_SWCTL_I2C1                      PCR_SWCTL_I2C1_Msk                  /*!< I2C1 clock gate control  */
+
+#define PCR_SWCTL_SPI0_Pos                  (11U)
+#define PCR_SWCTL_SPI0_Msk                  (0x1UL << PCR_SWCTL_SPI0_Pos)       /*!< 0x00000800 */
+#define PCR_SWCTL_SPI0                      PCR_SWCTL_SPI0_Msk                  /*!< SPI0 clock gate control  */
+
+#define PCR_SWCTL_SPI1_Pos                  (12U)
+#define PCR_SWCTL_SPI1_Msk                  (0x1UL << PCR_SWCTL_SPI1_Pos)       /*!< 0x00001000 */
+#define PCR_SWCTL_SPI1                      PCR_SWCTL_SPI1_Msk                  /*!< SPI1 clock gate control  */
+
+#define PCR_SWCTL_GPIO_Pos                  (13U)
+#define PCR_SWCTL_GPIO_Msk                  (0x1UL << PCR_SWCTL_GPIO_Pos)       /*!< 0x00002000 */
+#define PCR_SWCTL_GPIO                      PCR_SWCTL_GPIO_Msk                  /*!< GPIO clock gate control  */
+
+#define PCR_SWCTL_QDEC_Pos                  (15U)
+#define PCR_SWCTL_QDEC_Msk                  (0x1UL << PCR_SWCTL_QDEC_Pos)       /*!< 0x00008000 */
+#define PCR_SWCTL_QDEC                      PCR_SWCTL_QDEC_Msk                  /*!< QDEC clock gate control  */
+
+#define PCR_SWCTL_ADCC_Pos                  (17U)
+#define PCR_SWCTL_ADCC_Msk                  (0x1UL << PCR_SWCTL_ADCC_Pos)       /*!< 0x00020000 */
+#define PCR_SWCTL_ADCC                      PCR_SWCTL_ADCC_Msk                  /*!< ADCC clock gate control  */
+
+#define PCR_SWCTL_PWM_Pos                   (18U)
+#define PCR_SWCTL_PWM_Msk                   (0x1UL << PCR_SWCTL_PWM_Pos)        /*!< 0x00040000 */
+#define PCR_SWCTL_PWM                       PCR_SWCTL_PWM_Msk                   /*!< PWM clock gate control  */
+
+#define PCR_SWCTL_SPIF_Pos                  (19U)
+#define PCR_SWCTL_SPIF_Msk                  (0x1UL << PCR_SWCTL_SPIF_Pos)       /*!< 0x00080000 */
+#define PCR_SWCTL_SPIF                      PCR_SWCTL_SPIF_Msk                  /*!< SPIF clock gate control  */
+
+#define PCR_SWCTL_VOC_Pos                   (20U)
+#define PCR_SWCTL_VOC_Msk                   (0x1UL << PCR_SWCTL_VOC_Pos)        /*!< 0x00100000 */
+#define PCR_SWCTL_VOC                       PCR_SWCTL_VOC_Msk                   /*!< VOC clock gate control  */
+
+#define PCR_SWCTL_TIM5_Pos                  (21U)
+#define PCR_SWCTL_TIM5_Msk                  (0x1UL << PCR_SWCTL_TIM5_Pos)       /*!< 0x00200000 */
+#define PCR_SWCTL_TIM5                      PCR_SWCTL_TIM5_Msk                  /*!< TIM5 clock gate control  */
+
+#define PCR_SWCTL_TIM6_Pos                  (22U)
+#define PCR_SWCTL_TIM6_Msk                  (0x1UL << PCR_SWCTL_TIM6_Pos)       /*!< 0x00400000 */
+#define PCR_SWCTL_TIM6                      PCR_SWCTL_TIM6_Msk                  /*!< TIM6 clock gate control  */
+
+#define PCR_SWCTL_UART1_Pos                 (25U)
+#define PCR_SWCTL_UART1_Msk                 (0x1UL << PCR_SWCTL_UART1_Pos)      /*!< 0x02000000 */
+#define PCR_SWCTL_UART1                     PCR_SWCTL_UART1_Msk                 /*!< UART1 clock gate control  */
 
 /*******************  Bit definition for SW_CLK1 register  ********************/
 // SW_CLK1 -->0x4000f014
@@ -890,6 +981,11 @@ typedef struct
   * @{
   */
 
+
+/*********************************** AON **************************************/
+#define AON_CLEAR_RTC_COUNT               (AON_RTCCTL |= AON_RTCCTL_RTCCLR)
+#define AON_CLEAR_XTAL_TRACKING_AND_CALIB AON_SLEEPR1 = 0
+
 /*********************************** WDT **************************************/
 #define AP_WDT_ENABLE_STATE ((AP_WDT->CR & 0x01)) // 1:enable 0:disable
 #define AP_WDT_FEED         \
@@ -897,11 +993,6 @@ typedef struct
     {                       \
         AP_WDT->CRR = 0x76; \
     } while (0)
-
-// subWriteReg: write value to register zone: bit[high:low]
-#define subWriteReg(addr, high, low, value) write_reg(addr, (read_reg(addr) &                                                 \
-                                                             (~((((unsigned int)1 << ((high) - (low) + 1)) - 1) << (low)))) | \
-                                                                ((unsigned int)(value) << (low)))
 
 
 

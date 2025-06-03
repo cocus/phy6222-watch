@@ -1,4 +1,5 @@
 
+#include <types.h> /* for UNUSED */
 #include <phy62xx.h>
 #include <driver/gpio/gpio.h>
 #include <driver/uart/uart.h>
