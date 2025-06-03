@@ -12,6 +12,8 @@
 #include <osal/osal_critical.h>
 #include <driver/pwrmgr/pwrmgr.h>
 
+#include <types.h> /* for __ATTR_SECTION_SRAM__ */
+
 #include <stddef.h> /* for NULL */
 #define SPIF_WAIT_IDLE_CYC (32)
 
@@ -194,8 +196,21 @@ static void hal_cache_init(void)
 	AP_PCR->CACHE_BYPASS = 0;
 }
 
+typedef struct
+{
+    uint8_t init_flag;
+    uint32_t IdentificationID;
+    uint32_t Capacity;
+} FLASH_CHIP_INFO;
+
+enum
+{
+    FLASH_CTX_NOT_INITALIZED = 0U,
+    FLASH_CTX_INITIALIZED = 1U
+};
+
 FLASH_CHIP_INFO phy_flash = {
-	.init_flag = false,
+	.init_flag = FLASH_CTX_NOT_INITALIZED,
 	.IdentificationID = 0x00,
 	.Capacity = 0x80000,
 };
@@ -205,7 +220,7 @@ int hal_get_flash_info(void)
 	uint32_t cs;
 	uint8_t data[4];
 
-	if (phy_flash.init_flag == true)
+	if (phy_flash.init_flag == FLASH_CTX_INITIALIZED)
 	{
 		return PPlus_SUCCESS;
 	}
@@ -231,7 +246,7 @@ int hal_get_flash_info(void)
 		*(volatile int *)0x1fff0898 = phy_flash.Capacity;
 	}
 
-	phy_flash.init_flag = true;
+	phy_flash.init_flag = FLASH_CTX_INITIALIZED;
 	return PPlus_SUCCESS;
 }
 

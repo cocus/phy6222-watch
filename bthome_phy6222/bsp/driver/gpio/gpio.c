@@ -13,6 +13,8 @@
 #include <jump_function.h>
 #include <string.h>
 
+#include <types.h> /* for subWriteReg and BIT */
+
 #define TEST_PIN_NUM 0
 
 enum
@@ -22,18 +24,30 @@ enum
     GPIO_PIN_ASSI_IN,
 };
 
+enum
+{
+    GPIO_IN_DISABLED = 0U,
+    GPIO_IN_ENABLED = 1U,
+};
+
 typedef struct
 {
-    bool enable;
+    uint8_t enable;
     uint8_t pin_state;
     gpioin_Hdl_t posedgeHdl;
     gpioin_Hdl_t negedgeHdl;
 
 } gpioin_Ctx_t;
 
+enum
+{
+    GPIO_CTX_NOT_INITALIZED = 0U,
+    GPIO_CTX_INITIALIZED = 1U
+};
+
 typedef struct
 {
-    bool state;
+    uint8_t state;
     uint8_t pin_assignments[NUMBER_OF_PINS];
     uint32_t pin_retention_status;
     gpioin_Ctx_t irq_ctx[NUMBER_OF_PINS];
@@ -48,7 +62,7 @@ typedef struct
 
 static gpio_Ctx_t m_gpioCtx =
     {
-        .state = false,
+        .state = GPIO_CTX_NOT_INITALIZED,
         .pin_assignments = {
             0,
         },
@@ -418,7 +432,7 @@ int hal_gpioin_disable(gpio_pin_e pin)
         return PPlus_ERR_NOT_SUPPORTED;
 #endif
 
-    p_irq_ctx[pin].enable = false;
+    p_irq_ctx[pin].enable = GPIO_IN_DISABLED;
     m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_NONE;
     hal_gpio_pin_init(pin, GPIO_INPUT);
     return hal_gpio_interrupt_disable(pin);
@@ -630,7 +644,7 @@ int hal_gpioin_enable(gpio_pin_e pin)
         return PPlus_ERR_NOT_REGISTED;
 
     m_gpioCtx.pin_assignments[pin] = GPIO_PIN_ASSI_IN;
-    p_irq_ctx[pin].enable = true;
+    p_irq_ctx[pin].enable = GPIO_IN_ENABLED;
     hal_gpio_pin_init(pin, GPIO_INPUT);
 
     // hal_gpio_pull_set(pin, PULL_DOWN); //??need disccuss
@@ -684,11 +698,11 @@ int hal_gpioin_register(gpio_pin_e pin, gpioin_Hdl_t posedgeHdl, gpioin_Hdl_t ne
 
 int hal_gpio_init(void)
 {
-    if (m_gpioCtx.state)
+    if (m_gpioCtx.state == GPIO_CTX_INITIALIZED)
         return PPlus_ERR_INVALID_STATE;
 
     memset(&m_gpioCtx, 0, sizeof(m_gpioCtx));
-    m_gpioCtx.state = true;
+    m_gpioCtx.state = GPIO_CTX_INITIALIZED;
     // disable all channel irq,unmask all channel
     AP_GPIO->inten = 0;
     AP_GPIO->intmask = 0;
@@ -703,10 +717,12 @@ int hal_gpio_init(void)
     return PPlus_SUCCESS;
 }
 
-void hal_gpio_debug_mux(Freq_Type_e fre, bool en)
+void hal_gpio_debug_mux_enable(Freq_Type_e fre)
 {
-    if (en)
-        AP_IOMUX->debug_mux_en |= BIT(fre);
-    else
-        AP_IOMUX->debug_mux_en &= ~BIT(fre);
+    AP_IOMUX->debug_mux_en |= BIT(fre);
+}
+
+void hal_gpio_debug_mux_disable(Freq_Type_e fre)
+{
+    AP_IOMUX->debug_mux_en &= ~BIT(fre);
 }

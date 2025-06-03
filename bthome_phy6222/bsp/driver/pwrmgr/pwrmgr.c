@@ -5,12 +5,13 @@
 #include "pwrmgr.h"
 #include <driver/gpio/gpio.h>
 
+#include <types.h> /* for BIT */
 
 
 typedef struct _pwrmgr_Context_t
 {
     MODULE_e moudle_id;
-    bool lock;
+    pwrmgr_module_lock_t lock;
     pwrmgr_Hdl_t sleep_handler;
     pwrmgr_Hdl_t wakeup_handler;
 } pwrmgr_Ctx_t;
@@ -65,7 +66,7 @@ int hal_pwrmgr_clk_gate_config(MODULE_e module)
     return PPlus_SUCCESS;
 }
 
-bool hal_pwrmgr_is_lock(MODULE_e mod)
+pwrmgr_module_lock_t hal_pwrmgr_is_lock(MODULE_e mod)
 {
     UNUSED(mod);
     /*    int i;
@@ -97,7 +98,7 @@ bool hal_pwrmgr_is_lock(MODULE_e mod)
      *    HAL_EXIT_CRITICAL_SECTION();
      */
 
-    return 1;
+    return PWRMGR_MODULE_LOCKED;
 }
 
 int hal_pwrmgr_lock(MODULE_e mod)
@@ -357,7 +358,7 @@ int hal_pwrmgr_LowCurrentLdo_enable(void)
      *
      *    if(retention_flag == 0xffffffff)
      *    {
-     *        subWriteReg(0x4000f014,26,26, 1);
+     *        subWriteReg(&AON_PMCTL0,26,26, 1);
      *    }
      */
 
@@ -366,7 +367,7 @@ int hal_pwrmgr_LowCurrentLdo_enable(void)
 
 int hal_pwrmgr_LowCurrentLdo_disable(void)
 {
-    subWriteReg(0x4000f014, 26, 26, 0);
+    subWriteReg(&AON_PMCTL0, 26, 26, 0);
     return PPlus_SUCCESS;
 }
 
@@ -394,8 +395,8 @@ void hal_pwrmgr_poweroff(pwroff_cfg_t *pcfg, uint8_t wakeup_pin_num)
      *     reset path walkaround dwc
      */
 
-    AP_AON->SLEEP_R[0] = 2;
-    write_reg(0x4000f000, 0x5a5aa5a5);
+    AON_SLEEPR0 = 2;
+    AON_PWROFF = 0x5a5aa5a5;
 
     while (1)
         ;

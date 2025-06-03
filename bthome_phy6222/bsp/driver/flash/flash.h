@@ -95,13 +95,6 @@ typedef struct
     uint8_t mAddr[CHIP_MADDR_LEN];
 } chipMAddr_t;
 
-typedef struct
-{
-    bool init_flag;
-    uint32_t IdentificationID;
-    uint32_t Capacity;
-} FLASH_CHIP_INFO;
-extern FLASH_CHIP_INFO phy_flash;
 
 extern int _spif_wait_nobusy(uint8_t flg, uint32_t tout_ns);
 extern int spif_write(uint32_t addr, uint8_t *data, uint32_t size);
@@ -112,7 +105,7 @@ extern int spif_erase_sector(unsigned int addr);
 extern int spif_erase_block64(unsigned int addr);
 extern int spif_erase_all(void);
 extern uint8_t spif_flash_status_reg_0(void);
-extern int spif_write_protect(bool en);
+ATTR_ROM_FN int spif_write_protect(uint8_t en);
 extern void spif_cmd(uint8_t op, uint8_t addrlen, uint8_t rdlen, uint8_t wrlen, uint8_t mbit, uint8_t dummy);
 extern void spif_rddata(uint8_t *data, uint8_t len);
 extern int spif_config(sysclk_t ref_clk, uint8_t div, uint32_t rd_instr, uint8_t mode_bit, uint8_t QE);

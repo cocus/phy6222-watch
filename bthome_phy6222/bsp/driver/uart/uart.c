@@ -8,26 +8,37 @@
  SDK_LICENSE
 
 *******************************************************************************/
-// #include "rom_sym_def.h"
-
-// #include "bus_dev.h"
-// #include "mcu.h"
-// #include "gpio.h"
-// #include "clock.h"
 #include "uart.h"
-// #include "pwrmgr.h"
-// #include "error.h"
 #include <osal/osal_critical.h>
 #include <driver/clock/clock.h>
 #include <driver/pwrmgr/pwrmgr.h>
 #include <jump_function.h>
 #include <string.h>
 
+#include <types.h> /* for __ATTR_SECTION_SRAM__ */
+
+typedef enum
+{
+    UART_CTX_NOT_INITALIZED = 0U,
+    UART_CTX_INITIALIZED = 1U
+} uart_ctx_init_t;
+
+// TODO!!!: use FreeRTOS wait
+#define HAL_WAIT_CONDITION_TIMEOUT(condition, timeout) \
+    {                                                  \
+        volatile int val = 0;                          \
+        while (!(condition))                           \
+        {                                              \
+            if (val++ > timeout)                       \
+                return PPlus_ERR_TIMEOUT;              \
+        }                                              \
+    }
+
 #define UART_TX_BUFFER_SIZE 256
 
 typedef struct _uart_Context
 {
-    bool enable;
+    uart_ctx_init_t enable;
 
     uint8_t tx_state;
     uart_Tx_Buf_t tx_buf;
@@ -37,10 +48,10 @@ typedef struct _uart_Context
 static uart_Ctx_t m_uartCtx[2] =
     {
         {
-            .enable = false,
+            .enable = UART_CTX_NOT_INITALIZED,
         },
         {
-            .enable = false,
+            .enable = UART_CTX_NOT_INITALIZED,
         },
 };
 
@@ -164,13 +175,13 @@ static void __ATTR_SECTION_SRAM__ irq_tx_empty_handler(UART_INDEX_e uart_index)
     uint16_t len;
     AP_UART_TypeDef *cur_uart = (AP_UART_TypeDef *)AP_UART0_BASE;
 
-    if (m_uartCtx[uart_index].enable == false)
+    if (m_uartCtx[uart_index].enable == UART_CTX_NOT_INITALIZED)
         return;
 
-    if (m_uartCtx[uart_index].cfg.use_fifo == false)
+    if (m_uartCtx[uart_index].cfg.use_fifo == UART_CFG_FIFO_DISABLED)
         return;
 
-    if (m_uartCtx[uart_index].cfg.use_tx_buf == false)
+    if (m_uartCtx[uart_index].cfg.use_tx_buf == UART_CFG_BUFFER_DISABLED)
         return;
 
     if (p_txbuf->tx_state != TX_STATE_TX)
@@ -429,7 +440,7 @@ int hal_uart_init(uart_Cfg_t cfg, UART_INDEX_e uart_index)
     memset(&(m_uartCtx[uart_index]), 0, sizeof(uart_Ctx_t));
     memcpy(&(m_uartCtx[uart_index].cfg), &cfg, sizeof(uart_Cfg_t));
     uart_hw_init(uart_index);
-    m_uartCtx[uart_index].enable = true;
+    m_uartCtx[uart_index].enable = UART_CTX_INITIALIZED;
 
     if (uart_index == UART0)
         hal_pwrmgr_register(MOD_UART0, NULL, uart_wakeup_process_0);
@@ -443,7 +454,7 @@ int hal_uart_deinit(UART_INDEX_e uart_index)
 {
     uart_hw_deinit(uart_index);
     memset(&(m_uartCtx[uart_index]), 0, sizeof(uart_Ctx_t));
-    m_uartCtx[uart_index].enable = false;
+    m_uartCtx[uart_index].enable = UART_CTX_NOT_INITALIZED;
 
     if (uart_index == UART0)
         hal_pwrmgr_unregister(MOD_UART0);
@@ -457,10 +468,10 @@ int hal_uart_set_tx_buf(UART_INDEX_e uart_index, uint8_t *buf, uint16_t size)
 {
     uart_Tx_Buf_t *p_txbuf = &(m_uartCtx[uart_index].tx_buf);
 
-    if (m_uartCtx[uart_index].enable == false)
+    if (m_uartCtx[uart_index].enable == UART_CTX_NOT_INITALIZED)
         return PPlus_ERR_INVALID_STATE;
 
-    if (m_uartCtx[uart_index].cfg.use_tx_buf == false)
+    if (m_uartCtx[uart_index].cfg.use_tx_buf == UART_CFG_BUFFER_DISABLED)
         return PPlus_ERR_NOT_SUPPORTED;
 
     if (p_txbuf->tx_state != TX_STATE_UNINIT)
@@ -478,7 +489,7 @@ int hal_uart_set_tx_buf(UART_INDEX_e uart_index, uint8_t *buf, uint16_t size)
 
 int hal_uart_get_tx_ready(UART_INDEX_e uart_index)
 {
-    if (m_uartCtx[uart_index].cfg.use_tx_buf == false)
+    if (m_uartCtx[uart_index].cfg.use_tx_buf == UART_CFG_BUFFER_DISABLED)
         return PPlus_SUCCESS;
 
     if (m_uartCtx[uart_index].tx_buf.tx_state == TX_STATE_IDLE)

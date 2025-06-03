@@ -189,7 +189,7 @@ extern "C"
 /*********************************************************************
     VARIABLES
 */
-extern CONST uint8_t btBaseUUID[ATT_UUID_SIZE];
+extern const uint8_t btBaseUUID[ATT_UUID_SIZE];
 
 /*********************************************************************
     MACROS

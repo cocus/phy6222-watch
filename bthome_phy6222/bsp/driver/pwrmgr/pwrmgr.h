@@ -46,6 +46,12 @@ extern "C"
 		uint8_t moudle_num : 5;
 	} PWRMGR_CFG_BIT;
 
+	typedef enum
+	{
+		PWRMGR_MODULE_UNLOCKED = 0U,
+		PWRMGR_MODULE_LOCKED = 1U,
+	} pwrmgr_module_lock_t;
+
 #define CHIP_RETENTION_FLG_FLASH_ADDRESS 0x1100181c
 
 	extern uint32_t g_system_reset_cause;
@@ -54,7 +60,7 @@ extern "C"
 	typedef void (*pwrmgr_Hdl_t)(void);
 
 	int hal_pwrmgr_init(void);
-	bool hal_pwrmgr_is_lock(MODULE_e mod);
+	pwrmgr_module_lock_t hal_pwrmgr_is_lock(MODULE_e mod);
 	int hal_pwrmgr_lock(MODULE_e mod);
 	int hal_pwrmgr_unlock(MODULE_e mod);
 	int hal_pwrmgr_register(MODULE_e mod, pwrmgr_Hdl_t sleepHandle, pwrmgr_Hdl_t wakeupHandle);
@@ -70,7 +76,6 @@ extern "C"
 	int hal_pwrmgr_get_module_lock_status(void);
 
 	void hal_pwrmgr_poweroff(pwroff_cfg_t *pcfg, uint8_t wakeup_pin_num);
-	__ATTR_SECTION_SRAM__ void hal_pwrmgr_enter_sleep_rtc_reset(uint32_t sleepRtcTick);
 	void hal_pwrmgr_enter_standby(pwroff_cfg_t *pcfg, uint8_t wakeup_pin_num);
 
 	void clk_change_mod_restore(void);

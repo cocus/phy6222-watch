@@ -5602,7 +5602,7 @@ void config_RTC1(uint32_t time)
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 20;           //enable comparator0 envent
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 18;           //counter overflow interrupt
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 15;           //enable comparator0 inerrupt
-    AP_AON->RTCCTL |= BIT(15)|BIT(18)|BIT(20); // |= 0x148000 combine above 3 statement to save MCU time
+    AON_RTCCTL |= AON_RTCCTL_COMP0INT | AON_RTCCTL_COUNTOVF | AON_RTCCTL_COMP0EVT; // |= 0x148000 combine above 3 statement to save MCU time
 
     //compensate for cal wakeup next_time
     if (llState != LL_STATE_IDLE)

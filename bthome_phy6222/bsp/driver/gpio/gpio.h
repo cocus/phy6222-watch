@@ -17,6 +17,7 @@ extern "C"
 #endif
 
 #include <phy62xx.h>
+#include <rom/rom_attr.h>
 #include <phy_error.h>
 
 #define NUMBER_OF_PINS 23
@@ -139,6 +140,15 @@ extern "C"
         FRE_XTAL_CLK32768 = 7,
     } Freq_Type_e;
 
+    /**
+     * @brief  GPIO Bit SET and Bit RESET enumeration
+     */
+    typedef enum
+    {
+        GPIO_PIN_RESET = 0u,
+        GPIO_PIN_SET
+    } GPIO_PinState;
+
     typedef enum
     {
         GPIO_INPUT = 0,
@@ -192,7 +202,7 @@ extern "C"
 
     void hal_gpio_write(gpio_pin_e pin, uint8_t en);
     void hal_gpio_fast_write(gpio_pin_e pin, uint8_t en);
-    bool hal_gpio_read(gpio_pin_e pin);
+    GPIO_PinState hal_gpio_read(gpio_pin_e pin);
     void hal_gpio_fmux(gpio_pin_e pin, bit_action_e value);
     void hal_gpio_fmux_set(gpio_pin_e pin, gpio_fmux_e type);
 
@@ -215,12 +225,13 @@ extern "C"
     int hal_gpioretention_register(gpio_pin_e pin);
     int hal_gpioin_unregister(gpio_pin_e pin);
     int hal_gpio_init(void);
-    void hal_gpio_debug_mux(Freq_Type_e fre, bool en);
+    void hal_gpio_debug_mux_enable(Freq_Type_e fre);
+    void hal_gpio_debug_mux_disable(Freq_Type_e fre);
 
     // rom api
-    extern int gpio_write(gpio_pin_e pin, uint8_t en);
-    extern bool gpio_read(gpio_pin_e pin);
-    extern void gpio_pull_set(gpio_pin_e pin, gpio_pupd_e type);
+    ATTR_ROM_FN int gpio_write(gpio_pin_e pin, uint8_t en);
+    ATTR_ROM_FN GPIO_PinState gpio_read(gpio_pin_e pin);
+    ATTR_ROM_FN void gpio_pull_set(gpio_pin_e pin, gpio_pupd_e type);
 
     extern uint32_t s_gpio_wakeup_src_group1, s_gpio_wakeup_src_group2;
 #ifdef __cplusplus

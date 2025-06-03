@@ -15,15 +15,23 @@
 #include <driver/pwrmgr/pwrmgr.h>
 #include <log/log.h>
 
+#include <types.h> /* for BIT, UNUSED, subWriteReg */
+
 #if DMAC_USE
 #include "dma.h"
 #endif
+
+typedef enum
+{
+    SPI_MASTER = 0U,
+    SPI_SLAVE = 1U,
+} spi_ctx_slave_t;
 
 typedef struct _spi_Context
 {
     spi_Cfg_t cfg;
     hal_spi_t *spi_info;
-    bool is_slave_mode;
+    spi_ctx_slave_t is_slave_mode;
     spi_xmit_t transmit;
 } spi_Ctx_t;
 
@@ -131,7 +139,7 @@ static void spi_int_handle(uint8_t id, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
             if (trans_ptr->tx_offset == trans_ptr->xmit_len)
             {
                 Ssix->IMR = 0x10;
-                m_spiCtx[pctx->spi_info->spi_index].transmit.busy = false;
+                m_spiCtx[pctx->spi_info->spi_index].transmit.state = SPI_XMIT_IDLE;
                 break;
             }
         }
@@ -148,10 +156,10 @@ static void spi_int_handle(uint8_t id, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
 
         if (trans_ptr->rx_offset == trans_ptr->xmit_len)
         {
-            if (pctx->cfg.force_cs == true)
+            if (pctx->cfg.force_cs == SPI_FORCE_CS_ENABLED)
                 hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_ENABLE);
 
-            trans_ptr->busy = false;
+            trans_ptr->state = SPI_XMIT_IDLE;
             trans_ptr->rx_buf = NULL;
             trans_ptr->rx_offset = 0;
             evt.id = id;
@@ -217,7 +225,7 @@ static void spis_int_handle(uint8_t id, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
         {
             uint8_t rxbuf[16];
 
-            if (trans_ptr->busy)
+            if (trans_ptr->state == SPI_XMIT_BUSY)
                 trans_ptr->rx_offset += cnt;
 
             for (i = 0; i < cnt; i++)
@@ -232,7 +240,7 @@ static void spis_int_handle(uint8_t id, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
             pctx->cfg.evt_handler(&evt);
         }
 
-        if (trans_ptr->busy && trans_ptr->rx_offset >= trans_ptr->xmit_len)
+        if (trans_ptr->state == SPI_XMIT_BUSY && trans_ptr->rx_offset >= trans_ptr->xmit_len)
         {
             memset(trans_ptr, 0, sizeof(spi_xmit_t));
             evt.id = id;
@@ -268,7 +276,7 @@ void __attribute__((used)) hal_SPI0_IRQHandler(void)
     if (pctx->spi_info == NULL)
         return;
 
-    if (pctx->is_slave_mode)
+    if (pctx->is_slave_mode == SPI_SLAVE)
         spis_int_handle(0, pctx, AP_SPI0);
     else
         spi_int_handle(0, pctx, AP_SPI0);
@@ -296,7 +304,7 @@ void __attribute__((used)) hal_SPI1_IRQHandler(void)
     if (pctx->spi_info == NULL)
         return;
 
-    if (pctx->is_slave_mode)
+    if (pctx->is_slave_mode == SPI_SLAVE)
         spis_int_handle(1, pctx, AP_SPI1);
     else
         spi_int_handle(1, pctx, AP_SPI1);
@@ -872,7 +880,7 @@ int hal_spi_transmit(
     if (((tx_len == 0) && (rx_len == 0)) || (mod > SPI_EEPROM) || (tx_buf == NULL))
         return PPlus_ERR_INVALID_PARAM;
 
-    if (pctx->transmit.busy == true)
+    if (pctx->transmit.state == SPI_XMIT_IDLE)
         return PPlus_ERR_BUSY;
 
 #if DMAC_USE
@@ -892,17 +900,17 @@ int hal_spi_transmit(
         hal_spi_ndf_set(spi_ptr, rx_len);
     }
 
-    if (pctx->cfg.force_cs == true /*&& pctx->is_slave_mode == false*/)
+    if (pctx->cfg.force_cs == SPI_FORCE_CS_ENABLED /*&& pctx->is_slave_mode == SPI_MASTER */)
     {
         hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_DISABLE);
         hal_gpio_write(pctx->cfg.ssn_pin, 0);
     }
 
-    if (pctx->cfg.int_mode == false)
+    if (pctx->cfg.int_mode == SPI_INT_MODE_DISABLED)
     {
         ret = hal_spi_xmit_polling(spi_ptr, tx_buf, rx_buf, tx_len, rx_len);
 
-        if (pctx->cfg.force_cs == true && pctx->is_slave_mode == false)
+        if (pctx->cfg.force_cs == SPI_FORCE_CS_ENABLED && pctx->is_slave_mode == SPI_MASTER)
             hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_ENABLE);
 
         if (ret)
@@ -950,7 +958,7 @@ int hal_spi_transmit(
             trans_ptr->xmit_len = tx_len;
         }
 
-        pctx->transmit.busy = true;
+        pctx->transmit.state = SPI_XMIT_IDLE;
         spi_int_enable(spi_ptr, 0x11);
     }
 
@@ -969,35 +977,33 @@ int hal_spi_set_tx_buffer(hal_spi_t *spi_ptr, uint8_t *tx_buf, uint16_t len)
     return PPlus_SUCCESS;
 }
 
-int hal_spi_set_int_mode(hal_spi_t *spi_ptr, bool en)
+int hal_spi_set_int_mode(hal_spi_t *spi_ptr, spi_cfg_int_mode_t en)
 {
     SPI_HDL_VALIDATE(spi_ptr);
     m_spiCtx[spi_ptr->spi_index].cfg.int_mode = en;
 
     if (en)
     {
-        m_spiCtx[spi_ptr->spi_index].cfg.int_mode = true;
         spi_int_enable(spi_ptr, 0x10);
     }
     else
     {
-        m_spiCtx[spi_ptr->spi_index].cfg.int_mode = false;
         spi_int_disable(spi_ptr);
     }
 
     return PPlus_SUCCESS;
 }
 
-int hal_spi_set_force_cs(hal_spi_t *spi_ptr, bool en)
+int hal_spi_set_force_cs(hal_spi_t *spi_ptr, spi_cfg_force_cs_t en)
 {
     SPI_HDL_VALIDATE(spi_ptr);
     m_spiCtx[spi_ptr->spi_index].cfg.force_cs = en;
     return PPlus_SUCCESS;
 }
 
-bool hal_spi_get_transmit_bus_state(hal_spi_t *spi_ptr)
+spi_xmit_state_t hal_spi_get_transmit_bus_state(hal_spi_t *spi_ptr)
 {
-    return m_spiCtx[spi_ptr->spi_index].transmit.busy;
+    return m_spiCtx[spi_ptr->spi_index].transmit.state;
 }
 
 int hal_spi_TxComplete(hal_spi_t *spi_ptr)
@@ -1052,7 +1058,7 @@ int hal_spi_bus_init(hal_spi_t *spi_ptr, spi_Cfg_t cfg)
     hal_spi_master_init(spi_ptr, cfg.baudrate, cfg.spi_scmod, cfg.spi_tmod);
     hal_spi_dfs_set(spi_ptr, cfg.spi_dfsmod);
     pctx->cfg = cfg;
-    pctx->transmit.busy = false;
+    pctx->transmit.state = SPI_XMIT_IDLE;
     pctx->spi_info = spi_ptr;
 
     if (cfg.int_mode)
@@ -1060,7 +1066,7 @@ int hal_spi_bus_init(hal_spi_t *spi_ptr, spi_Cfg_t cfg)
     else
         spi_int_disable(spi_ptr);
 
-    pctx->is_slave_mode = false;
+    pctx->is_slave_mode = SPI_MASTER;
     return PPlus_SUCCESS;
 }
 
@@ -1119,7 +1125,7 @@ int hal_spis_bus_init(hal_spi_t *spi_ptr, spi_Cfg_t cfg)
     pctx->cfg = cfg;
     memset(&(pctx->transmit), 0, sizeof(spi_xmit_t));
     pctx->spi_info = spi_ptr;
-    pctx->is_slave_mode = true;
+    pctx->is_slave_mode = SPI_SLAVE;
 
     if (cfg.int_mode)
         spi_int_enable(spi_ptr, 0x10);

@@ -91,6 +91,18 @@ typedef struct _spi_evt_t
 
 typedef void (*spi_hdl_t)(spi_evt_t *pevt);
 
+typedef enum
+{
+    SPI_INT_MODE_DISABLED = 0U,
+    SPI_INT_MODE_ENABLED = 1U,
+} spi_cfg_int_mode_t;
+
+typedef enum
+{
+    SPI_FORCE_CS_DISABLED = 0U,
+    SPI_FORCE_CS_ENABLED = 1U,
+} spi_cfg_force_cs_t;
+
 typedef struct _spi_Cfg_t
 {
     GPIO_Pin_e sclk_pin;
@@ -105,8 +117,8 @@ typedef struct _spi_Cfg_t
     bool dma_tx_enable;
     bool dma_rx_enable;
 #endif
-    bool int_mode;
-    bool force_cs;
+    spi_cfg_int_mode_t int_mode;
+    spi_cfg_force_cs_t force_cs;
     spi_hdl_t evt_handler;
 } spi_Cfg_t;
 
@@ -124,9 +136,15 @@ typedef struct _hal_spi_t
     SPI_INDEX_e spi_index;
 } hal_spi_t;
 
+typedef enum
+{
+    SPI_XMIT_IDLE = 0U,
+    SPI_XMIT_BUSY = 1U
+} spi_xmit_state_t;
+
 typedef struct
 {
-    bool busy;
+    spi_xmit_state_t state;
     uint16_t xmit_len;
     uint16_t buf_len;
     uint8_t *tx_buf;
@@ -161,10 +179,10 @@ int hal_spi_transmit(
     uint16_t rx_len);
 
 int hal_spi_set_tx_buffer(hal_spi_t *spi_ptr, uint8_t *tx_buf, uint16_t len);
-int hal_spi_set_int_mode(hal_spi_t *spi_ptr, bool en);
-int hal_spi_set_force_cs(hal_spi_t *spi_ptr, bool en);
+int hal_spi_set_int_mode(hal_spi_t *spi_ptr, spi_cfg_int_mode_t en);
+int hal_spi_set_force_cs(hal_spi_t *spi_ptr, spi_cfg_force_cs_t en);
 
-bool hal_spi_get_transmit_bus_state(hal_spi_t *spi_ptr);
+spi_xmit_state_t hal_spi_get_transmit_bus_state(hal_spi_t *spi_ptr);
 int hal_spi_TxComplete(hal_spi_t *spi_ptr);
 int hal_spi_send_byte(hal_spi_t *spi_ptr, uint8_t data);
 

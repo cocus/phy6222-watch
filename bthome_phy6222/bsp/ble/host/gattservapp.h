@@ -321,7 +321,7 @@ extern void GATTServApp_RegisterForMsg( uint8_t taskID );
  *          bleMemAllocError: Memory allocation error occurred.<BR>
  */
 extern bStatus_t GATTServApp_RegisterService( gattAttribute_t *pAttrs, uint16_t numAttrs,
-                                              CONST gattServiceCBs_t *pServiceCBs );
+                                              const gattServiceCBs_t *pServiceCBs );
 /**
  * @brief   Deregister a service's attribute list and callback functions from
  *          the GATT Server Application.

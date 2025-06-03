@@ -87,13 +87,11 @@ extern volatile uint8_t   g_rc32kCalRes   ;
 #define PHY_REG_WT(x,y)                             *(volatile uint32_t *)(x) = (y)
 #define RF_CHN_TO_FREQ(x)
 
-#define DCDC_REF_CLK_SETTING(x)                     subWriteReg(0x4000f014,25,25, (0x01&(x)))
-#define DCDC_CONFIG_SETTING(x)                      subWriteReg(0x4000f014,18,15, (0x0f&(x)))
+#define DCDC_REF_CLK_SETTING(x)                     subWriteReg(&AON_PMCTL0,25,25, (0x01&(x)))
+#define DCDC_CONFIG_SETTING(x)                      subWriteReg(&AON_PMCTL0,18,15, (0x0f&(x)))
 /*
     0x4000f0c4 is AON-SLEEP_R[1], used for xtal tracking
 */
-#define AON_CLEAR_XTAL_TRACKING_AND_CALIB          AP_AON->SLEEP_R[1]=0
-
 #define AON_SAVE_RC32K_CALIB_FLG(x)                 subWriteReg(0x4000f0c4, 7, 7, (0x01&(x)))
 #define AON_LOAD_RC32K_CALIB_FLG                    (((*(volatile uint32_t*)0x4000f0c4) & 0x80) == 0x80)
 
@@ -107,7 +105,7 @@ extern volatile uint8_t   g_rc32kCalRes   ;
 #define XTAL16M_CAP_SETTING(x)                      subWriteReg(0x4000f0bc, 4, 0, (0x1f&(x)))
 
 #define XTAL16M_CURRENT_SETTING(x)                  subWriteReg(0x4000f0bc, 6, 5, (0x03&(x)))
-#define DIG_LDO_CURRENT_SETTING(x)                  subWriteReg(0x4000f014,22,21, (0x03&(x)))
+#define DIG_LDO_CURRENT_SETTING(x)                  subWriteReg(&AON_PMCTL0,22,21, (0x03&(x)))
 
 #define RF_PHY_LO_LDO_SETTING(x)                    subWriteReg(0x400300cc,11,10, (0x03&(x)))
 #define RF_PHY_PA_VTRIM_SETTING(x)                  subWriteReg(0x400300dc, 9, 7, (0x03&(x)))

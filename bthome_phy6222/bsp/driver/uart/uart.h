@@ -17,6 +17,7 @@ extern "C"
 #endif
 
 #include <phy62xx.h>
+#include <rom/rom_attr.h>
 #include <phy_error.h>
 #include <driver/gpio/gpio.h>
 
@@ -108,6 +109,30 @@ extern "C"
 
     typedef void (*uart_Hdl_t)(uart_Evt_t *pev);
 
+    typedef enum
+    {
+        UART_CFG_FIFO_DISABLED = 0U,
+        UART_CFG_FIFO_ENABLED = 1U,
+    } uart_cfg_fifo_t;
+
+    typedef enum
+    {
+        UART_CFG_FLOW_DISABLED = 0U,
+        UART_CFG_FLOW_ENABLED = 1U,
+    } uart_cfg_flow_t;
+
+    typedef enum
+    {
+        UART_CFG_PARITY_DISABLED = 0U,
+        UART_CFG_PARITY_ENABLED = 1U,
+    } uart_cfg_parity_t;
+
+    typedef enum
+    {
+        UART_CFG_BUFFER_DISABLED = 0U,
+        UART_CFG_BUFFER_ENABLED = 1U,
+    } uart_cfg_buffer_t;
+
     typedef struct _uart_Cfg_t
     {
         gpio_pin_e tx_pin;
@@ -115,10 +140,10 @@ extern "C"
         gpio_pin_e rts_pin;
         gpio_pin_e cts_pin;
         uint32_t baudrate;
-        bool use_fifo;
-        bool hw_fwctrl;
-        bool use_tx_buf;
-        bool parity;
+        uart_cfg_fifo_t use_fifo;
+        uart_cfg_flow_t hw_fwctrl;
+        uart_cfg_buffer_t use_tx_buf;
+        uart_cfg_parity_t parity;
         uart_Hdl_t evt_handler;
     } uart_Cfg_t;
 
