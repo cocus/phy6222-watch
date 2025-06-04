@@ -73,7 +73,7 @@ static void dt_timer_start(uint32_t intval_ms)
 void timer_cnt_get(uint32_t* tick)
 {
     #if(USE_SYS_TICK)
-    *tick = hal_systick();         // read current RTC counter
+    *tick = getMcuPrecisionCount();         // read current RTC counter
     #else
     *tick = rtc_get_counter();         // read current RTC counter
     #endif

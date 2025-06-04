@@ -7,7 +7,7 @@
 #define ROM_NAME _symrom_#
 #endif
 
-#define ATTR_ROM_VAR extern
+#define ATTR_ROM_VAR extern volatile
 
 #define ATTR_ROM_FN
 

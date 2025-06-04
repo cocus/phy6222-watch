@@ -40,8 +40,8 @@ extern "C" {
 
 
 #define SPIF_RSVD_AREA_1                 (0x1000)
-#define pSPIF_RSVD1_ADC_CALIBRATE       ((volatile uint32_t*)(SPIF_BASE_ADDR + SPIF_RSVD_AREA_1))
-#define SPIF_RSVD1_ADC_CALIBRATE        (SPIF_BASE_ADDR + SPIF_RSVD_AREA_1)
+#define pSPIF_RSVD1_ADC_CALIBRATE       ((volatile uint32_t*)(FLASH_BASE_ADDR + SPIF_RSVD_AREA_1))
+#define SPIF_RSVD1_ADC_CALIBRATE        (FLASH_BASE_ADDR + SPIF_RSVD_AREA_1)
 
 
 

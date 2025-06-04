@@ -179,7 +179,6 @@ extern volatile uint8_t g_same_rf_channel_flag;
 
 //extern uint32_t  g_TIM2_wakeup_delay;
 extern uint32_t  rtc_mod_value;
-extern uint32_t  g_counter_traking_cnt;
 extern uint32_t  sleep_tick;
 extern uint32_t  g_wakeup_rtc_tick;
 
@@ -4854,9 +4853,6 @@ void LL_IRQHandler1(void)
 //--------------------------------------
 extern uint32_t  g_wakeup_rtc_tick;
 
-extern uint32_t counter_tracking;
-extern uint32_t g_counter_traking_avg;
-extern uint32_t g_counter_traking_cnt;
 extern uint32_t  g_TIM2_IRQ_TIM3_CurrCount;
 extern uint32_t  g_TIM2_IRQ_to_Sleep_DeltTick;
 extern uint32_t  read_ll_adv_remainder_time(void);

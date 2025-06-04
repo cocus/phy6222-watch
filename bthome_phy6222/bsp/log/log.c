@@ -418,7 +418,7 @@ void dbg_printf(const char *format, ...)
 
 uint32_t dbg_time(void)
 {
-    return hal_systick();
+    return getMcuPrecisionCount();
 }
 
 void dbg_printf_init(void)

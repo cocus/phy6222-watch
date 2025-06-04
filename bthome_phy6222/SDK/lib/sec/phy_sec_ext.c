@@ -19,14 +19,14 @@
 #define CHIP_VERSION_H                  (0x0BBB)
 
 #define CHIP_BOOT_AREA_ADDR             0x3000
-#define CHIP_BOOT_PART_SEC(n)           ((*(volatile uint32_t*)(SPIF_BASE_ADDR + CHIP_BOOT_AREA_ADDR+0x104+(n)*0x10))&0x80000000)
+#define CHIP_BOOT_PART_SEC(n)           ((*(volatile uint32_t*)(FLASH_BASE_ADDR + CHIP_BOOT_AREA_ADDR+0x104+(n)*0x10))&0x80000000)
 #define CHIP_SECURE_AREA_ADDR           (0x2900)
-#define CHIP_SECURE_AUTH_WORD           (*(volatile uint32_t*)(SPIF_BASE_ADDR + CHIP_SECURE_AREA_ADDR ))
-#define CHIP_SECURE_USE_EFUSE           (*(volatile uint32_t*)(SPIF_BASE_ADDR + CHIP_SECURE_AREA_ADDR + 0x4))
-#define CHIP_SECURE_KEY_L               (*(volatile uint32_t*)(SPIF_BASE_ADDR + CHIP_SECURE_AREA_ADDR + 0x8))
-#define CHIP_SECURE_KEY_H               (*(volatile uint32_t*)(SPIF_BASE_ADDR + CHIP_SECURE_AREA_ADDR + 0xc))
-#define pCHIP_SECURE_PLAINTEXT          ((volatile uint8_t*)(SPIF_BASE_ADDR + CHIP_SECURE_AREA_ADDR + 0x10))
-#define pCHIP_SECURE_MIC                ((volatile uint8_t*)(SPIF_BASE_ADDR + CHIP_SECURE_AREA_ADDR + 0x20))
+#define CHIP_SECURE_AUTH_WORD           (*(volatile uint32_t*)(FLASH_BASE_ADDR + CHIP_SECURE_AREA_ADDR ))
+#define CHIP_SECURE_USE_EFUSE           (*(volatile uint32_t*)(FLASH_BASE_ADDR + CHIP_SECURE_AREA_ADDR + 0x4))
+#define CHIP_SECURE_KEY_L               (*(volatile uint32_t*)(FLASH_BASE_ADDR + CHIP_SECURE_AREA_ADDR + 0x8))
+#define CHIP_SECURE_KEY_H               (*(volatile uint32_t*)(FLASH_BASE_ADDR + CHIP_SECURE_AREA_ADDR + 0xc))
+#define pCHIP_SECURE_PLAINTEXT          ((volatile uint8_t*)(FLASH_BASE_ADDR + CHIP_SECURE_AREA_ADDR + 0x10))
+#define pCHIP_SECURE_MIC                ((volatile uint8_t*)(FLASH_BASE_ADDR + CHIP_SECURE_AREA_ADDR + 0x20))
 
 #if 0
     chipId_t g_chipId;

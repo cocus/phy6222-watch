@@ -38,7 +38,7 @@ typedef struct _spi_Context
 static spi_Ctx_t m_spiCtx[2];
 
 #if (SPI_USE_TIMEOUT == 1)
-#define SPI_INIT_TOUT(to) int to = hal_systick()
+#define SPI_INIT_TOUT(to) int to = getMcuPrecisionCount()
 #define SPI_CHECK_TOUT(to, timeout, loginfo) \
     {                                        \
         if (hal_ms_intv(to) > timeout)       \

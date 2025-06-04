@@ -51,7 +51,7 @@ void hal_voice_amic_mode(void)
     subWriteReg(0x4000f048,7,5,0);      //Connect ADC to PGA
     subWriteReg(0x4000f07c,4,4,1);
     subWriteReg(0x4000f07c,0,0,1);
-    subWriteReg(0x4000F000 + 0x7c,2,1,HAL_ADC_CLOCK_320K);
+    subWriteReg(&AON_PWROFF + 0x7c,2,1,HAL_ADC_CLOCK_320K);
 }
 
 // Open a GPIO pin for DMIC

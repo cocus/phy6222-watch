@@ -425,7 +425,7 @@ typedef struct
   __IO uint32_t GPIO_WAKEUP_SRC[2];/*!< 0xb0 b4 */
   __IO uint32_t PCLK_CLK_GATE;    /*!< 0xb8 bit0 pclk_clk_gate_en */
   __IO uint32_t XTAL_16M_CTRL;    /*!< 0xbc */
-  __IO uint32_t SLEEP_R[4];       /*!< 0xc0 c4 c8 cc */
+  __IO uint32_t SLEEP_R[4];       /*!< 0xc0 c4 c8 cc: SLEEP_R[0]: flags =2 RSTC_OFF_MODE, =4 RSTC_WARM_NDWC */
 } AP_AON_TypeDef;
 
 /**
@@ -461,7 +461,7 @@ typedef struct
   __IO uint32_t SW_RESET2;        /*!< 0xc */
   __IO uint32_t SW_RESET3;        /*!< 0x10 bit 1: M0 cpu reset pulse, bit 0: M0 system reset pulse. */
   __IO uint32_t SW_CLK1;          /*!< 0x14 */
-  __IO uint32_t APB_CLK;          /*!< 0x18 */
+  __IO uint32_t APB_CLK;          /*!< 0x18 bit7-4: HCLK/PCLK ratio (minus 1) */
   __IO uint32_t APB_CLK_UPDATE;   /*!< 0x1c */
   __IO uint32_t CACHE_CLOCK_GATE; /*!< 0x20 */
   __IO uint32_t CACHE_RST;        /*!< 0x24 */
@@ -472,7 +472,7 @@ typedef struct
 {
   __IO uint32_t CLKSEL;           /*!< 0x3c */
   __IO uint32_t CLKHF_CTL0;       /*!< 0x40 */
-  __IO uint32_t CLKHF_CTL1;       /*!< 0x44 */
+  __IO uint32_t CLKHF_CTL1;       /*!< 0x44: bit8 doubler enabled */
   __IO uint32_t ANA_CTL;          /*!< 0x48 */
   __IO uint32_t mem_0_1_dvs;      /*!< 0x4c */
   __IO uint32_t mem_2_3_4_dvs;    /*!< 0x50 */
@@ -843,6 +843,7 @@ typedef struct
 #define AON_PWROFF                          (AP_AON->PWROFF)
 #define AON_RTCCTL                          (AP_AON->RTCCTL)
 #define AON_PMCTL0                          (AP_AON->PMCTL0)
+#define AON_PMCTL2_0                        (AP_AON->PMCTL2_0)
 #define AON_SLEEPR0                         (AP_AON->SLEEP_R[0])
 #define AON_SLEEPR1                         (AP_AON->SLEEP_R[1])
 
@@ -874,8 +875,8 @@ typedef struct
 /******************************************************************************/
 
 /*!< Endpoint-specific registers */
-#define PCR_SWCTL                           (AP_PCR->SW_CLK)
-#define PCR_SWCTL1                          (AP_PCR->SW_CLK1)
+#define PCR_SWCLK                           (AP_PCR->SW_CLK)
+#define PCR_SWCLK1                          (AP_PCR->SW_CLK1)
 #define PCR_CACHE_CLOCK_GATE                (AP_PCR->CACHE_CLOCK_GATE)
 #define PCR_SW_RESET0                       (AP_PCR->SW_RESET0)
 #define PCR_SW_RESET1                       (AP_PCR->SW_RESET1)

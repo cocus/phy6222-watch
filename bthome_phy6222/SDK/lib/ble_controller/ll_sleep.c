@@ -267,7 +267,7 @@ void config_RTC0(uint32 time)
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 18;           //counter overflow interrupt
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 15;           //enable comparator0 inerrupt
     //*(volatile uint32_t *) 0x4000f024 |= 0x148000;          // combine above 3 statement to save MCU time
-    AP_AON->RTCCTL |= BIT(15)|BIT(18)|BIT(20);
+    AON_RTCCTL |= AON_RTCCTL_COMP0INT | AON_RTCCTL_COUNTOVF | AON_RTCCTL_COMP0EVT; //BIT(15)|BIT(18)|BIT(20);
 }
 
 /*******************************************************************************

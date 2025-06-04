@@ -2305,7 +2305,7 @@ void    rf_phy_dtm_ext_rx_demod_burst(uint8_t rfChnIdx,int8_t rfFoff,uint8_t xta
     uint8_t rssi;
     uint16_t foff;
     uint8_t carrSens;
-    uint32_t t0 = hal_systick();
+    uint32_t t0 = getMcuPrecisionCount();
     XTAL16M_CAP_SETTING(xtal_cap);
 
     while(hal_ms_intv(t0)<rxTimeOut)

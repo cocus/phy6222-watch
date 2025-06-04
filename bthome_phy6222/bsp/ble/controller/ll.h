@@ -3510,8 +3510,6 @@ extern uint32_t ll_remain_time;
 extern volatile uint32_t llWaitingIrq;
 extern uint32_t ISR_entry_time;
 
-extern uint32_t counter_tracking;
-
 
 extern uint8_t  g_llScanMode;
 extern uint8_t g_currentPeerAddrType;

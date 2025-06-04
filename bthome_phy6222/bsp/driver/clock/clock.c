@@ -6,6 +6,8 @@
 
 #include <driver/gpio/gpio.h>
 
+#include <types.h> /* for BIT, subWriteReg */
+
 uint32_t sysclk_get_clk(void)
 {
     switch (g_system_clk)
@@ -22,66 +24,59 @@ uint32_t sysclk_get_clk(void)
     case SYS_CLK_DLL_96M:
         return 96000000;
     default:
-        break;
+        return 16000000; /* safe default */
     }
-
-    return 16000000;
 }
 
 void hal_clk_gate_enable(MODULE_e module)
 {
-    if(module < MOD_CP_CPU)
+    if (module < MOD_CP_CPU)
     {
-        AP_PCR->SW_CLK |= BIT(module);
+        PCR_SWCLK |= BIT(module);
     }
-    else if(module < MOD_PCLK_CACHE)
+    else if (module < MOD_PCLK_CACHE)
     {
-        AP_PCR->SW_CLK1 |= BIT(module-MOD_CP_CPU);
+        PCR_SWCLK1 |= BIT(module-MOD_CP_CPU);
     }
-    else if(module < MOD_USR0)
+    else if (module < MOD_USR0)
     {
-        AP_PCR->CACHE_CLOCK_GATE |= BIT(module-MOD_PCLK_CACHE);
+        PCR_CACHE_CLOCK_GATE |= BIT(module-MOD_PCLK_CACHE);
     }
 }
 
 void hal_clk_gate_disable(MODULE_e module)
 {
-    if(module < MOD_CP_CPU)
+    // TODO!!!: Use atomic bit unset
+    if (module < MOD_CP_CPU)
     {
-        AP_PCR->SW_CLK &= ~(BIT(module));
+        PCR_SWCLK &= ~(BIT(module));
     }
-    else if(module < MOD_PCLK_CACHE)
+    else if (module < MOD_PCLK_CACHE)
     {
-        AP_PCR->SW_CLK1 &= ~(BIT(module-MOD_CP_CPU));
+        PCR_SWCLK1 &= ~(BIT(module-MOD_CP_CPU));
     }
-    else if(module < MOD_USR0)
+    else if (module < MOD_USR0)
     {
-        AP_PCR->CACHE_CLOCK_GATE &= ~(BIT(module-MOD_PCLK_CACHE));
+        PCR_CACHE_CLOCK_GATE &= ~(BIT(module-MOD_PCLK_CACHE));
     }
 }
 
 int hal_clk_gate_get(MODULE_e module)
 {
-    if(module < MOD_CP_CPU)
+    // TODO!!!: Use atomic bit unset
+    if (module < MOD_CP_CPU)
     {
-        return (AP_PCR->SW_CLK & BIT(module));
+        return (PCR_SWCLK & BIT(module));
     }
-    else if(module < MOD_PCLK_CACHE)
+    else if (module < MOD_PCLK_CACHE)
     {
-        return (AP_PCR->SW_CLK1 & BIT(module-MOD_CP_CPU));
+        return (PCR_SWCLK1 & BIT(module-MOD_CP_CPU));
     }
-    //else if(module < MOD_USR0)
+    // else if(module < MOD_USR0)
     else
     {
-        return (AP_PCR->CACHE_CLOCK_GATE & BIT(module-MOD_PCLK_CACHE));
+        return (PCR_CACHE_CLOCK_GATE & BIT(module-MOD_PCLK_CACHE));
     }
-}
-
-void hal_clk_get_modules_state(uint32_t* buff)
-{
-    *buff     = AP_PCR->SW_CLK;
-    *(buff+1) = AP_PCR->SW_CLK1;
-    *(buff+2) = AP_PCR->CACHE_CLOCK_GATE;
 }
 
 void hal_clk_reset(MODULE_e module)
@@ -90,101 +85,78 @@ void hal_clk_reset(MODULE_e module)
     {
         if((module >= MOD_TIMER5) &&(module <= MOD_TIMER6))
         {
-            AP_PCR->SW_RESET0 &= ~BIT(5);
-            AP_PCR->SW_RESET0 |= BIT(5);
+            PCR_SW_RESET0 &= ~BIT(5);
+            PCR_SW_RESET0 |= BIT(5);
         }
         else
         {
-            AP_PCR->SW_RESET0 &= ~BIT(module);
-            AP_PCR->SW_RESET0 |= BIT(module);
+            PCR_SW_RESET0 &= ~BIT(module);
+            PCR_SW_RESET0 |= BIT(module);
         }
     }
     else if(module < MOD_PCLK_CACHE)
     {
         if((module >= MOD_TIMER1) &&(module <= MOD_TIMER4))
         {
-            AP_PCR->SW_RESET2 &= ~BIT(4);
-            AP_PCR->SW_RESET2 |= BIT(4);
+            PCR_SW_RESET2 &= ~BIT(4);
+            PCR_SW_RESET2 |= BIT(4);
         }
         else
         {
-            AP_PCR->SW_RESET2 &= ~BIT(module-MOD_CP_CPU);
-            AP_PCR->SW_RESET2 |= BIT(module-MOD_CP_CPU);
+            PCR_SW_RESET2 &= ~BIT(module-MOD_CP_CPU);
+            PCR_SW_RESET2 |= BIT(module-MOD_CP_CPU);
         }
     }
     else if(module < MOD_USR0)
     {
-        AP_PCR->CACHE_RST &= ~BIT(1-(module-MOD_HCLK_CACHE));
-        AP_PCR->CACHE_RST |= BIT(1-(module-MOD_HCLK_CACHE));
+        PCR_CACHE_RST &= ~BIT(1-(module-MOD_HCLK_CACHE));
+        PCR_CACHE_RST |= BIT(1-(module-MOD_HCLK_CACHE));
     }
 }
 
-
 void hal_rtc_clock_config(CLK32K_e clk32Mode)
 {
-    if(clk32Mode == CLK_32K_RCOSC)
+    if (clk32Mode == CLK_32K_RCOSC)
     {
-        subWriteReg(&(AP_AON->PMCTL0),31,27,0x05);
-        subWriteReg(&(AP_AON->PMCTL2_0),16,7,0x3fb);
-        subWriteReg(&(AP_AON->PMCTL2_0),6,6,0x01);
+        subWriteReg(&(AON_PMCTL0),31,27,0x05);
+        subWriteReg(&(AON_PMCTL2_0),16,7,0x3fb);
+        subWriteReg(&(AON_PMCTL2_0),6,6,0x01);
         //pGlobal_config[LL_SWITCH]|=RC32_TRACKINK_ALLOW|LL_RC32K_SEL;
     }
-    else if(clk32Mode == CLK_32K_XTAL)
+    else if (clk32Mode == CLK_32K_XTAL)
     {
         // P16 P17 for 32K XTAL input
         hal_gpio_pull_set(P16,FLOATING);
         hal_gpio_pull_set(P17,FLOATING);
-        subWriteReg(&(AP_AON->PMCTL2_0),9,8,0x03);   //software control 32k_clk
-        subWriteReg(&(AP_AON->PMCTL2_0),6,6,0x00);   //disable software control
-        subWriteReg(&(AP_AON->PMCTL0),31,27,0x16);
+        subWriteReg(&(AON_PMCTL2_0),9,8,0x03);   //software control 32k_clk
+        subWriteReg(&(AON_PMCTL2_0),6,6,0x00);   //disable software control
+        subWriteReg(&(AON_PMCTL0),31,27,0x16);
         //pGlobal_config[LL_SWITCH]&=0xffffffee;
     }
 
-//    //ZQ 20200812 for rc32k wakeup
-//    subWriteReg(&(AP_AON->PMCTL0),28,28,0x1);//turn on 32kxtal
-//    subWriteReg(&(AP_AON->PMCTL1),18,17,0x0);// reduce 32kxtl bias current
-}
-
-
-/* Step 625 us */
-uint32_t hal_systick(void)
-{
-    return osal_sys_tick;
+    //    //ZQ 20200812 for rc32k wakeup
+    //    subWriteReg(&(AON_PMCTL0),28,28,0x1);//turn on 32kxtal
+    //    subWriteReg(&(AP_AON->PMCTL1),18,17,0x0);// reduce 32kxtl bias current
 }
 
 /* Step 625 us */
 uint32_t hal_ms_intv(uint32_t tick)
 {
     uint32_t diff = 0;
+    uint32_t osal = getMcuPrecisionCount();
 
-    if(osal_sys_tick < tick)
+    if (osal < tick)
     {
-        diff = 0xffffffff- tick;
-        diff = osal_sys_tick + diff;
+        diff = 0xffffffff - tick;
+        diff = osal + diff;
     }
     else
     {
-        diff = osal_sys_tick - tick;
+        diff = osal - tick;
     }
 
-    return diff*625/1000;
+    return diff * 625 / 1000;
 }
-
-/**************************************************************************************
-    @fn          WaitMs
-
-    @brief       This function process for wait program msecond,use RTC
-
-    input parameters
-
-    @param       uint32_t msecond: the msecond value
-
-    output parameters
-
-    @param       None.
-
-    @return      None.
- **************************************************************************************/
 
 void WaitMs(uint32_t msecond)
 {
@@ -193,41 +165,36 @@ void WaitMs(uint32_t msecond)
 
 void WaitUs(uint32_t wtTime)
 {
-    uint32_t T0,currTick,deltTick;
-    //T0 = read_current_time();
-    T0 =(TIME_BASE - ((AP_TIM3->CurrentCount) >> 2));
+    uint32_t T0, currTick, deltTick;
+    // T0 = read_current_time();
+    T0 = (TIME_BASE - ((AP_TIM3->CurrentCount) >> 2));
 
-    while(1)
+    while (1)
     {
         currTick = (TIME_BASE - ((AP_TIM3->CurrentCount) >> 2));
-        deltTick = TIME_DELTA(currTick,T0);
+        deltTick = TIME_DELTA(currTick, T0);
 
-        if(deltTick>wtTime)
+        if (deltTick > wtTime)
             break;
     }
 }
 
-#define AON_CLEAR_XTAL_TRACKING_AND_CALIB           AP_AON->SLEEP_R[1]=0
-#define XTAL16M_CAP_SETTING(x)                      subWriteReg(0x4000f0bc, 4, 0, (0x1f&(x)))
-
-
-extern int m_in_critical_region ;
 void hal_system_soft_reset(void)
 {
-    //HAL_ENTER_CRITICAL_SECTION();
+    // HAL_ENTER_CRITICAL_SECTION();
     __disable_irq();
-    m_in_critical_region++;
     /**
         config reset casue as RSTC_WARM_NDWC
         reset path walkaround dwc
     */
-    AP_AON->SLEEP_R[0] = 4;
+    AON_SLEEPR0 = 4;
 
     AON_CLEAR_XTAL_TRACKING_AND_CALIB;
 
-    AP_PCR->SW_RESET1 = 0;
+    PCR_SW_RESET1 = 0;
 
-    while(1);
+    while (1)
+        ;
 }
 
 void hal_rc32k_clk_tracking_init(void)
@@ -239,10 +206,13 @@ void hal_rc32k_clk_tracking_init(void)
 }
 
 #if 0
+#define CHIP_RFEQ_OFF_FLASH_ADDRESS 0x11001e08 // was 0x11004008
+#define CHIP_XTAK_CAP_FLASH_ADDRESS 0x11001e0c // was 0x1100400c
+
 __ATTR_SECTION_XIP__  void hal_rfPhyFreqOff_Set(void)
 {
     int32_t freqPpm=0;
-    freqPpm= *(volatile int32_t*) CHIP_RFEQ_OFF_FLASH_ADDRESS; // было 0x11004008
+    freqPpm= *(volatile int32_t*) CHIP_RFEQ_OFF_FLASH_ADDRESS; // was 0x11004008
 
     if((freqPpm!=-1) && (freqPpm>=-50) && (freqPpm<=50))
     {
@@ -253,14 +223,13 @@ __ATTR_SECTION_XIP__  void hal_rfPhyFreqOff_Set(void)
         g_rfPhyFreqOffSet   =RF_PHY_FREQ_FOFF_00KHZ;
     }
 }
-#endif
 
 __ATTR_SECTION_XIP__ void hal_xtal16m_cap_Set(void)
 {
-    uint32_t cap=0;
-    cap= *(volatile int32_t*) CHIP_XTAK_CAP_FLASH_ADDRESS; // было 0x1100400c
+    uint32_t cap = 0;
+    cap = *(volatile int32_t *)CHIP_XTAK_CAP_FLASH_ADDRESS; // was 0x1100400c
 
-    if((cap!=0xffffffff) && (cap <= 0x1f))
+    if ((cap != 0xffffffff) && (cap <= 0x1f))
     {
         XTAL16M_CAP_SETTING(cap);
     }
@@ -269,5 +238,4 @@ __ATTR_SECTION_XIP__ void hal_xtal16m_cap_Set(void)
         XTAL16M_CAP_SETTING(0x09);
     }
 }
-
-
+#endif
