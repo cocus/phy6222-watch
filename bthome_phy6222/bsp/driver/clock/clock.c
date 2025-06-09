@@ -1,13 +1,53 @@
-/*************
- clock.c
- SDK_LICENSE
-***************/
+/**
+  ******************************************************************************
+  * @file    clock.c
+  * @author  PhyPlus, Santiago Hormazabal
+  * @brief   Clock BSP module driver.
+  *          This file provides firmware functions to manage the clock related
+  *          functionalities of the MCU:
+  *           + Enabling/Disabling clock to peripherals (modules)
+  *           + Resets peripherals (modules)
+  *           + Configure the RTC clock
+  *           + Provide delay functions with microsecond accuaracy
+  *
+  ******************************************************************************
+  */
+
+/* Includes ------------------------------------------------------------------*/
 #include "clock.h"
 
 #include <driver/gpio/gpio.h>
 
 #include <types.h> /* for BIT, subWriteReg */
 
+/** @addtogroup PHY62XX_BSP_Driver
+  * @{
+  */
+
+/** @defgroup CLOCK
+  * @brief Clock BSP module driver
+  * @{
+  */
+
+/* Private typedef -----------------------------------------------------------*/
+/* Private define ------------------------------------------------------------*/
+/** @addtogroup CLOCK_Private_Constants CLOCK Private Constants
+  * @{
+  */
+
+/**
+  * @}
+  */
+
+/* Private macro -------------------------------------------------------------*/
+/* Private variables ---------------------------------------------------------*/
+/* Private function prototypes -----------------------------------------------*/
+/* Private functions ---------------------------------------------------------*/
+/* Exported functions --------------------------------------------------------*/
+
+/** @defgroup CLOCK_Exported_Functions Clock related exported functions
+  * @{
+  */
 uint32_t sysclk_get_clk(void)
 {
     switch (g_system_clk)
@@ -139,12 +179,12 @@ void hal_rtc_clock_config(CLK32K_e clk32Mode)
     //    subWriteReg(&(AP_AON->PMCTL1),18,17,0x0);// reduce 32kxtl bias current
 }
 
-/* Step 625 us */
 uint32_t hal_ms_intv(uint32_t tick)
 {
     uint32_t diff = 0;
     uint32_t osal = getMcuPrecisionCount();
 
+    /* each tick is 625us */
     if (osal < tick)
     {
         diff = 0xffffffff - tick;
@@ -166,7 +206,6 @@ void WaitMs(uint32_t msecond)
 void WaitUs(uint32_t wtTime)
 {
     uint32_t T0, currTick, deltTick;
-    // T0 = read_current_time();
     T0 = (TIME_BASE - ((AP_TIM3->CurrentCount) >> 2));
 
     while (1)
@@ -239,3 +278,16 @@ __ATTR_SECTION_XIP__ void hal_xtal16m_cap_Set(void)
     }
 }
 #endif
+
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */
+
+/**
+  * @}
+  */

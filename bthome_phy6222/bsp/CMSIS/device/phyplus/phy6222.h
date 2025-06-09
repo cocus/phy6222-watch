@@ -835,6 +835,91 @@ typedef struct
 /******************************************************************************/
 /******************************************************************************/
 /*                                                                            */
+/*                             SPI FLASH registers                            */
+/*                                                                            */
+/******************************************************************************/
+
+/*!< Endpoint-specific registers */
+#define SPIF_FCMD                           (AP_SPIF->fcmd)
+
+/********************  Bit definition for FCMD register  **********************/
+#define SPIF_FCMD_EXEC_Pos                  (0U)
+#define SPIF_FCMD_EXEC_Msk                  (0x1UL << SPIF_FCMD_EXEC_Pos)       /*!< 0x00000001 */
+#define SPIF_FCMD_EXEC                      SPIF_FCMD_EXEC_Msk                  /*!< SPIF exec flag, maybe? */
+
+#define SPIF_FCMD_BUSY_Pos                  (1U)
+#define SPIF_FCMD_BUSY_Msk                  (0x1UL << SPIF_FCMD_BUSY_Pos)       /*!< 0x00000002 */
+#define SPIF_FCMD_BUSY                      SPIF_FCMD_BUSY_Msk                  /*!< SPIF Busy flag, maybe? */
+
+#define SPIF_FCMD_WREN_Pos                  (15U)
+#define SPIF_FCMD_WREN_Msk                  (0x1UL << SPIF_FCMD_WREN_Pos)       /*!< 0x0008000 */
+#define SPIF_FCMD_WREN                      SPIF_FCMD_WREN_Msk                  /*!< SPIF Write enable flag? */
+
+#define SPIF_FCMD_MBIT_Pos                  (18U)
+#define SPIF_FCMD_MBIT_Msk                  (0x1UL << SPIF_FCMD_MBIT_Pos)       /*!< 0x00040000 */
+#define SPIF_FCMD_MBIT                      SPIF_FCMD_MBIT_Msk                  /*!< SPIF MBIT flag? */
+
+#define SPIF_FCMD_ADDREN_Pos                (19U)
+#define SPIF_FCMD_ADDREN_Msk                (0x1UL << SPIF_FCMD_ADDREN_Pos)     /*!< 0x00080000 */
+#define SPIF_FCMD_ADDREN                    SPIF_FCMD_ADDREN_Msk                /*!< SPIF Address enable flag? */
+
+#define SPIF_FCMD_RDEN_Pos                  (23U)
+#define SPIF_FCMD_RDEN_Msk                  (0x1UL << SPIF_FCMD_RDEN_Pos)       /*!< 0x00800000 */
+#define SPIF_FCMD_RDEN                      SPIF_FCMD_RDEN_Msk                  /*!< SPIF Read enable flag? */
+
+#define SPIF_FCMD_OPS_Pos                   (24U)
+
+#define SPIF_CMD_RESET                      (0x99UL)
+#define SPIF_CMD_ENRST                      (0x66UL)
+#define SPIF_CMD_WREN                       (0x06UL)
+#define SPIF_CMD_WRDIS                      (0x04UL)
+#define SPIF_CMD_VSRWREN                    (0x50UL)
+#define SPIF_CMD_CERASE                     (0x60UL)
+#define SPIF_CMD_SERASE                     (0x20UL)
+#define SPIF_CMD_BERASE32                   (0x52UL)
+#define SPIF_CMD_BERASE64                   (0xD8UL)
+#define SPIF_CMD_DPWRDN                     (0xB9UL)
+#define SPIF_CMD_RLSDPD                     (0xABUL)
+#define SPIF_CMD_WRST                       (0x01UL)
+#define SPIF_CMD_RDID                       (0x9FUL)
+#define SPIF_CMD_RDST                       (0x05UL)
+#define SPIF_CMD_RDST_H                     (0x35UL)
+#define SPIF_CMD_PPROG                      (0x02UL)
+#define SPIF_CMD_READ                       (0x03UL)
+#define SPIF_CMD_READF                      (0x0BUL)
+#define SPIF_CMD_READDO                     (0x3BUL)
+#define SPIF_CMD_READDIO                    (0xBBUL)
+#define SPIF_CMD_READQO                     (0x6BUL)
+#define SPIF_CMD_READQIO                    (0xeBUL)
+#define SPIF_CMD_READQIOW                   (0xe7UL)
+
+#define SPIF_FCMD_OP_RESET                  (SPIF_CMD_RESET << SPIF_FCMD_OPS_Pos)    /*!< 0x99000000: reset */
+#define SPIF_FCMD_OP_ENRST                  (SPIF_CMD_ENRST << SPIF_FCMD_OPS_Pos)    /*!< 0x66000000: enable reset */
+#define SPIF_FCMD_OP_WREN                   (SPIF_CMD_WREN << SPIF_FCMD_OPS_Pos)     /*!< 0x06000000: Write Enable */
+#define SPIF_FCMD_OP_WRDIS                  (SPIF_CMD_WRDIS << SPIF_FCMD_OPS_Pos)    /*!< 0x04000000: write disable */
+#define SPIF_FCMD_OP_VSRWREN                (SPIF_CMD_VSRWREN << SPIF_FCMD_OPS_Pos)  /*!< 0x50000000: Volatile SR Write Enable */
+#define SPIF_FCMD_OP_CERASE                 (SPIF_CMD_CERASE << SPIF_FCMD_OPS_Pos)   /*!< 0x60000000: (or 0xC7)chip erase */
+#define SPIF_FCMD_OP_SERASE                 (SPIF_CMD_SERASE << SPIF_FCMD_OPS_Pos)   /*!< 0x20000000: sector erase */
+#define SPIF_FCMD_OP_BERASE32               (SPIF_CMD_BERASE32 << SPIF_FCMD_OPS_Pos) /*!< 0x52000000: block erease 32k */
+#define SPIF_FCMD_OP_BERASE64               (SPIF_CMD_BERASE64 << SPIF_FCMD_OPS_Pos) /*!< 0xD8000000: block erease 64k */
+#define SPIF_FCMD_OP_DPWRDN                 (SPIF_CMD_DPWRDN << SPIF_FCMD_OPS_Pos)   /*!< 0xB9000000: deep power down */
+#define SPIF_FCMD_OP_RLSDPD                 (SPIF_CMD_RLSDPD << SPIF_FCMD_OPS_Pos)   /*!< 0xAB000000: release from powerdown (and read device id) */
+#define SPIF_FCMD_OP_WRST                   (SPIF_CMD_WRST << SPIF_FCMD_OPS_Pos)     /*!< 0x01000000: Write Status */
+#define SPIF_FCMD_OP_RDID                   (SPIF_CMD_RDID << SPIF_FCMD_OPS_Pos)     /*!< 0x9F000000: read ID */
+#define SPIF_FCMD_OP_RDST                   (SPIF_CMD_RDST << SPIF_FCMD_OPS_Pos)     /*!< 0x05000000: read status */
+#define SPIF_FCMD_OP_RDST_H                 (SPIF_CMD_RDST_H << SPIF_FCMD_OPS_Pos)   /*!< 0x35000000: read status high byte */
+#define SPIF_FCMD_OP_PPROG                  (SPIF_CMD_PPROG << SPIF_FCMD_OPS_Pos)    /*!< 0x02000000: page program */
+#define SPIF_FCMD_OP_READ                   (SPIF_CMD_READ << SPIF_FCMD_OPS_Pos)     /*!< 0x03000000: read */
+#define SPIF_FCMD_OP_READF                  (SPIF_CMD_READF << SPIF_FCMD_OPS_Pos)    /*!< 0x0B000000: fast read */
+#define SPIF_FCMD_OP_READDO                 (SPIF_CMD_READDO << SPIF_FCMD_OPS_Pos)   /*!< 0x3B000000: dual output fast read */
+#define SPIF_FCMD_OP_READDIO                (SPIF_CMD_READDIO << SPIF_FCMD_OPS_Pos)  /*!< 0xBB000000: dual I/O fast read */
+#define SPIF_FCMD_OP_READQO                 (SPIF_CMD_READQO << SPIF_FCMD_OPS_Pos)   /*!< 0x6B000000: quad output fast read */
+#define SPIF_FCMD_OP_READQIO                (SPIF_CMD_READQIO << SPIF_FCMD_OPS_Pos)  /*!< 0xeB000000: quad I/O fast read */
+#define SPIF_FCMD_OP_READQIOW               (SPIF_CMD_READQIOW << SPIF_FCMD_OPS_Pos) /*!< 0xe7000000: quad I/O fast read word */
+
+
+/******************************************************************************/
+/*                                                                            */
 /*                       RTC Control in AON register                          */
 /*                                                                            */
 /******************************************************************************/

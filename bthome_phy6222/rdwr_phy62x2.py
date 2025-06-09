@@ -70,11 +70,11 @@ def ParseHexFile(hexfile):
 	return table
 
 class phyflasher:
-	def __init__(self, port='COM1'):
+	def __init__(self, port='COM1', start_baud=START_BAUD):
 		self.old_erase_start = EXT_FLASH_ADD
 		self.old_erase_end = EXT_FLASH_ADD
 		self.port = port
-		self.baud = START_BAUD
+		self.baud = start_baud
 		try:
 			self._port = serial.Serial(self.port, self.baud)
 			self._port.timeout = 1
@@ -512,6 +512,7 @@ def main():
 	parser = argparse.ArgumentParser(description='%s version %s' % (__progname__, __version__), prog = __filename__)
 	parser.add_argument('--port', '-p', help = 'Serial port device',	default='COM1');
 	parser.add_argument('--baud', '-b',	help = 'Set Port Baud (115200, 250000, 500000, 1000000)',	type = arg_auto_int, default = DEF_RUN_BAUD);
+	parser.add_argument('--startbaud', '-sb',	help = 'Set Port Start Baud (9600, 115200, 250000, 500000, 1000000)',	type = arg_auto_int, default = START_BAUD);
 
 	parser.add_argument('--allerase', '-a',  action='store_true', help = 'Pre-processing: All Chip Erase');
 	parser.add_argument('--erase', '-e',  action='store_true', help = 'Pre-processing: Erase Flash work area');
@@ -569,7 +570,7 @@ def main():
 	print('=========================================================')
 	print('%s version %s' % (__progname__, __version__))
 	print('---------------------------------------------------------')
-	phy = phyflasher(args.port)
+	phy = phyflasher(args.port, args.startbaud)
 	print ('Connecting...')
 	#--------------------------------
 	if not phy.Connect(args.baud):

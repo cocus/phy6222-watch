@@ -13,8 +13,7 @@
 #include "aes.h"
 #include "version.h"
 
-#define CHIP_ID_FLASH_ADDRESS           0x11000800
-#define CHIP_MADDR_FLASH_ADDRESS        (CHIP_ID_FLASH_ADDRESS+CHIP_ID_LENGTH*4)
+#define CHIP_MADDR_FLASH_ADDRESS        (FLASH_BASE_ADDR+CHIP_ID_LENGTH*4)
 #define CHIP_VERSION_L                  SDK_VER_CHIP
 #define CHIP_VERSION_H                  (0x0BBB)
 
@@ -219,7 +218,7 @@ CHIP_ID_STATUS_e read_chip_id(void)
 
     for(int i=0; i<CHIP_ID_LENGTH; i++)
     {
-        ret = chip_id_one_bit_hot_convter(&b, read_reg(CHIP_ID_FLASH_ADDRESS+(i<<2)));
+        ret = chip_id_one_bit_hot_convter(&b, read_reg(FLASH_BASE_ADDR+(i<<2)));
 
         if(ret==CHIP_ID_VALID)
         {

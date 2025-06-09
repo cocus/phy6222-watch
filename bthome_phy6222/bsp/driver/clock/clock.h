@@ -10,7 +10,7 @@ extern "C" {
 
 #include <phy62xx.h>
 
-#include <rom/rom_attr.h>
+#include <rom/rom_attr.h> /* for ATTR_ROM_VAR and ATTR_ROM_FN */
 
 /** @addtogroup PHY62XX_BSP_Driver
   * @{
@@ -53,21 +53,21 @@ typedef enum
   MOD_UART1 = PCR_SWCTL_UART1_Pos,      /*!< UART1 Module */
 
   /*!< Second group of modules: Affects the SW_CLK1 register */
-  MOD_CP_CPU = 0 + 32,                /*!< CP_CPU Module */
-  MOD_BB = MOD_CP_CPU + 3,            /*!< BB Module */
-  MOD_TIMER = MOD_CP_CPU + 4,         /*!< TIMER Module */
-  MOD_WDT = MOD_CP_CPU + 5,           /*!< WDT Module */
-  MOD_COM = MOD_CP_CPU + 6,           /*!< COM Module */
-  MOD_KSCAN = MOD_CP_CPU + 7,         /*!< KSCAN Module */
-  MOD_BBREG = MOD_CP_CPU + 9,         /*!< BBREG Module */
-  BBLL_RST = MOD_CP_CPU + 10,         /*!< BB LL "module", can reset, but can't set clock gate */
-  BBTX_RST = MOD_CP_CPU + 11,         /*!< BB TX "module", can reset, but can't set clock gate */
-  BBRX_RST = MOD_CP_CPU + 12,         /*!< BB RX "module", can reset, but can't set clock gate */
-  BBMIX_RST = MOD_CP_CPU + 13,        /*!< BB MIX "module", can reset, but can't set clock gate */
-  MOD_TIMER1 = MOD_CP_CPU + 21,       /*!< TIMER1 Module */
-  MOD_TIMER2 = MOD_CP_CPU + 22,       /*!< TIMER2 Module */
-  MOD_TIMER3 = MOD_CP_CPU + 23,       /*!< TIMER3 Module */
-  MOD_TIMER4 = MOD_CP_CPU + 24,       /*!< TIMER4 Module */
+  MOD_CP_CPU = 0 + 32,                  /*!< CP_CPU Module */
+  MOD_BB = MOD_CP_CPU + 3,              /*!< BB Module */
+  MOD_TIMER = MOD_CP_CPU + 4,           /*!< TIMER Module */
+  MOD_WDT = MOD_CP_CPU + 5,             /*!< WDT Module */
+  MOD_COM = MOD_CP_CPU + 6,             /*!< COM Module */
+  MOD_KSCAN = MOD_CP_CPU + 7,           /*!< KSCAN Module */
+  MOD_BBREG = MOD_CP_CPU + 9,           /*!< BBREG Module */
+  BBLL_RST = MOD_CP_CPU + 10,           /*!< BB LL "module", can reset, but can't set clock gate */
+  BBTX_RST = MOD_CP_CPU + 11,           /*!< BB TX "module", can reset, but can't set clock gate */
+  BBRX_RST = MOD_CP_CPU + 12,           /*!< BB RX "module", can reset, but can't set clock gate */
+  BBMIX_RST = MOD_CP_CPU + 13,          /*!< BB MIX "module", can reset, but can't set clock gate */
+  MOD_TIMER1 = MOD_CP_CPU + 21,         /*!< TIMER1 Module */
+  MOD_TIMER2 = MOD_CP_CPU + 22,         /*!< TIMER2 Module */
+  MOD_TIMER3 = MOD_CP_CPU + 23,         /*!< TIMER3 Module */
+  MOD_TIMER4 = MOD_CP_CPU + 24,         /*!< TIMER4 Module */
 
   /*!< Third group of modules: Affects the CACHE_CLOCK_GATE register */
   MOD_PCLK_CACHE = 0 + 64,
@@ -137,15 +137,37 @@ typedef enum _SYSCLK_SEL
 /** @addtogroup CLOCK_Exported_Functions
   * @{
   */
-
-
+    /**
+      * @brief  Enables the clock to a specified module inside the MCU.
+      * @param  module: One of the MODULE_e for which the clock should be enabled.
+      * @note   This effectively enables the specified module, which will
+      *         start consuming power.
+      * @retval None.
+      */
     void hal_clk_gate_enable(MODULE_e module);
+
+    /**
+      * @brief  Disables the clock to a specified module inside the MCU.
+      * @param  module: One of the MODULE_e for which the clock should be disabled.
+      * @note   This effectively disables the specified module. Access to non-clocked
+      *         modules might cause HardFaults (TBD!).
+      * @retval None.
+      */
     void hal_clk_gate_disable(MODULE_e module);
 
+    /**
+      * @brief  Returns the clock gating of a specified module inside the MCU.
+      * @param  module: One of the MODULE_e to check for the clock gating.
+      * @retval 1 if the module is enabled, 0 otherwise.
+      */
     int hal_clk_gate_get(MODULE_e module);
 
+    /**
+      * @brief  Triggers a reset of a specified module inside the MCU.
+      * @param  module: One of the MODULE_e to be reset.
+      * @retval None.
+      */
     void hal_clk_reset(MODULE_e module);
-
 
     /**
       * @brief  Gets the current System Clock frequency in Hz, derived from the ROM variable g_system_clk.

@@ -1,139 +1,268 @@
-/*******************************************************************************
-    @file     flash.h
-    @brief    Contains all functions support for flash driver
-    @version  0.0
-    @date     27. Nov. 2017
-    @author   qing.han
+/* Define to prevent recursive inclusion -------------------------------------*/
+#ifndef _HAL_FLASH_H
+#define _HAL_FLASH_H
 
- SDK_LICENSE
+#ifdef __cplusplus
+extern "C" {
+#endif
 
-*******************************************************************************/
-#ifndef _FLASH_H_
-#define _FLASH_H_
+/* Includes ------------------------------------------------------------------*/
 
 #include <phy62xx.h>
+
 #include <phy_error.h>
 #include <driver/gpio/gpio.h>
-#include <driver/clock/clock.h>
+#include <driver/clock/clock.h> /* for sysclk_t */
 
-// #define FLASH_PROTECT_FEATURE
-#define CHIP_MADDR_LEN 6
-#define CHIP_ID_FLASH_ADDRESS 0x11000800
-#define CHIP_MADDR_FLASH_ADDRESS (CHIP_ID_FLASH_ADDRESS + CHIP_ID_LENGTH * 4)
+#include <rom/rom_attr.h> /* for ATTR_ROM_VAR and ATTR_ROM_FN */
 
-#ifndef FLASH_PROTECT_FEATURE
-#define FLASH_PROTECT_FEATURE 0
-#endif
+/** @addtogroup PHY62XX_BSP_Driver
+  * @{
+  */
 
-#define SPIF_TIMEOUT (0x7ffffff) // 1000000
+/** @addtogroup FLASH
+  * @{
+  */
 
-#define SFLG_WIP 1
-#define SFLG_WEL 2
-#define SFLG_WELWIP 3
+/* Exported types ------------------------------------------------------------*/
 
-// define flash ucds
-#define FLASH_BASE_ADDR (0x11000000)
-// #define FLASH_UCDS_ADDR_BASE    0x11005000
+/** @defgroup FLASH_Exported_Types FLASH Exported Types
+  * @{
+  */
 
-#define CHIP_ID_LENGTH 64
-#define CHIP_ID_PID_LEN 16
-#define CHIP_ID_LID_LEN 10
-#define CHIP_ID_MID_LEN 16
-#define CHIP_ID_TID_LEN 14
-#define CHIP_ID_SID_LEN 8
-
-#define CHIP_MADDR_LEN 6
-
-// xip flash read instrcution
-#define XFRD_FCMD_READ 0x0000003
-#define XFRD_FCMD_READ_DUAL 0x801003B
-#define XFRD_FCMD_READ_QUAD 0x801006B
-
-#define FCMD_RESET 0x99   // reset
-#define FCMD_ENRST 0x66   // enable reset
-#define FCMD_WREN 0x06    // write enable
-#define FCMD_WRDIS 0x04   // write disable
-#define FCMD_VSRWREN 0x50 // Volatile SR Write Enable
-
-#define FCMD_CERASE 0x60   //(or 0xC7)chip erase
-#define FCMD_SERASE 0x20   // sector erase
-#define FCMD_BERASE32 0x52 // block erease 32k
-#define FCMD_BERASE64 0xD8
-
-#define FCMD_DPWRDN 0xB9   // deep power down
-#define FCMD_RLSDPD 0xAB   // release from powerdown(and read device id)
-#define FCMD_WRST 0x01     // write status
-#define FCMD_RDID 0x9F     // read ID
-#define FCMD_RDST 0x05     // read status
-#define FCMD_RDST_H 0x35   // read status high byte
-#define FCMD_PPROG 0x02    // page program
-#define FCMD_READ 0x03     // read
-#define FCMD_READF 0x0B    // fast read
-#define FCMD_READDO 0x3B   // dual output fast read
-#define FCMD_READDIO 0xBB  // dual I/O fast read
-#define FCMD_READQO 0x6B   // quad output fast read
-#define FCMD_READQIO 0xeB  // quad I/O fast read
-#define FCMD_READQIOW 0xe7 // quad I/O fast read word
-
-typedef struct
-{
-    sysclk_t spif_ref_clk; //
-    uint32_t rd_instr;
-} xflash_Ctx_t;
-
+/**
+  * @brief  PHY62xx Execute-in-place (XIP) read instruction mode.
+  */
 typedef enum
 {
-    CHIP_ID_UNCHECK,
-    CHIP_ID_EMPTY,
-    CHIP_ID_VALID,
-    CHIP_ID_INVALID,
-} CHIP_ID_STATUS_e;
+  XFRD_FCMD_READ_DUAL = 0x801003B,    /*!< Use DIO */
+  XFRD_FCMD_READ_QUAD = 0x801006B,    /*!< Use QIO */
+} XFRD_FCMD_READ_t;
 
-typedef struct
-{
-    CHIP_ID_STATUS_e chipMAddrStatus;
-    uint8_t mAddr[CHIP_MADDR_LEN];
-} chipMAddr_t;
+/**
+  * @}
+  */
+
+/* Exported constants --------------------------------------------------------*/
+/** @defgroup FLASH_Exported_Constants FLASH Exported Constants
+  * @{
+  */
+
+  /**
+  * @}
+  */
+
+/* Exported macro ------------------------------------------------------------*/
+/** @defgroup FLASH_Exported_Macros FLASH Exported Macros
+  * @{
+  */
+
+  /**
+  * @}
+  */
+
+/* Exported functions --------------------------------------------------------*/
+/** @addtogroup FLASH_Exported_Functions
+  * @{
+  */
+    /**
+      * @brief  Initializes the embedded SPI Flash and its XIP cache.
+      * @param  spif_ref_clk: ? might or might not need to match the system clock?
+      *         rd_instr: Selects the XIP code read mode, dual or quad.
+      * @retval None.
+      */
+    void hal_spif_cache_init(sysclk_t spif_ref_clk, XFRD_FCMD_READ_t rd_instr);
+
+    /**
+      * @brief  Write-locks the embedded SPI Flash.
+      * @param  None.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    int hal_flash_lock(void);
+
+    /**
+      * @brief  Write-unlocks the embedded SPI Flash.
+      * @param  None.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    int hal_flash_unlock(void);
+
+    /**
+      * @brief  Returns if the embedded SPI Flash is write-locked or not.
+      * @param  None.
+      * @retval 0 if unlocked, any other value otherwise.
+      */
+    uint8_t hal_flash_get_lock_state(void);
+
+    /**
+      * @brief  Writes data on the embedded SPI Flash.
+      * @param  addr: Offset on the SPI Flash to write to.
+      *         data: Pointer to the buffer which contains the data to write.
+      *         size: Size of the buffer.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    int hal_flash_write(uint32_t addr, uint8_t *data, uint32_t size);
+
+    /**
+      * @brief  Writes data on the embedded SPI Flash, using DMA.
+      * @param  addr: Offset on the SPI Flash to write to.
+      *         data: Pointer to the buffer which contains the data to write.
+      *         size: Size of the buffer.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    int hal_flash_write_by_dma(uint32_t addr, uint8_t *data, uint32_t size);
+
+    /**
+      * @brief  Reads data from the embedded SPI Flash.
+      * @param  addr: Offset on the SPI Flash to read from.
+      *         data: Pointer to the buffer to read the data from the flash.
+      *         size: Size of the buffer.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    int hal_flash_read(uint32_t addr, uint8_t *data, uint32_t size);
+
+    /* TODO!!!: hal_flash_read_dma maybe? */
+
+    /**
+      * @brief  Erases a sector of the embedded SPI Flash.
+      * @param  addr: Sector number. I have no idea what's the sector size.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    int hal_flash_erase_sector(unsigned int addr);
+
+    /**
+      * @brief  Erases a block of 64kb on the embedded SPI Flash.
+      * @param  addr: Block number.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    int hal_flash_erase_block64(unsigned int addr);
+
+    /**
+      * @brief  Erases all SPI Flash?
+      * @param  None.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    int hal_flash_erase_all(void);
+
+/**
+  * @}
+  */
+
+/* Exported ROM functions ----------------------------------------------------*/
+/** @defgroup CLOCK_Exported_ROM_Functions CLOCK Exported ROM Functions
+  * @{
+  */
+    /**
+      * @brief  Writes data on the embedded SPI Flash.
+      * @param  addr: Offset on the SPI Flash to write to.
+      *         data: Pointer to the buffer which contains the data to write.
+      *         size: Size of the buffer.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    ATTR_ROM_FN int spif_write(uint32_t addr, uint8_t *data, uint32_t size);
+
+    /**
+      * @brief  Writes data on the embedded SPI Flash, using DMA.
+      * @param  addr: Offset on the SPI Flash to write to.
+      *         data: Pointer to the buffer which contains the data to write.
+      *         size: Size of the buffer.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    ATTR_ROM_FN int spif_write_dma(uint32_t addr, uint8_t *data, uint32_t size);
+
+    /**
+      * @brief  Reads data from the embedded SPI Flash.
+      * @param  addr: Offset on the SPI Flash to read from.
+      *         data: Pointer to the buffer to read the data from the flash.
+      *         size: Size of the buffer.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    ATTR_ROM_FN int spif_read(uint32_t addr, uint8_t *data, uint32_t size);
+
+    /**
+      * @brief  Reads data from the embedded SPI Flash, using DMA.
+      * @param  addr: Offset on the SPI Flash to read from.
+      *         data: Pointer to the buffer to read the data from the flash.
+      *         size: Size of the buffer.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    ATTR_ROM_FN int spif_read_dma(uint32_t addr, uint8_t *data, uint32_t size);
+
+    /**
+      * @brief  Erases a sector of the embedded SPI Flash.
+      * @param  addr: Sector number. I have no idea what's the sector size.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    ATTR_ROM_FN int spif_erase_sector(unsigned int addr);
+
+    /**
+      * @brief  Erases a block of 64kb on the embedded SPI Flash.
+      * @param  addr: Block number.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    ATTR_ROM_FN int spif_erase_block64(unsigned int addr);
+
+    /**
+      * @brief  Erases all SPI Flash?
+      * @param  None.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
+      */
+    ATTR_ROM_FN int spif_erase_all(void);
+
+    /**
+      * @brief  Executes a command on the embedded SPI Flash.
+      * @param  op: Command, one of SPIF_CMD_*.
+      *         addrlen: ?
+      *         rdlen: ?
+      *         wrlen: ?
+      *         mbit: ?
+      *         dummy: ?
+      * @retval None.
+      */
+    ATTR_ROM_FN void spif_cmd(uint8_t op, uint8_t addrlen, uint8_t rdlen, uint8_t wrlen, uint8_t mbit, uint8_t dummy);
+
+    /**
+      * @brief  Reads data from a command executed on the embedded SPI Flash.
+      * @param  data: Pointer to write the data.
+      *         len: Length of the data to read.
+      * @retval None.
+      */
+    ATTR_ROM_FN void spif_rddata(uint8_t *data, uint8_t len);
+
+    /**
+      * @brief  Configures the embedded SPI Flash peripheral.
+      * @param  ref_clk: Clock source.
+      *         div: Clock divider.
+      *         rd_instr: XIP code mode.
+      *         QE: QIO enable if 1.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if SPIF is busy, PPlus_ERR_SPI_FLASH if something went wrong.
+      */
+    ATTR_ROM_FN int spif_config(sysclk_t ref_clk, uint8_t div, uint32_t rd_instr, uint8_t mode_bit, uint8_t QE);
+
+/**
+  * @}
+  */
+
+/* Exported ROM variables ----------------------------------------------------*/
+/** @defgroup FLASH_Exported_ROM_Variables FLASH Exported ROM Variables
+  * @{
+  */
 
 
-extern int _spif_wait_nobusy(uint8_t flg, uint32_t tout_ns);
-extern int spif_write(uint32_t addr, uint8_t *data, uint32_t size);
-extern int spif_write_dma(uint32_t addr, uint8_t *data, uint32_t size);
-extern int spif_read(uint32_t addr, uint8_t *data, uint32_t size);
-extern int spif_read_dma(uint32_t addr, uint8_t *data, uint32_t size);
-extern int spif_erase_sector(unsigned int addr);
-extern int spif_erase_block64(unsigned int addr);
-extern int spif_erase_all(void);
-extern uint8_t spif_flash_status_reg_0(void);
-ATTR_ROM_FN int spif_write_protect(uint8_t en);
-extern void spif_cmd(uint8_t op, uint8_t addrlen, uint8_t rdlen, uint8_t wrlen, uint8_t mbit, uint8_t dummy);
-extern void spif_rddata(uint8_t *data, uint8_t len);
-extern int spif_config(sysclk_t ref_clk, uint8_t div, uint32_t rd_instr, uint8_t mode_bit, uint8_t QE);
-int hal_spif_cache_init(sysclk_t spif_ref_clk, uint32_t rd_instr);
-// static void hal_cache_tag_flush(void);
-// #if(FLASH_PROTECT_FEATURE == 1)
-int hal_flash_wr_status(uint8_t status);
-int hal_flash_lock(void);
-int hal_flash_unlock(void);
-uint8_t hal_flash_get_lock_state(void);
-// #endif
-int hal_flash_write(uint32_t addr, uint8_t *data, uint32_t size);
-int hal_flash_write_by_dma(uint32_t addr, uint8_t *data, uint32_t size);
-int hal_flash_read(uint32_t addr, uint8_t *data, uint32_t size);
-int hal_flash_erase_sector(unsigned int addr);
-int hal_flash_erase_block64(unsigned int addr);
-int flash_write_word(unsigned int offset, uint32_t value);
+/**
+  * @}
+  */
 
-CHIP_ID_STATUS_e chip_id_one_bit_hot_convter(uint8_t *b, uint32_t w);
+/**
+  * @}
+  */
 
-// void LL_PLUS_LoadMACFromFlash(uint32_t addr);
+/**
+  * @}
+  */
 
-// CHIP_ID_STATUS_e LL_PLUS_LoadMACFromChipMAddr(void);
-
-CHIP_ID_STATUS_e read_chip_mAddr(uint8_t *mAddr);
-int hal_get_flash_info(void);
-
-// void check_chip_mAddr(void);
-// void LOG_CHIP_MADDR(void);
-
+#ifdef __cplusplus
+}
 #endif
+
+#endif /* _HAL_FLASH_H */
