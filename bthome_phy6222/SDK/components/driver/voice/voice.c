@@ -377,8 +377,8 @@ int hal_voice_clear(void)
 
     if (mVoiceCtx.cfg.voiceSelAmicDmic)
     {
-        hal_gpioin_disable(mVoiceCtx.cfg.dmicDataPin);
-        hal_gpioin_disable(mVoiceCtx.cfg.dmicClkPin);
+        hal_gpioin_unregister(mVoiceCtx.cfg.dmicDataPin);
+        hal_gpioin_unregister(mVoiceCtx.cfg.dmicClkPin);
     }
     else
     {

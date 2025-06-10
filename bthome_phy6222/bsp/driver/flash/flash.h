@@ -66,7 +66,7 @@ typedef enum
     /**
       * @brief  Initializes the embedded SPI Flash and its XIP cache.
       * @param  spif_ref_clk: ? might or might not need to match the system clock?
-      *         rd_instr: Selects the XIP code read mode, dual or quad.
+      * @param  rd_instr: Selects the XIP code read mode, dual or quad.
       * @retval None.
       */
     void hal_spif_cache_init(sysclk_t spif_ref_clk, XFRD_FCMD_READ_t rd_instr);
@@ -95,8 +95,8 @@ typedef enum
     /**
       * @brief  Writes data on the embedded SPI Flash.
       * @param  addr: Offset on the SPI Flash to write to.
-      *         data: Pointer to the buffer which contains the data to write.
-      *         size: Size of the buffer.
+      * @param  data: Pointer to the buffer which contains the data to write.
+      * @param  size: Size of the buffer.
       * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
       */
     int hal_flash_write(uint32_t addr, uint8_t *data, uint32_t size);
@@ -104,8 +104,8 @@ typedef enum
     /**
       * @brief  Writes data on the embedded SPI Flash, using DMA.
       * @param  addr: Offset on the SPI Flash to write to.
-      *         data: Pointer to the buffer which contains the data to write.
-      *         size: Size of the buffer.
+      * @param  data: Pointer to the buffer which contains the data to write.
+      * @param  size: Size of the buffer.
       * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
       */
     int hal_flash_write_by_dma(uint32_t addr, uint8_t *data, uint32_t size);
@@ -113,8 +113,8 @@ typedef enum
     /**
       * @brief  Reads data from the embedded SPI Flash.
       * @param  addr: Offset on the SPI Flash to read from.
-      *         data: Pointer to the buffer to read the data from the flash.
-      *         size: Size of the buffer.
+      * @param  data: Pointer to the buffer to read the data from the flash.
+      * @param  size: Size of the buffer.
       * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
       */
     int hal_flash_read(uint32_t addr, uint8_t *data, uint32_t size);
@@ -153,8 +153,8 @@ typedef enum
     /**
       * @brief  Writes data on the embedded SPI Flash.
       * @param  addr: Offset on the SPI Flash to write to.
-      *         data: Pointer to the buffer which contains the data to write.
-      *         size: Size of the buffer.
+      * @param  data: Pointer to the buffer which contains the data to write.
+      * @param  size: Size of the buffer.
       * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
       */
     ATTR_ROM_FN int spif_write(uint32_t addr, uint8_t *data, uint32_t size);
@@ -162,8 +162,8 @@ typedef enum
     /**
       * @brief  Writes data on the embedded SPI Flash, using DMA.
       * @param  addr: Offset on the SPI Flash to write to.
-      *         data: Pointer to the buffer which contains the data to write.
-      *         size: Size of the buffer.
+      * @param  data: Pointer to the buffer which contains the data to write.
+      * @param  size: Size of the buffer.
       * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
       */
     ATTR_ROM_FN int spif_write_dma(uint32_t addr, uint8_t *data, uint32_t size);
@@ -171,8 +171,8 @@ typedef enum
     /**
       * @brief  Reads data from the embedded SPI Flash.
       * @param  addr: Offset on the SPI Flash to read from.
-      *         data: Pointer to the buffer to read the data from the flash.
-      *         size: Size of the buffer.
+      * @param  data: Pointer to the buffer to read the data from the flash.
+      * @param  size: Size of the buffer.
       * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
       */
     ATTR_ROM_FN int spif_read(uint32_t addr, uint8_t *data, uint32_t size);
@@ -180,8 +180,8 @@ typedef enum
     /**
       * @brief  Reads data from the embedded SPI Flash, using DMA.
       * @param  addr: Offset on the SPI Flash to read from.
-      *         data: Pointer to the buffer to read the data from the flash.
-      *         size: Size of the buffer.
+      * @param  data: Pointer to the buffer to read the data from the flash.
+      * @param  size: Size of the buffer.
       * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if busy, PPlus_ERR_INVALID_STATE if SPIF not initialized.
       */
     ATTR_ROM_FN int spif_read_dma(uint32_t addr, uint8_t *data, uint32_t size);
@@ -210,11 +210,11 @@ typedef enum
     /**
       * @brief  Executes a command on the embedded SPI Flash.
       * @param  op: Command, one of SPIF_CMD_*.
-      *         addrlen: ?
-      *         rdlen: ?
-      *         wrlen: ?
-      *         mbit: ?
-      *         dummy: ?
+      * @param  addrlen: ?
+      * @param  rdlen: ?
+      * @param  wrlen: ?
+      * @param  mbit: ?
+      * @param  dummy: ?
       * @retval None.
       */
     ATTR_ROM_FN void spif_cmd(uint8_t op, uint8_t addrlen, uint8_t rdlen, uint8_t wrlen, uint8_t mbit, uint8_t dummy);
@@ -222,7 +222,7 @@ typedef enum
     /**
       * @brief  Reads data from a command executed on the embedded SPI Flash.
       * @param  data: Pointer to write the data.
-      *         len: Length of the data to read.
+      * @param  len: Length of the data to read.
       * @retval None.
       */
     ATTR_ROM_FN void spif_rddata(uint8_t *data, uint8_t len);
@@ -230,9 +230,9 @@ typedef enum
     /**
       * @brief  Configures the embedded SPI Flash peripheral.
       * @param  ref_clk: Clock source.
-      *         div: Clock divider.
-      *         rd_instr: XIP code mode.
-      *         QE: QIO enable if 1.
+      * @param  div: Clock divider.
+      * @param  rd_instr: XIP code mode.
+      * @param  QE: QIO enable if 1.
       * @retval PPlus_SUCCESS on success, PPlus_ERR_BUSY if SPIF is busy, PPlus_ERR_SPI_FLASH if something went wrong.
       */
     ATTR_ROM_FN int spif_config(sysclk_t ref_clk, uint8_t div, uint32_t rd_instr, uint8_t mode_bit, uint8_t QE);

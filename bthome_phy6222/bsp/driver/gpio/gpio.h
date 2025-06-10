@@ -40,7 +40,7 @@ typedef enum
   GPIO_P02 = 2,             /*!< GPIO 02/SWD_IO: QFN32 pin 3 */
   P2 = GPIO_P02,
 
-  GPIO_P03 = 3,             /*!< GPIO 03/SWD_CLK: QFN32 pin 4 */
+  GPIO_P03 = 3,             /*!< GPIO 03/SWD_CLK: QFN32 pin 4, default pull down */
   P3 = GPIO_P03,
 
   GPIO_P07 = 4,             /*!< GPIO 07: QFN32 pin 6 */
@@ -66,12 +66,12 @@ typedef enum
   P15 = GPIO_P15,
   Analog_IO_4 = GPIO_P15,   /*!< P15 can also be muxed as a single ended (AIO_4) or differential (Input D-) analog IO */
 
-  GPIO_P16 = 10,            /*!< GPIO 16/XTAL32K_I: QFN32 pin 18 */
+  GPIO_P16 = 10,            /*!< GPIO 16/XTAL32K_I: QFN32 pin 18, can't act as a interrupt/wakeup source */
   P16 = GPIO_P16,
   Analog_IO_5 = GPIO_P16,   /*!< P16 can't be muxed as an analog IO (AIO_5, according to the datasheet) */
   XTALI = GPIO_P16,
 
-  GPIO_P17 = 11,            /*!< GPIO 17/XTAL32K_O: QFN32 pin 19 */
+  GPIO_P17 = 11,            /*!< GPIO 17/XTAL32K_O: QFN32 pin 19, can't act as a interrupt/wakeup source */
   P17 = GPIO_P17,
   Analog_IO_6 = GPIO_P17,   /*!< P16 can't be muxed as an analog IO (AIO_6, according to the datasheet) */
   XTALO = GPIO_P17,
@@ -88,11 +88,11 @@ typedef enum
   P23 = GPIO_P23,
   Analog_IO_1 = GPIO_P23,   /*!< P23 can also be muxed as a single ended (AIO_1) or differential (Input B+) analog IO */
 
-  GPIO_P24 = 15,            /*!< GPIO 24/AIO_2: QFN32 pin 26 */
+  GPIO_P24 = 15,            /*!< GPIO 24/AIO_2: QFN32 pin 26, default pull down */
   P24 = GPIO_P24,
   Analog_IO_2 = GPIO_P24,   /*!< P23 can also be muxed as a single ended (AIO_2) or differential (Input C-) analog IO */
 
-  GPIO_P25 = 16,            /*!< GPIO 25/AIO_8: QFN32 pin 27 */
+  GPIO_P25 = 16,            /*!< GPIO 25/AIO_8: QFN32 pin 27, default pull down */
   P25 = GPIO_P25,
   Analog_IO_8 = GPIO_P25,   /*!< P25 can also be muxed as a differential (AIO_8, Input A-) analog IO */
 
@@ -131,8 +131,9 @@ typedef enum
   FMUX_UART0_TX = 4,        /*!< UART0: TX signal */
   FMUX_UART0_RX = 5,        /*!< UART0: RX signal */
 
-  FMUX_RF_RX_EN = 6,
-  FMUX_RF_TX_EN = 7,
+  /*!< RF Debug */
+  FMUX_RF_RX_EN = 6,        /*<! RF Receiver debug signal */
+  FMUX_RF_TX_EN = 7,        /*<! RF Transmitter debug signal */
 
   /*!< UART1 */
   FMUX_UART1_TX = 8,        /*!< UART1: TX signal */
@@ -158,20 +159,22 @@ typedef enum
   FMUX_SPI_1_TX = 22,       /*!< SPI1: MOSI signal */
   FMUX_SPI_1_RX = 23,       /*!< SPI1: MISO signal */
 
-  FMUX_CHAX = 24,
-  FMUX_CHBX = 25,
-  FMUX_CHIX = 26,
-  FMUX_CHAY = 27,
-  FMUX_CHBY = 28,
-  FMUX_CHIY = 29,
-  FMUX_CHAZ = 30,
-  FMUX_CHBZ = 31,
-  FMUX_CHIZ = 32,
+  /*!< Rotary encoder */
+  FMUX_CHAX = 24,           /*!< CHAX signal */
+  FMUX_CHBX = 25,           /*!< CHBX signal */
+  FMUX_CHIX = 26,           /*!< CHIX signal */
+  FMUX_CHAY = 27,           /*!< CHAY signal */
+  FMUX_CHBY = 28,           /*!< CHBY signal */
+  FMUX_CHIY = 29,           /*!< CHIY signal */
+  FMUX_CHAZ = 30,           /*!< CHAZ signal */
+  FMUX_CHBZ = 31,           /*!< CHBZ signal */
+  FMUX_CHIZ = 32,           /*!< CHIZ signal */
 
   /*!< DMIC */
   FMUX_CLK1P28M = 33,       /*!< DMIC: I2S CLK 28MHz out signal */
   FMUX_ADCC = 34,           /*!< DMIC: I2S DATA_IN input signal*/
 
+  /*!< Antenna selection */
   FMUX_ANT_SEL_0 = 35,
   FMUX_ANT_SEL_1 = 36,
   FMUX_ANT_SEL_2 = 37,
@@ -232,19 +235,20 @@ typedef enum
   GPIO_FLOATING = 0x00,     /*!< No pull (floating) */
   FLOATING = GPIO_FLOATING,
 
-  GPIO_PULL_UP_S = 0x01,    /*!< Strong (150k) pull up */
+  GPIO_PULL_UP_S = 0x01,    /*!< Strong (150k) pull up to VDD33 */
   STRONG_PULL_UP = GPIO_PULL_UP_S,
 
-  GPIO_PULL_UP = 0x02,      /*!< Weak (1M) pull up */
+  GPIO_PULL_UP = 0x02,      /*!< Weak (1M) pull up to VDD33 */
   WEAK_PULL_UP = GPIO_PULL_UP,
 
-  GPIO_PULL_DOWN = 0x03,    /*!< Strong (150k) pull down */
+  GPIO_PULL_DOWN = 0x03,    /*!< Strong (150k) pull down to VDD33 */
   PULL_DOWN = GPIO_PULL_DOWN,
 } gpio_pupd_e;
 
 /**
  * @brief  GPIO initialization structure used to easily set-up all GPIOs used in a project
  */
+/*!< TODO!!!: make an API that uses this */
 typedef struct
 {
   gpio_pin_e pin;           /*!< GPIO pin */
@@ -258,9 +262,9 @@ typedef struct
  */
 typedef struct
 {
-  uint8_t reg_i;
-  uint8_t bit_h;
-  uint8_t bit_l;
+  uint8_t reg_i;            /*!< Index for the AP_AON->IOCTL[] */
+  uint8_t bit_h;            /*!< Number of the highest bit of the pull inside IOCTL */
+  uint8_t bit_l;            /*!< Number of the lowest bit of the pull inside IOCTL */
 } PULL_TypeDef;
 
 /*!< Software-defined GPIO interrupt handler */
@@ -297,45 +301,163 @@ typedef void (*gpioin_Hdl_t)(gpio_pin_e pin, gpio_polarity_e type);
       * @brief  Initializes GPIO subsystem.
       * @note   Nulls out the GPIO context structure, disables the interrupt mask
       *         and wakeup interrupt for all GPIOs, registers and enables the GPIO IRQ.
+      *         Must be called before any call to the GPIOs APIs.
       * @retval PPlus_SUCCESS on success, PPlus_ERR_INVALID_STATE if already initialized.
       */
     int hal_gpio_init(void);
 
     /**
-      * @brief  Configures a given pin as a GPIO, sets its direction.
+      * @brief  Configures a given pin as a GPIO (no alternate function) and sets its direction.
       * @param  pin: Pin to configure as a GPIO, from the gpio_pin_e enum.
-      *         type: GPIO_INPUT for input, GPIO_OUTPUT for output.
-      * @retval PPlus_SUCCESS on success, PPlus_ERR_INVALID_STATE if already initialized.
+      * @param  type: GPIO_INPUT for input, GPIO_OUTPUT for output.
+      * @retval PPlus_SUCCESS always.
       */
     int hal_gpio_pin_init(gpio_pin_e pin, gpio_dir_t type);
 
+    /**
+      * @brief  Sets a given pull up/down or disables it.
+      * @param  pin: Pin to configure the pull, from the gpio_pin_e enum.
+      * @param  type: configures the pull, one of the following:
+      *               - GPIO_FLOATING to disable any pull
+      *               - GPIO_PULL_UP_S to enable a strong (150k) pull up to VDD33
+      *               - GPIO_PULL_UP to enable a weak (1M) pull up to VDD33
+      *               - GPIO_PULL_DOWN to enable a strong (150k) pull down
+      * @retval None.
+      */
     void hal_gpio_pull_set(gpio_pin_e pin, gpio_pupd_e type);
 
-
+    /**
+      * @brief  Writes a logic value onto a given pin; setting it as a GPIO output.
+      * @param  pin: Pin to write the logic level onto, from the gpio_pin_e enum.
+      * @param  en: Logic level to write, 0 if low, 1 if high.
+      * @retval None.
+      */
     void hal_gpio_write(gpio_pin_e pin, uint8_t en);
-    void hal_gpio_fast_write(gpio_pin_e pin, uint8_t en);
-    GPIO_PinState hal_gpio_read(gpio_pin_e pin);
 
+    /**
+      * @brief  Writes a logic value onto a given pin; pin should be set up as GPIO output beforehand.
+      * @param  pin: Pin to write the logic level onto, from the gpio_pin_e enum.
+      * @param  en: Logic level to write, 0 if low, 1 if high.
+      * @retval None.
+      */
+    void hal_gpio_fast_write(gpio_pin_e pin, uint8_t en);
+
+    /**
+      * @brief  Reads the logic value from a given pin.
+      * @param  pin: Pin to read the logic level, from the gpio_pin_e enum.
+      * @retval 0 if low, 1 if high.
+      */
+    uint8_t hal_gpio_read(gpio_pin_e pin);
+
+    /**
+      * @brief  Routes a pin to the full mux.
+      * @param  pin: Pin to configure the alternate function, from the gpio_pin_e enum.
+      * @param  value: Bit_DISABLE to disconnect the pin from the full mux, Bit_ENABLE to connect it.
+      * @note   GPIO_P01, GPIO_P16, GPIO_P17 can't be routed to the full mux, so don't use them.
+      * @retval None.
+      */
     void hal_gpio_fmux(gpio_pin_e pin, bit_action_e value);
+
+    /**
+      * @brief  Configures a pin mux to a given alternate function and routes it to the full mux.
+      * @param  pin: Pin to configure the alternate function, from the gpio_pin_e enum.
+      * @param  type: One of gpio_fmux_e, which selects the alternate function for the pin.
+      * @note   GPIO_P01, GPIO_P16, GPIO_P17 can't be routed to the full mux, so don't use them.
+      * @retval None.
+      */
     void hal_gpio_fmux_set(gpio_pin_e pin, gpio_fmux_e type);
 
-
-    void hal_gpio_ds_control(gpio_pin_e pin, bit_action_e value);
-    int hal_gpio_cfg_analog_io(gpio_pin_e pin, bit_action_e value);
+    /**
+      * @brief  Configures the ARM JTAG/SWD 2 wire debug feature on GPIO_P02 (SWDIO) and GPIO_P03 (SWCLK).
+      * @param  pin: Pin to configure the SWD function, either GPIO_P02 or GPIO_P03.
+      * @param  en: 0 to enable the SWD (pin can't be muxed), 1 to disable the SWD (pin available to be muxed).
+      * @note   There's no SWO sadly, so NO tracing features. Use the RST_N pin as the ARM RESET signal
+      *         and VDD33 as the ARM VCC.
+      * @retval None.
+      */
     void hal_gpio_pin2pin3_control(gpio_pin_e pin, uint8_t en);
 
+    /**
+      * @brief  Configures a pin as an analog input and disables any pull setting.
+      * @param  pin: Pin to configure as analog input, from the gpio_pin_e enum.
+      * @param  value: Bit_DISABLE to mark the pin as digital, Bit_ENABLE to set it as analog.
+      * @note   GPIO_P11, GPIO_P14, GPIO_P15, GPIO_P16, GPIO_P17, GPIO_P18, GPIO_P20, GPIO_P23, GPIO_P24, GPIO_P25
+      *         can be configured as analog input.
+      * @retval None.
+      */
+    int hal_gpio_cfg_analog_io(gpio_pin_e pin, bit_action_e value);
+
+    /**
+      * @brief  Configures and enables a pin as wakeup source.
+      * @param  pin: Pin to configure as a wakeup source, from the gpio_pin_e enum.
+      * @param  type: Edge that will trigger the wakeup from sleep, one of the values from gpio_polarity_e.
+      * @note   GPIO needs to be configured as an input beforehand. Pull up/down needs to be considered
+      *         on sleep.
+      * @retval None.
+      */
     void hal_gpio_wakeup_set(gpio_pin_e pin, gpio_polarity_e type);
+
+    /**
+      * @brief  Enables a pin as wakeup source.
+      * @param  pin: Pin to configure as a wakeup source, from the gpio_pin_e enum.
+      * @param  value: Bit_DISABLE to disable the pin as a wakeup source, Bit_ENABLE to enable it.
+      * @note   This is called internally by hal_gpio_wakeup_set.
+      * @retval None.
+      */
     void hal_gpio_wakeup_control(gpio_pin_e pin, bit_action_e value);
 
-    int hal_gpioin_enable(gpio_pin_e pin);
+    /**
+      * @brief  Makes a GPIO an input, and enables interrupts when its state changes.
+      * @param  pin: Pin to configure, from the gpio_pin_e enum.
+      * @param  posedgeHdl: Handler function to call when a positive edge is detected, from ISR context
+      * @param  negedgeHdl: Handler function to call when a negative edge is detected, from ISR context
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_NOT_REGISTED if neither posedgeHdl
+      *         or negedgeHdl are supplied.
+      */
     int hal_gpioin_register(gpio_pin_e pin, gpioin_Hdl_t posedgeHdl, gpioin_Hdl_t negedgeHdl);
-    int hal_gpioin_unregister(gpio_pin_e pin);
-    int hal_gpioin_disable(gpio_pin_e pin);
 
-    int hal_gpioretention_unregister(gpio_pin_e pin);
+    /**
+      * @brief  Disables a GPIO that was previously configured to generate interrupts when its state changes.
+      * @param  pin: Pin to configure, from the gpio_pin_e enum.
+      * @note   Will re-initialize the GPIO as input (again...).
+      * @retval PPlus_SUCCESS always.
+      */
+    int hal_gpioin_unregister(gpio_pin_e pin);
+
+    /**
+      * @brief  Marks a GPIO so it retains its value when the MCU enters sleep.
+      * @param  pin: Pin to configure, from the gpio_pin_e enum.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_INVALID_PARAM if the GPIO isn't configured as an output.
+      */
     int hal_gpioretention_register(gpio_pin_e pin);
 
+    /**
+      * @brief  Un-marks a GPIO so it doesn't retains its value when the MCU enters sleep.
+      * @param  pin: Pin to configure, from the gpio_pin_e enum.
+      * @retval PPlus_SUCCESS on success, PPlus_ERR_INVALID_PARAM if the GPIO isn't configured as an output.
+      */
+    int hal_gpioretention_unregister(gpio_pin_e pin);
+
+    /**
+      * @brief  ?.
+      * @param  pin: Pin to configure, from the gpio_pin_e enum.
+      * @param  value: Bit_DISABLE to disable, Bit_ENABLE to enable.
+      * @retval None.
+      */
+    void hal_gpio_ds_control(gpio_pin_e pin, bit_action_e value);
+
+    /**
+      * @brief  ?.
+      * @param  fre: One of the Freq_Type_e enum.
+      * @retval None.
+      */
     void hal_gpio_debug_mux_enable(Freq_Type_e fre);
+
+    /**
+      * @brief  ?.
+      * @param  fre: One of the Freq_Type_e enum.
+      * @retval None.
+      */
     void hal_gpio_debug_mux_disable(Freq_Type_e fre);
 
 /**

@@ -6,9 +6,10 @@
 #include <stdarg.h>
 #include <string.h>
 #include <driver/uart/uart.h>
-#include <driver/clock/clock.h>
+#include <driver/clock/clock.h> /* for getMcuPrecisionCount */
 #include "log.h"
 
+#if 0
 #define ZEROPAD 1  // Pad with zero
 #define SIGN 2     // Unsigned/signed long
 #define PLUS 4     // Show plus
@@ -19,7 +20,6 @@
 #define is_digit(c) ((c) >= '0' && (c) <= '9')
 static const char *digits = "0123456789abcdefghijklmnopqrstuvwxyz";
 static const char *upper_digits = "0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZ";
-
 static size_t _strnlen(const char *s, size_t count)
 {
     const char *sc;
@@ -402,6 +402,9 @@ static void log_vsprintf(std_putc putc, const char *fmt, va_list args)
         tmpstr_size = 0;
     }
 }
+#else
+extern void log_vsprintf(std_putc putc, const char *fmt, va_list args);
+#endif
 
 static void _uart_putc(char *data, uint16_t size)
 {

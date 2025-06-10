@@ -311,19 +311,19 @@ typedef struct
   */
 typedef struct
 {
-  __IO uint32_t swporta_dr;       /*!< 0x00 */
-  __IO uint32_t swporta_ddr;      /*!< 0x04 */
+  __IO uint32_t swporta_dr;       /*!< 0x00: Bitfield of GPIO value, bit set = GPIO high, bit clear = GPIO low */
+  __IO uint32_t swporta_ddr;      /*!< 0x04: Bitfield of GPIO direction, bit set = GPIO set as output, bit clear = GPIO set as input */
   __IO uint32_t swporta_ctl;      /*!< 0x08 */
   uint32_t      RESERVED0[9];     /*!< 0x18-0x2c portC&D */
-  __IO uint32_t inten;            /*!< 0x30 */
-  __IO uint32_t intmask;          /*!< 0x34 */
-  __IO uint32_t inttype_level;    /*!< 0x38 */
-  __IO uint32_t int_polarity;     /*!< 0x3c */
+  __IO uint32_t inten;            /*!< 0x30: Bitfield of GPIO interrupt enable, bit set = int enabled, bit clear = int disabled */
+  __IO uint32_t intmask;          /*!< 0x34: Bitfield of GPIO interrupt mask, bit set = int masked, bit clear = int unmasked */
+  __IO uint32_t inttype_level;    /*!< 0x38: Bitfield of GPIO interrupt type, bit set = edge sensitive, bit clear = level sensitive? */
+  __IO uint32_t int_polarity;     /*!< 0x3c: Bitfield of GPIO interrupt polarity, bit set = rising edge, bit clear = falling edge */
   __I uint32_t  int_status;       /*!< 0x40 */
   __IO uint32_t raw_instatus;     /*!< 0x44 */
   __IO uint32_t debounce;         /*!< 0x48 */
   __O uint32_t  porta_eoi;        /*!< 0x4c */
-  __I uint32_t  ext_porta;        /*!< 0x50 */
+  __I uint32_t  ext_porta;        /*!< 0x50: Bitfield of GPIO value read, bit set = GPIO high, bit clear = GPIO low */
   uint32_t      RESERVED1[3];     /*!< 0x58 0x5c */
   __IO uint32_t ls_sync;          /*!< 0x60 */
   __I uint32_t  id_code;          /*!< 0x64 */
@@ -379,10 +379,10 @@ typedef struct
   __IO uint32_t Analog_IO_en;     /*!< 0x00 */
   __IO uint32_t SPI_debug_en;     /*!< 0x04 */
   __IO uint32_t debug_mux_en;     /*!< 0x08 */
-  __IO uint32_t full_mux0_en;     /*!< 0x0c */
+  __IO uint32_t full_mux0_en;     /*!< 0x0c Bitfield of pins routing to the fullmux, bit set = routed, bit clear = unrouted */
   __IO uint32_t full_mux1_en;     /*!< 0x10 reserved in some soc */
   __IO uint32_t gpio_pad_en;      /*!< 0x14 */
-  __IO uint32_t gpio_sel[9];      /*!< 0x18 */
+  __IO uint32_t gpio_sel[9];      /*!< 0x18 Mux routing; ex. on gpio_sel[0] => pin3: [29:24], pin2: [21:16], pin1: [13:8], pin0: [5:0], more pins are on the other array members, following the same bit pattern */
   __IO uint32_t pad_pe0;          /*!< 0x3c */
   __IO uint32_t pad_pe1;          /*!< 0x40 */
   __IO uint32_t pad_ps0;          /*!< 0x44 */
@@ -418,8 +418,8 @@ typedef struct
   __IO uint32_t RTCTRCCNT;        /*!< 0x64 RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle, counter_tracking_wakeup */
   __IO uint32_t RTCTRCNT;         /*!< 0x68 */
   __IO uint32_t reserved2[13];    /*!< 0x6c 70 74 78 7c 80 84 88 8c 90 94 98 9c */
-  __IO uint32_t REG_S9;           /*!< 0xa0 */
-  __IO uint32_t REG_S10;          /*!< 0xa4 */
+  __IO uint32_t REG_S9;           /*!< 0xa0 Bitfield of GPIO indices (P0-P32), bit set = wakeup enabled, bit clear = wakeup disabled */
+  __IO uint32_t REG_S10;          /*!< 0xa4 Bitfield of GPIO indices (P32 onwards), bit set = wakeup enabled, bit clear = wakeup disabled */
   __IO uint32_t REG_S11;          /*!< 0xa8 bit0 sleep_flag */
   __IO uint32_t IDLE_REG;         /*!< 0xac */
   __IO uint32_t GPIO_WAKEUP_SRC[2];/*!< 0xb0 b4 */

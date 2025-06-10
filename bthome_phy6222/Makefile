@@ -6,7 +6,7 @@ OFFLOAD_GPIO ?= 1
 BTSTACK ?= 0
 ##############################################################################
 COM_PORT = COM32
-COM_SPEED = 25000
+COM_SPEED = 250000
 COM_STARTBAUD = 115200
 UART_LOG_BPS = 115200
 ##############################################################################
@@ -250,10 +250,10 @@ flash: $(OBJ_DIR)/$(PROJECT_NAME).hex
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b $(COM_SPEED) --startbaud $(COM_STARTBAUD) -r wh $(OBJ_DIR)/$(PROJECT_NAME).hex
 
 terminal:
-	@$(PYTHON) ./miniterm.py $(COM_PORT) $(UART_LOG_BPS) --rts 1 --rtstoggle 100 --exit-char 3 --rtsexit 1
+	@$(PYTHON) ./miniterm.py $(COM_PORT) $(UART_LOG_BPS) --rts 1 --rtstoggle 100 --exit-char 3 --rtsexit 0
 
 terminal_flash: flash size
-	@$(PYTHON) ./miniterm.py $(COM_PORT) $(UART_LOG_BPS) --rts 1 --rtstoggle 100 --exit-char 3 --rtsexit 1
+	@$(PYTHON) ./miniterm.py $(COM_PORT) $(UART_LOG_BPS) --rts 1 --rtstoggle 100 --exit-char 3 --rtsexit 0
 
 identify:
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b $(COM_SPEED) i
