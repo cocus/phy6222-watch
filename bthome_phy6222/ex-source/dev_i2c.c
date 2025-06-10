@@ -86,8 +86,8 @@ void deinit_i2c(pdev_i2c_t pi2c_dev) {
 	AP_I2C_TypeDef* pi2cdev = pi2c_dev->pi2cdev;
 	pi2cdev->IC_ENABLE = 0;
 	hal_clk_gate_disable(MOD_I2C0 + pi2c_dev->i2c_num); // MOD_I2C1
-	hal_gpio_pin_init(pi2c_dev->scl, IE);
-	hal_gpio_pin_init(pi2c_dev->sda, IE);
+	hal_gpio_pin_init(pi2c_dev->scl, GPIO_INPUT);
+	hal_gpio_pin_init(pi2c_dev->sda, GPIO_INPUT);
 }
 
 extern volatile uint32 osal_sys_tick;

@@ -7,6 +7,7 @@ MIN_SLEEP_TIME
 
 #include <stdlib.h>
 #include <string.h>
+#include <stdbool.h>
 
 #include <ble/controller/ll.h>
 #include <ble/controller/ll_common.h>
@@ -5672,7 +5673,7 @@ void wakeupProcess1(void)
     //=======fix sram_rent issue 20180323
     // All memory on
     //hal_pwrmgr_RAM_retention_clr();
-    subWriteReg(0x4000f01c,21,17,0);
+    subWriteReg(&(AP_AON->PMCTL2_0),21,17,0);
 #endif
     if (sleep_flag != SLEEP_MAGIC)
     {
@@ -5694,13 +5695,13 @@ void wakeupProcess1(void)
 #if 0    // DO NOT Turn OFF 32K Xtal
     if (pGlobal_config[LL_SWITCH] & LL_RC32K_SEL)
     {
-         subWriteReg(0x4000f01c,16,7,0x3fb);   //software control 32k_clk
-         subWriteReg(0x4000f01c,6,6 ,0x01);    //enable software control
+         subWriteReg(&(AP_AON->PMCTL2_0),16,7,0x3fb);   //software control 32k_clk
+         subWriteReg(&(AP_AON->PMCTL2_0),6,6 ,0x01);    //enable software control
     }
     else
     {
-         subWriteReg(0x4000f01c,9,8,0x03);   //software control 32k_clk
-         subWriteReg(0x4000f01c,6,6,0x00);   //disable software control
+         subWriteReg(&(AP_AON->PMCTL2_0),9,8,0x03);   //software control 32k_clk
+         subWriteReg(&(AP_AON->PMCTL2_0),6,6,0x00);   //disable software control
     }
 #endif
     //20181201 by ZQ

@@ -28,6 +28,8 @@
 #include "FreeRTOS.h" /* for portX functions */
 #include "task.h"     /* for taskX functions */
 
+#include <phy_error.h>
+
 #ifdef ENABLE_BTSTACK
 #define BLE_MAX_ALLOW_CONNECTION 1
 #define BLE_MAX_ALLOW_PKT_PER_EVENT_TX 3
@@ -507,22 +509,33 @@ void osal_fake_timer(void *arg)
 }
 #endif
 
-bool _efuse_chip_version_check(void)
+typedef enum
+{
+    EFUSE_BLOCK_0 = 0,
+    EFUSE_BLOCK_1 = 1,
+    EFUSE_BLOCK_2 = 2,
+    EFUSE_BLOCK_3 = 3,
+} EFUSE_block_t;
+
+extern int efuse_read(EFUSE_block_t block,uint32_t* buf);
+extern void efuse_init(void);
+
+int _efuse_chip_version_check(void)
 {
     uint32_t buf[2];
     // uint8_t key[16];
-    efuse_read(1, buf);
+    int v = efuse_read(1, buf);
 
-    LOG("efuse read: %08X %08X", buf[0], buf[1]);
+    LOG("efuse read = %d: %08X %08X", v, buf[0], buf[1]);
 
-    return true;
+    return PPlus_SUCCESS;
 }
 
 void _rom_sec_boot_init(void)
 {
     efuse_init();
 
-    if (_efuse_chip_version_check())
+    if (_efuse_chip_version_check() == PPlus_SUCCESS)
     {
         typedef void (*my_function)(void);
         my_function pFunc = (my_function)(0xa2e1);

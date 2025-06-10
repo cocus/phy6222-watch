@@ -160,7 +160,7 @@ uint16 Timer_Demo_ProcessEvent(uint8 task_id, uint16 events)
     The followinng code shows P14 wakeup the system when there is a posedge or negedge.
 */
 static uint8 gpio_wakeup_TaskID;
-void posedge_callback_wakeup(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
+void posedge_callback_wakeup(gpio_pin_e pin, gpio_polarity_e type)
 {
     if (type == POSEDGE)
     {
@@ -172,7 +172,7 @@ void posedge_callback_wakeup(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
     }
 }
 
-void negedge_callback_wakeup(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
+void negedge_callback_wakeup(gpio_pin_e pin, gpio_polarity_e type)
 {
     if (type == NEGEDGE)
     {

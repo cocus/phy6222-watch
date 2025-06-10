@@ -57,9 +57,9 @@ void light_timeout_handle(void)
 //    hal_pwm_close_channel(PWM_CH2);
 //    hal_pwm_destroy(PWM_CH2);
 //    hal_pwm_stop();
-//    hal_gpio_pin_init(GPIO_GREEN, IE);
-//    hal_gpio_pin_init(GPIO_RED, IE);
-//    hal_gpio_pin_init(GPIO_BLUE, IE);
+//    hal_gpio_pin_init(GPIO_GREEN, GPIO_INPUT);
+//    hal_gpio_pin_init(GPIO_RED, GPIO_INPUT);
+//    hal_gpio_pin_init(GPIO_BLUE, GPIO_INPUT);
 //    hal_gpio_pull_set(GPIO_GREEN, WEAK_PULL_UP);
 //    hal_gpio_pull_set(GPIO_RED, WEAK_PULL_UP);
 //    hal_gpio_pull_set(GPIO_BLUE, WEAK_PULL_UP);
@@ -95,7 +95,7 @@ static void led_init(gpio_pin_e* pin_ptr,uint16_t pin_num)
     for(int i = 0; i < pin_num; i++)
     {
         pin = *(pin_ptr + i);
-        hal_gpio_pin_init(pin,IE);
+        hal_gpio_pin_init(pin,GPIO_INPUT);
         hal_gpio_pull_set(pin,WEAK_PULL_UP);
     }
 }

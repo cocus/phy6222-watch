@@ -9,6 +9,8 @@
 
 #define ATTR_ROM_VAR extern volatile
 
+#define ATTR_ROM_CONST extern const
+
 #define ATTR_ROM_FN
 
 #endif /* ROM_VARS_H */

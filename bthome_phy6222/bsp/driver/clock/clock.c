@@ -203,21 +203,6 @@ void WaitMs(uint32_t msecond)
     WaitRTCCount((msecond << 15) / 1000); // step 32us
 }
 
-void WaitUs(uint32_t wtTime)
-{
-    uint32_t T0, currTick, deltTick;
-    T0 = (TIME_BASE - ((AP_TIM3->CurrentCount) >> 2));
-
-    while (1)
-    {
-        currTick = (TIME_BASE - ((AP_TIM3->CurrentCount) >> 2));
-        deltTick = TIME_DELTA(currTick, T0);
-
-        if (deltTick > wtTime)
-            break;
-    }
-}
-
 void hal_system_soft_reset(void)
 {
     // HAL_ENTER_CRITICAL_SECTION();

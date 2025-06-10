@@ -17,6 +17,8 @@
 
 #include <driver/pwrmgr/pwrmgr.h> /* for hal_pwrmgr_register */
 
+#include <phy_error.h> /* for PPlus_* return types */
+
 #include <types.h> /* for __ATTR_SECTION_SRAM__ */
 
 #include <stddef.h> /* for NULL */
@@ -64,20 +66,11 @@ typedef struct
 } FLASH_CHIP_INFO;
 
 /**
- * @brief  PHY62xx
- */
-FLASH_CHIP_INFO phy_flash = {
-    .init_flag = FLASH_CTX_NOT_INITALIZED,
-    .IdentificationID = 0x00,
-    .Capacity = 0x80000,
-};
-
-/**
   * @}
   */
 
 /* Private define ------------------------------------------------------------*/
-/** @addtogroup FLASH_Private_Constants CLOCK Private Constants
+/** @addtogroup FLASH_Private_Constants FLASH Private Constants
   * @{
   */
 #define SPIF_TIMEOUT (0x7ffffff) // 1000000
@@ -149,10 +142,22 @@ FLASH_CHIP_INFO phy_flash = {
 /** @addtogroup FLASH_Private_Variables FLASH Private variables
   * @{
   */
+/**
+ * @brief  PHY62xx
+ */
 static xflash_Ctx_t s_xflashCtx = {
     .spif_ref_clk = SYS_CLK_DLL_64M,
-    .rd_instr = XFRD_FCMD_READ_DUAL};
+    .rd_instr = XFRD_FCMD_READ_DUAL
+};
 
+/**
+ * @brief  PHY62xx
+ */
+static FLASH_CHIP_INFO phy_flash = {
+    .init_flag = FLASH_CTX_NOT_INITALIZED,
+    .IdentificationID = 0x00,
+    .Capacity = 0x80000,
+};
 /**
   * @}
   */

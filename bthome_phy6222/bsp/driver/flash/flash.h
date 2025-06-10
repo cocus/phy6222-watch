@@ -10,8 +10,6 @@ extern "C" {
 
 #include <phy62xx.h>
 
-#include <phy_error.h>
-#include <driver/gpio/gpio.h>
 #include <driver/clock/clock.h> /* for sysclk_t */
 
 #include <rom/rom_attr.h> /* for ATTR_ROM_VAR and ATTR_ROM_FN */
@@ -149,7 +147,7 @@ typedef enum
   */
 
 /* Exported ROM functions ----------------------------------------------------*/
-/** @defgroup CLOCK_Exported_ROM_Functions CLOCK Exported ROM Functions
+/** @defgroup FLASH_Exported_ROM_Functions FLASH Exported ROM Functions
   * @{
   */
     /**
@@ -247,7 +245,6 @@ typedef enum
 /** @defgroup FLASH_Exported_ROM_Variables FLASH Exported ROM Variables
   * @{
   */
-
 
 /**
   * @}

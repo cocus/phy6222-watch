@@ -73,7 +73,7 @@ void hal_timer_sleep_handler(void)
         s_ap_callback(HAL_EVT_SLEEP);
 }
 
-int hal_timer_mask_int(User_Timer_e timeId, bool en)
+int hal_timer_mask_int(User_Timer_e timeId, uint8_t en)
 {
     volatile AP_TIM_TypeDef* TIMx;
     TIMx = TimerIndex[timeId-AP_TIMER_ID_5];

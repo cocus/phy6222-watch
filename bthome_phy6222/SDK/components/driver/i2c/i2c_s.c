@@ -101,7 +101,7 @@ int i2cs_init(
     i2cs_hdl_t      evt_handler)
 {
     i2cs_ctx_t* pctx = &s_i2cs_ctx;
-    Fmux_Type_e   fmux;
+    gpio_fmux_e   fmux;
     MODULE_e      module;
     AP_I2C_TypeDef* pdev = NULL;
     int    irqid;

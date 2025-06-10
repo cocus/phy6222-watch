@@ -317,10 +317,10 @@ void __attribute__((used)) hal_SPI1_IRQHandler(void)
 
     input parameters
 
-    @param       GPIO_Pin_e sck_pin: define sclk pin
-                GPIO_Pin_e ssn_pin: define ssn pin
-                GPIO_Pin_e tx_pin: define transmit pin;when use as master,it's mosi pin;corresponding,use as slave,it's miso
-                GPIO_Pin_e rx_pin: define receive pin;when use as master,it's miso pin;corresponding,use as slave,it's mosi
+    @param       gpio_pin_e sck_pin: define sclk pin
+                gpio_pin_e ssn_pin: define ssn pin
+                gpio_pin_e tx_pin: define transmit pin;when use as master,it's mosi pin;corresponding,use as slave,it's miso
+                gpio_pin_e rx_pin: define receive pin;when use as master,it's miso pin;corresponding,use as slave,it's mosi
 
     output parameters
 
@@ -328,7 +328,7 @@ void __attribute__((used)) hal_SPI1_IRQHandler(void)
 
     @return      None.
  **************************************************************************************/
-static void hal_spi_pin_init(hal_spi_t *spi_ptr, GPIO_Pin_e sck_pin, GPIO_Pin_e ssn_pin, GPIO_Pin_e tx_pin, GPIO_Pin_e rx_pin)
+static void hal_spi_pin_init(hal_spi_t *spi_ptr, gpio_pin_e sck_pin, gpio_pin_e ssn_pin, gpio_pin_e tx_pin, gpio_pin_e rx_pin)
 {
     if (spi_ptr->spi_index == SPI0)
     {
@@ -346,7 +346,7 @@ static void hal_spi_pin_init(hal_spi_t *spi_ptr, GPIO_Pin_e sck_pin, GPIO_Pin_e 
     }
 }
 
-static void hal_spi_pin_deinit(GPIO_Pin_e sck_pin, GPIO_Pin_e ssn_pin, GPIO_Pin_e tx_pin, GPIO_Pin_e rx_pin)
+static void hal_spi_pin_deinit(gpio_pin_e sck_pin, gpio_pin_e ssn_pin, gpio_pin_e tx_pin, gpio_pin_e rx_pin)
 {
     hal_gpio_fmux(sck_pin, Bit_DISABLE);
     hal_gpio_fmux(ssn_pin, Bit_DISABLE);

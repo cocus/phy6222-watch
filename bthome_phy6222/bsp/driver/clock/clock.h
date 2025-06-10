@@ -200,13 +200,6 @@ typedef enum _SYSCLK_SEL
     void WaitMs(uint32_t msecond);
 
     /**
-      * @brief  Busy waits for a given number of microseconds using the TIM3 as a reference.
-      * @param  wtTime: Number of microseconds to wait.
-      * @retval None.
-      */
-    void WaitUs(uint32_t wtTime);
-
-    /**
       * @brief  Resets the MCU causing a warm reset.
       * @param  None.
       * @retval None.
@@ -246,6 +239,13 @@ typedef enum _SYSCLK_SEL
       * @retval None.
       */
     ATTR_ROM_FN void WaitRTCCount(uint32_t rtcDelyCnt);
+
+    /**
+      * @brief  Busy waits for a given number of microseconds using the TIM3 as a reference.
+      * @param  wtTime: Number of microseconds to wait.
+      * @retval None.
+      */
+    ATTR_ROM_FN void WaitUs(uint32_t wtTime);
 
     /**
       * @brief  Reads the current RTC cycles register.

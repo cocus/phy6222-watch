@@ -105,10 +105,10 @@ typedef enum
 
 typedef struct _spi_Cfg_t
 {
-    GPIO_Pin_e sclk_pin;
-    GPIO_Pin_e ssn_pin;
-    GPIO_Pin_e MOSI;
-    GPIO_Pin_e MISO;
+    gpio_pin_e sclk_pin;
+    gpio_pin_e ssn_pin;
+    gpio_pin_e MOSI;
+    gpio_pin_e MISO;
     uint32_t baudrate;
     SPI_TMOD_e spi_tmod;
     SPI_SCMOD_e spi_scmod;

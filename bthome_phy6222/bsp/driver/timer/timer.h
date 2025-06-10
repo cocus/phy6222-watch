@@ -36,7 +36,7 @@ int hal_timer_deinit(void);
 
 int hal_timer_set(User_Timer_e timeId, uint32_t us);
 
-int hal_timer_mask_int(User_Timer_e timeId, bool en);
+int hal_timer_mask_int(User_Timer_e timeId, uint8_t en);
 
 int hal_timer_stop(User_Timer_e timeId);
 

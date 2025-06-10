@@ -11,7 +11,7 @@
 ****************************************************************/
 #include "bsp_gpio.h"
 
-extern void gpio_btn_pin_event_handler(gpio_pin_e pin,IO_Wakeup_Pol_e type);
+extern void gpio_btn_pin_event_handler(gpio_pin_e pin,gpio_polarity_e type);
 
 static Gpio_Btn_Info* s_gpio_btn_ptr = NULL;
 int hal_gpio_btn_init(Gpio_Btn_Info* gpio_btn_ptr)

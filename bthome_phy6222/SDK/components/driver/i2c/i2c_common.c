@@ -101,7 +101,7 @@ uint8_t Hal_GetIIC_IRQID(uint8_t id)
     @ Module               :  Hal_GetIIC_PIN_Fmux
     @ Description    :  None
 *******************************************************************************/
-void Hal_GetIIC_PIN_Fmux(uint8_t id,Fmux_Type_e* SCL_Fmux,Fmux_Type_e* SDA_Fmux)
+void Hal_GetIIC_PIN_Fmux(uint8_t id,gpio_fmux_e* SCL_Fmux,gpio_fmux_e* SDA_Fmux)
 {
     if(IIC_Module0 == id)
     {

@@ -339,14 +339,14 @@ int hal_pwrmgr_RAM_retention(uint32_t sram)
 
 int hal_pwrmgr_RAM_retention_clr(void)
 {
-    /* subWriteReg(0x4000f01c,21,17,0); */
+    /* subWriteReg(&(AP_AON->PMCTL2_0),21,17,0); */
 
     return PPlus_SUCCESS;
 }
 
 int hal_pwrmgr_RAM_retention_set(void)
 {
-    /* subWriteReg(0x4000f01c,21,17,sramRet_config); */
+    /* subWriteReg(&(AP_AON->PMCTL2_0),21,17,sramRet_config); */
 
     return PPlus_SUCCESS;
 }
@@ -377,7 +377,7 @@ void hal_pwrmgr_poweroff(pwroff_cfg_t *pcfg, uint8_t wakeup_pin_num)
     UNUSED(pcfg);
     UNUSED(wakeup_pin_num);
     /*  HAL_ENTER_CRITICAL_SECTION();
-     *    subWriteReg(0x4000f01c,6,6,0x00);   #disable software control
+     *    subWriteReg(&(AP_AON->PMCTL2_0),6,6,0x00);   #disable software control
      *    #(void)(wakeup_pin_num);
      *
      *    for(uint8_t i = 0; i < wakeup_pin_num; i++ )

@@ -311,7 +311,7 @@ static void adv_measure(void) {
 /*********************************************************************
  * LED and Key
  */
-static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
+static void posedge_int_wakeup_cb(gpio_pin_e pin, gpio_polarity_e type)
 {
 	(void) pin;
 	if(type == POSEDGE)
@@ -340,7 +340,7 @@ static void posedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
 	}
 }
 
-static void negedge_int_wakeup_cb(GPIO_Pin_e pin, IO_Wakeup_Pol_e type)
+static void negedge_int_wakeup_cb(gpio_pin_e pin, gpio_polarity_e type)
 {
 	(void) pin;
 	if(type == NEGEDGE)

@@ -27,7 +27,7 @@ qdec_Ctx_t m_qdecCtx;
 
 void __attribute__((used)) hal_QDEC_IRQHandler()
 {
-    hal_gpio_pin_init(P20, OEN);
+    hal_gpio_pin_init(P20, GPIO_OUTPUT);
     hal_gpio_write(P20,1);
     osal_stop_timerEx(m_qdecCtx.qdec_task_id, m_qdecCtx.timeout_event);
     WaitMs(1);
@@ -43,7 +43,7 @@ void __attribute__((used)) hal_QDEC_IRQHandler()
 
     CLR_INT_QUAN(m_qdecCtx.cfg.qdec_chn);
     hal_pwrmgr_unlock(MOD_QDEC);
-    hal_gpio_pin_init(P20, OEN);
+    hal_gpio_pin_init(P20, GPIO_OUTPUT);
     hal_gpio_write(P20,0);
 }
 
@@ -71,7 +71,7 @@ void hal_qdec_timeout_handler()
 static void hal_qdec_set_cha(QDEC_CHN_e qdecCHN,gpio_pin_e pin)
 {
     hal_gpio_pull_set(pin, PULL_DOWN);
-    hal_gpio_fmux_set(pin, (Fmux_Type_e)(FMUX_CHAX + (qdecCHN*3)));
+    hal_gpio_fmux_set(pin, (gpio_fmux_e)(FMUX_CHAX + (qdecCHN*3)));
 }
 
 /**************************************************************************************
@@ -92,7 +92,7 @@ static void hal_qdec_set_cha(QDEC_CHN_e qdecCHN,gpio_pin_e pin)
 static void hal_qdec_set_chb(QDEC_CHN_e qdecCHN,gpio_pin_e pin)
 {
     hal_gpio_pull_set(pin, PULL_DOWN);
-    hal_gpio_fmux_set(pin, (Fmux_Type_e)(FMUX_CHBX + (qdecCHN*3)));
+    hal_gpio_fmux_set(pin, (gpio_fmux_e)(FMUX_CHBX + (qdecCHN*3)));
 }
 
 /**************************************************************************************
@@ -113,7 +113,7 @@ static void hal_qdec_set_chb(QDEC_CHN_e qdecCHN,gpio_pin_e pin)
 static void hal_qdec_set_chi(QDEC_CHN_e qdecCHN,gpio_pin_e pin)
 {
     hal_gpio_pull_set(pin, PULL_DOWN);
-    hal_gpio_fmux_set(pin, (Fmux_Type_e)(FMUX_CHIX + (qdecCHN*3)));
+    hal_gpio_fmux_set(pin, (gpio_fmux_e)(FMUX_CHIX + (qdecCHN*3)));
 }
 
 /**************************************************************************************
@@ -181,30 +181,30 @@ static void qdec_sleep_handler(void)
 
     for(uint8_t i=0; i<pin_num; i++)
     {
-        GPIO_Wakeup_Pol_e pol;
+        gpio_polarity_e pol;
         gpio_pin_e pin = m_qdecCtx.pin_arr[i];
-        hal_gpio_pin_init(pin, IE);
+        hal_gpio_pin_init(pin, GPIO_INPUT);
         pol = hal_gpio_read(pin) ? NEGEDGE:POSEDGE;
         hal_gpio_wakeup_set(pin, pol);
         m_qdecCtx.pin_state[i] = pol;
     }
 
     DISABLE_CHN(m_qdecCtx.cfg.qdec_chn);
-    hal_gpio_pin_init(P23, OEN);
+    hal_gpio_pin_init(P23, GPIO_OUTPUT);
     hal_gpio_write(P23,0);
 }
 
 static void qdec_wakeup_handler(void)
 {
-    hal_gpio_pin_init(P23, OEN);
+    hal_gpio_pin_init(P23, GPIO_OUTPUT);
     hal_gpio_write(P23,1);
     uint8_t pin_num;
     pin_num = m_qdecCtx.cfg.use_inc ? 3:2;
-    GPIO_Wakeup_Pol_e pol;
+    gpio_polarity_e pol;
 
     for(uint8_t i=0; i<pin_num; i++)
     {
-        hal_gpio_pin_init(m_qdecCtx.pin_arr[i], IE);
+        hal_gpio_pin_init(m_qdecCtx.pin_arr[i], GPIO_INPUT);
         pol = hal_gpio_read(m_qdecCtx.pin_arr[i]) ? POSEDGE:NEGEDGE;
 
         if(pol == m_qdecCtx.pin_state[i])
@@ -218,11 +218,11 @@ static void qdec_wakeup_handler(void)
     }
 
     int32_t delta = GET_CNT_QUAN(m_qdecCtx.cfg.qdec_chn);
-    hal_gpio_pin_init(P31, OEN);
+    hal_gpio_pin_init(P31, GPIO_OUTPUT);
     hal_gpio_write(P31,0);
     hal_pwrmgr_lock(MOD_QDEC);
     qdec_hw_config();
-    hal_gpio_pin_init(P31, OEN);
+    hal_gpio_pin_init(P31, GPIO_OUTPUT);
     hal_gpio_write(P31,1);
     osal_start_timerEx(m_qdecCtx.qdec_task_id, m_qdecCtx.timeout_event, 150);
 }

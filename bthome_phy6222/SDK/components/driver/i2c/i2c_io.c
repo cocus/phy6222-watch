@@ -23,11 +23,11 @@
 #define TWI_SCL_READ()    hal_gpio_read(IIC_SCL_PIN)
 #define TWI_SDA_READ()    hal_gpio_read(IIC_SDA_PIN)
 
-#define TWI_SDA_OUTPUT()  hal_gpio_pin_init(IIC_SDA_PIN,OEN)
-#define TWI_SDA_INPUT()   hal_gpio_pin_init(IIC_SDA_PIN,IE); hal_gpio_pull_set(IIC_SDA_PIN, STRONG_PULL_UP)
+#define TWI_SDA_OUTPUT()  hal_gpio_pin_init(IIC_SDA_PIN,GPIO_OUTPUT)
+#define TWI_SDA_INPUT()   hal_gpio_pin_init(IIC_SDA_PIN,GPIO_INPUT); hal_gpio_pull_set(IIC_SDA_PIN, STRONG_PULL_UP)
 
-#define TWI_SCL_OUTPUT()  hal_gpio_pin_init(IIC_SCL_PIN,OEN)
-#define TWI_SCL_INPUT()   hal_gpio_pin_init(IIC_SCL_PIN,IE); hal_gpio_pull_set(IIC_SCL_PIN, STRONG_PULL_UP)
+#define TWI_SCL_OUTPUT()  hal_gpio_pin_init(IIC_SCL_PIN,GPIO_OUTPUT)
+#define TWI_SCL_INPUT()   hal_gpio_pin_init(IIC_SCL_PIN,GPIO_INPUT); hal_gpio_pull_set(IIC_SCL_PIN, STRONG_PULL_UP)
 /*
     #define SCL_H   GPIOC->BSRR = GPIO_Pin_12
     #define SCL_L   GPIOC->BRR = GPIO_Pin_12

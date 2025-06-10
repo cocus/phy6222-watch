@@ -166,7 +166,7 @@ void update_paddles() {
     gfx_fill_rect(AI_PADDLE_X, ai_paddle_y, PADDLE_WIDTH, PADDLE_HEIGHT, PADDLE_COLOR);
 }
 
-void posedge_callback_wakeup(GPIO_Pin_e pin, IO_Wakeup_Pol_e type) {
+void posedge_callback_wakeup(gpio_pin_e pin, gpio_polarity_e type) {
     UNUSED(pin);
     UNUSED(type);
     // Invert the player's paddle movement direction on button press

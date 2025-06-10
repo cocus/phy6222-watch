@@ -57,8 +57,8 @@ void hal_voice_amic_mode(void)
 // Open a GPIO pin for DMIC
 void hal_voice_dmic_open(gpio_pin_e dmicDataPin, gpio_pin_e dmicClkPin)
 {
-    hal_gpio_fmux_set(dmicDataPin, (Fmux_Type_e)FMUX_ADCC);
-    hal_gpio_fmux_set(dmicClkPin, (Fmux_Type_e)FMUX_CLK1P28M);
+    hal_gpio_fmux_set(dmicDataPin, (gpio_fmux_e)FMUX_ADCC);
+    hal_gpio_fmux_set(dmicClkPin, (gpio_fmux_e)FMUX_CLK1P28M);
 }
 
 // Set PGA gain for AMIC

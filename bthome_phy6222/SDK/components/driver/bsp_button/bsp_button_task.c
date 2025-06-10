@@ -118,7 +118,7 @@ static void Bsp_Btn_Check(uint8_t ucKeyCode)
     }
 }
 
-void gpio_btn_pin_event_handler(gpio_pin_e pin,IO_Wakeup_Pol_e type)
+void gpio_btn_pin_event_handler(gpio_pin_e pin,gpio_polarity_e type)
 {
     #if ((BSP_BTN_HARDWARE_CONFIG == BSP_BTN_JUST_GPIO) ||  (BSP_BTN_HARDWARE_CONFIG == BSP_BTN_GPIO_AND_KSCAN))
 

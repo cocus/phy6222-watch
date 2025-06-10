@@ -39,8 +39,8 @@ typedef struct
     uint8_t                     INTR_ID;                                // get by software
     gpio_pin_e              SDA_PIN;                                // I2C Pin
     gpio_pin_e              SCL_PIN;
-    Fmux_Type_e             Fmux_SCL;                               // get by software
-    Fmux_Type_e             Fmux_SDA;                               // get by software
+    gpio_fmux_e             Fmux_SCL;                               // get by software
+    gpio_fmux_e             Fmux_SDA;                               // get by software
     IIC_Slave_status    state;
 } IIC_Slave_cfg;
 
@@ -208,22 +208,22 @@ void Hal_I2C_Slave_WriteTX_FIFO(uint8_t handle,uint8_t* p,uint8_t len)
     4、IC_ENABLE=1;
 */
 /*******************************************************************************
-    @ Module           :  I2C Slave 单字节发�?
+    @ Module           :  I2C Slave 单字节发�?
     @ Description    :  NULL
 *******************************************************************************/
 /*
     1、IIC MASTER 寻址
     2、IIC SLAVE ACK
-    3、IIC SLAVE 触发 RD_REQ 中断�?同时 HOLD THE SCL LOW , WAIT UNTIL THE SOFTWARE RESPONDS(数据响应�?
-        SOFTWARE RESPONDS的时间间隔，10倍SCL周期 �?00K--->25us）（一个byte传输完成的时间）
-    4、读请求触发前，如果TXFIFO,总线触发TX_ABRT中断，清除旧数据   （通过软件读取 IC_CLR_TX_ABRT register，释放总线�?
-    5、写数据�?IC_DATA_CMD
-    6、清除RD_REQ,TX_ABRT中断标志位（如果中断被屏蔽，则需要清除IC_RAW_INTR_STAT�?
-    7、总线释放SCL并传输数据（�?对应�?
-    8、MASTER 通过RESTART �?STOP 继续操作总线
+    3、IIC SLAVE 触发 RD_REQ 中断�?同时 HOLD THE SCL LOW , WAIT UNTIL THE SOFTWARE RESPONDS(数据响应�?
+        SOFTWARE RESPONDS的时间间隔，10倍SCL周期 �?00K--->25us）（一个byte传输完成的时间）
+    4、读请求触发前，如果TXFIFO,总线触发TX_ABRT中断，清除旧数据   （通过软件读取 IC_CLR_TX_ABRT register，释放总线�?
+    5、写数据�?IC_DATA_CMD
+    6、清除RD_REQ,TX_ABRT中断标志位（如果中断被屏蔽，则需要清除IC_RAW_INTR_STAT�?
+    7、总线释放SCL并传输数据（�?对应�?
+    8、MASTER 通过RESTART �?STOP 继续操作总线
 */
 /*******************************************************************************
-    @ Module           :  I2C Slave 单字节接�?
+    @ Module           :  I2C Slave 单字节接�?
     @ Description    :  NULL
 *******************************************************************************/
 /*
@@ -233,7 +233,7 @@ void Hal_I2C_Slave_WriteTX_FIFO(uint8_t handle,uint8_t* p,uint8_t len)
         如果RX FIFO已经满了，再来数据的时候，将会触发R_RX_OVER中断，于此同时，
         IIC数据将会继续传输（没有NACK信号），并无法保证后续数据的完整
     4、RX_FULL 中断
-    5、从IC_DATA_CMD 中读取数�?
-    6、MASTER 通过RESTART �?STOP 继续操作总线
+    5、从IC_DATA_CMD 中读取数�?
+    6、MASTER 通过RESTART �?STOP 继续操作总线
 */
 

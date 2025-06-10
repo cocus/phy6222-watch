@@ -26,7 +26,7 @@ static int key_timer_start(uint32 intval_ms)
     return 0;
 }
 
-static void key_idle_handler(uint8 i,IO_Wakeup_Pol_e type)
+static void key_idle_handler(uint8 i,gpio_polarity_e type)
 {
     if(((type == NEGEDGE) && (key_state.key[i].idle_level == HAL_HIGH_IDLE)) ||
             ((type == POSEDGE) && (key_state.key[i].idle_level == HAL_LOW_IDLE)))
@@ -38,7 +38,7 @@ static void key_idle_handler(uint8 i,IO_Wakeup_Pol_e type)
     }
 }
 
-static void key_press_debonce_handler(uint8 i,IO_Wakeup_Pol_e type)
+static void key_press_debonce_handler(uint8 i,gpio_polarity_e type)
 {
     if(((type == NEGEDGE) && (key_state.key[i].idle_level == HAL_HIGH_IDLE)) ||
             ((type == POSEDGE) && (key_state.key[i].idle_level == HAL_LOW_IDLE)))
@@ -47,7 +47,7 @@ static void key_press_debonce_handler(uint8 i,IO_Wakeup_Pol_e type)
     }
 }
 
-static void key_press_handler(uint8 i,IO_Wakeup_Pol_e type)
+static void key_press_handler(uint8 i,gpio_polarity_e type)
 {
     if(((type == POSEDGE) && (key_state.key[i].idle_level == HAL_HIGH_IDLE)) ||
             ((type == NEGEDGE) && (key_state.key[i].idle_level == HAL_LOW_IDLE)))
@@ -58,7 +58,7 @@ static void key_press_handler(uint8 i,IO_Wakeup_Pol_e type)
     }
 }
 
-static void key_release_debonce_handler(uint8 i,IO_Wakeup_Pol_e type)
+static void key_release_debonce_handler(uint8 i,gpio_polarity_e type)
 {
     if(((type == POSEDGE) && (key_state.key[i].idle_level == HAL_HIGH_IDLE)) ||
             ((type == NEGEDGE) && (key_state.key[i].idle_level == HAL_LOW_IDLE)))
@@ -67,7 +67,7 @@ static void key_release_debonce_handler(uint8 i,IO_Wakeup_Pol_e type)
     }
 }
 
-static void pin_event_handler(gpio_pin_e pin,IO_Wakeup_Pol_e type)
+static void pin_event_handler(gpio_pin_e pin,gpio_polarity_e type)
 {
     uint8 i;
 
