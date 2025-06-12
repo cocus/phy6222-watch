@@ -505,8 +505,8 @@ typedef struct
   __IO uint32_t intr_clear;       /*!< 0x38 */
   __IO uint32_t intr_status;      /*!< 0x3c: bit8 interrupt triggered by Voice, [7:0] interrupt triggered by ADC channel 7-0 */
   __IO uint32_t compare_cfg[8];   /*!< 0x40~0x5c */
-  uint32_t RESERVED2[928];
-  __IO uint32_t adc_data[8][32];  /*!< 0x400: ADC values buffer */
+  uint32_t RESERVED2[232];
+  __IO uint32_t adc_data[9][32];  /*!< 0x400: ADC values buffer */
 } AP_ADCC_TypeDef;
 
 /**

@@ -31,8 +31,6 @@
 #define SPIF_RSVD1_ADC_CALIBRATE        (FLASH_BASE_ADDR + SPIF_RSVD_AREA_1)
 
 
-#define    ADC_CH_BASE             (ADCC_BASE_ADDR + 0x00000400UL)
-
 typedef enum
 {
     ADC_CTX_NOT_INITALIZED = 0U,        /*!< Context is not initialized yet */
@@ -304,8 +302,10 @@ void __attribute__((used)) hal_ADC_IRQHandler(void)
 
         for (n = 0; n < (MAX_ADC_SAMPLE_SIZE - 3); n++)
         {
-            adc_data[n] = (uint16_t)(read_reg(ADC_CH_BASE + (bitfield_bit * 0x80) + ((n + 2) * 4)) & 0xfff);
-            adc_data[n + 1] = (uint16_t)((read_reg(ADC_CH_BASE + (bitfield_bit * 0x80) + ((n + 2) * 4)) >> 16) & 0xfff);
+            //adc_data[n] = (uint16_t)(read_reg(ADC_CH_BASE + (bitfield_bit * 0x80) + ((n + 2) * 4)) & 0xfff);
+            //adc_data[n + 1] = (uint16_t)((read_reg(ADC_CH_BASE + (bitfield_bit * 0x80) + ((n + 2) * 4)) >> 16) & 0xfff);
+            adc_data[n] = (uint16_t)(AP_ADCC->adc_data[bitfield_bit][n + 2] & 0xfff);
+            adc_data[n + 1] = (uint16_t)((AP_ADCC->adc_data[bitfield_bit][n + 2] >> 16) & 0xfff);
         }
 
         /* Clear the Interrupt of this channel */
