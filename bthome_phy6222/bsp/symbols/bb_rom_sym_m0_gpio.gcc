@@ -4,3 +4,4 @@ hal_gpio_read = gpio_read;
 hal_ds_control = gpio_ds_control;
 hal_gpio_cfg_analog_io = gpio_cfg_analog_io;
 hal_gpio_fmux = gpio_fmux_control;
+hal_gpio_ds_control = gpio_ds_control;

@@ -211,9 +211,9 @@ void hal_system_soft_reset(void)
         config reset casue as RSTC_WARM_NDWC
         reset path walkaround dwc
     */
-    AON_SLEEPR0 = 4;
+    PCRM_SLEEPR0 = 4;
 
-    AON_CLEAR_XTAL_TRACKING_AND_CALIB;
+    PCRM_CLEAR_XTAL_TRACKING_AND_CALIB;
 
     PCR_SW_RESET1 = 0;
 
@@ -225,7 +225,7 @@ void hal_rc32k_clk_tracking_init(void)
 {
     if(g_counter_traking_avg == 0) {
     	counter_tracking = g_counter_traking_avg = 7812;
-    	AP_AON->SLEEP_R[1]=0;
+    	AP_PCRM->SLEEP_R[1]=0;
     }
 }
 

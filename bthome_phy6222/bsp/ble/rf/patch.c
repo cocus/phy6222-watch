@@ -5237,18 +5237,18 @@ static void check_16MXtal_by_rcTracking(void)
     uint32_t temp_min,temp_max;
     uint32_t tracking_start = rtc_get_counter();
     // ======== enable tracking 32KHz RC timer with 16MHz crystal clock
-    AP_AON->RTCCLK0 |= BIT(18);
+    AP_PCRM->CLKSEL |= BIT(18);
     //temp = *(volatile uint32_t*)0x4000f040;
     //*(volatile uint32_t*)0x4000f040 = temp | BIT(18);
     // [bit16] 16M [bit8:4] cnt [bit3] track_en_rc32k
-    AP_AON->RTCCFG2 = (AP_AON->RTCCFG2 & 0xfffefe00) | 0x0028;
+    AP_PCRM->RTCCFG2 = (AP_PCRM->RTCCFG2 & 0xfffefe00) | 0x0028;
     WaitRTCCount(3);
     // 0x4000f064 - RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle
-    temp31 = AP_AON->RTCTRCCNT & 0x1ffff;
+    temp31 = AP_PCRM->RTCTRCCNT & 0x1ffff;
     WaitRTCCount(3);
-    temp32 = AP_AON->RTCTRCCNT & 0x1ffff;
+    temp32 = AP_PCRM->RTCTRCCNT & 0x1ffff;
     WaitRTCCount(3);
-    temp33 = AP_AON->RTCTRCCNT & 0x1ffff;
+    temp33 = AP_PCRM->RTCTRCCNT & 0x1ffff;
 
     while(1)
     {
@@ -5276,7 +5276,7 @@ static void check_16MXtal_by_rcTracking(void)
         temp31= temp32;
         temp32 = temp33;
         WaitRTCCount(3);
-        temp33 = AP_AON->RTCTRCCNT & 0x1ffff;
+        temp33 = AP_PCRM->RTCTRCCNT & 0x1ffff;
         //check tracking cost
         uint32_t tracking_end = rtc_get_counter();
         uint32_t tracking_16M_tick = (tracking_end>=tracking_start) ? (tracking_end-tracking_start) : (0xffffffff-tracking_start+tracking_end);
@@ -5302,9 +5302,9 @@ static void check_16MXtal_by_rcTracking(void)
     }
 
     WaitRTCCount(20);
-    temp = AP_AON->RTCTRCCNT & 0x1ffff;
+    temp = AP_PCRM->RTCTRCCNT & 0x1ffff;
     //disable tracking
-    AP_AON->RTCCFG2 &= ~BIT(3); // subWriteReg(0x4000f05C,3,3,0);
+    AP_PCRM->RTCCFG2 &= ~BIT(3); // subWriteReg(0x4000f05C,3,3,0);
     g_xtal16M_tmp = temp;
 }
 
@@ -5319,10 +5319,10 @@ static void check_96MXtal_by_rcTracking(void)
     uint32_t temp,temp1;
 
     //for first wakeupinit
-    if((AP_AON->SLEEP_R[1] & 0x80) == 0)
+    if((AP_PCRM->SLEEP_R[1] & 0x80) == 0)
     {
         //enable DLL
-    	AP_AON->RTCCFG1 |= BIT(7); // temp = *(volatile uint32_t*)0x4000f044;
+    	AP_PCRM->CLKHF_CTL1 |= BIT(7); // temp = *(volatile uint32_t*)0x4000f044;
         // *(volatile uint32_t*)0x4000f044 = temp | BIT(7);
         WaitRTCCount(3);
         return;
@@ -5330,14 +5330,14 @@ static void check_96MXtal_by_rcTracking(void)
 
     DLL_enable_num=0;
     // ======== enable tracking 32KHz RC timer with 16MHz crystal clock
-    AP_AON->RTCCLK1 |= BIT(18);
+    AP_PCRM->CLKHF_CTL0 |= BIT(18);
     //temp = *(volatile uint32_t*)0x4000f040;
     //*(volatile uint32_t*)0x4000f040 = temp | BIT(18);
 
     while(1)
     {
         //enable DLL
-    	AP_AON->RTCCFG1 |= BIT(7);
+    	AP_PCRM->CLKHF_CTL1 |= BIT(7);
         //temp = *(volatile uint32_t*)0x4000f044;
         //*(volatile uint32_t*)0x4000f044 = temp | BIT(7);
         WaitRTCCount(3);
@@ -5346,29 +5346,29 @@ static void check_96MXtal_by_rcTracking(void)
         // gpio_write(P32,0);
         // //enable digclk 96M
         // temp = *(volatile uint32_t*)0x4000f044;
-        AP_AON->RTCCFG1 |= BIT(16); // *(volatile uint32_t*)0x4000f044 = temp | BIT(16);
+        AP_PCRM->CLKHF_CTL1 |= BIT(16); // *(volatile uint32_t*)0x4000f044 = temp | BIT(16);
 
         for(uint8_t index=0; index<5; index++)
         {
-            temp = AP_AON->RTCCFG2;
+            temp = AP_PCRM->RTCCFG2;
             // [bit16] 16M [bit8:4] cnt [bit3] track_en_rc32k
-            AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0028 | BIT(16);
+            AP_PCRM->RTCCFG2 = (temp & 0xfffefe00) | 0x0028 | BIT(16);
             WaitRTCCount(3);
-            temp1 = AP_AON->RTCTRCCNT & 0x1ffff;
-            AP_AON->RTCCFG2 &= ~BIT(3); //disable tracking subWriteReg(0x4000f05C,3,3,0);
+            temp1 = AP_PCRM->RTCTRCCNT & 0x1ffff;
+            AP_PCRM->RTCCFG2 &= ~BIT(3); //disable tracking subWriteReg(0x4000f05C,3,3,0);
             if( (g_xtal16M_tmp*6 >=temp1 ? (g_xtal16M_tmp*6 -temp1):(temp1-g_xtal16M_tmp*6))<TRACKING_96M_16M_MULTI6_DELTA_LIMIT)
             {
                 //disable 96M
-            	AP_AON->RTCCFG2 &= ~BIT(16); // disable 16M subWriteReg(0x4000f05C,16,16,0);
-            	AP_AON->RTCCFG1 &= ~BIT(16); // subWriteReg(0x4000f044,16,16,0);
+            	AP_PCRM->RTCCFG2 &= ~BIT(16); // disable 16M subWriteReg(0x4000f05C,16,16,0);
+            	AP_PCRM->CLKHF_CTL1 &= ~BIT(16); // subWriteReg(0x4000f044,16,16,0);
                 g_xtal96M_temp = temp1;
                 return;
             }
         }
 
         //disable 96M
-        AP_AON->RTCCFG2 &= ~BIT(16); // disable 16M subWriteReg(0x4000f05C,16,16,0);
-        AP_AON->RTCCFG1 &= ~BIT(16); // div?        subWriteReg(0x4000f044,16,16,0);
+        AP_PCRM->RTCCFG2 &= ~BIT(16); // disable 16M subWriteReg(0x4000f05C,16,16,0);
+        AP_PCRM->CLKHF_CTL1 &= ~BIT(16); // div?        subWriteReg(0x4000f044,16,16,0);
 
         //should not be here
         if(DLL_enable_num>= DLL_ENABLE_MAX)
@@ -5377,16 +5377,16 @@ static void check_96MXtal_by_rcTracking(void)
         }
 
         //disable DLL
-        AP_AON->RTCCFG1 &= ~BIT(7);
+        AP_PCRM->CLKHF_CTL1 &= ~BIT(7);
         WaitRTCCount(3);
         //update g_xtal16M_tmp
-        temp = AP_AON->RTCCFG2;
+        temp = AP_PCRM->RTCCFG2;
         // [bit16] 16M [bit8:4] cnt [bit3] track_en_rc32k
-        AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0028 ;
+        AP_PCRM->RTCCFG2 = (temp & 0xfffefe00) | 0x0028 ;
         WaitRTCCount(3);
         // RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle
-        g_xtal16M_tmp = AP_AON->RTCTRCCNT & 0x1ffff;
-        AP_AON->RTCCFG2 &= ~BIT(3); //disable tracking subWriteReg(0x4000f05C,3,3,0);
+        g_xtal16M_tmp = AP_PCRM->RTCTRCCNT & 0x1ffff;
+        AP_PCRM->RTCCFG2 &= ~BIT(3); //disable tracking subWriteReg(0x4000f05C,3,3,0);
     }
 }
 #endif
@@ -5451,8 +5451,8 @@ void wakeup_init1()
 #endif
     //each rtc count is about 30.5us
     //after 15count , xtal will be feedout to dll and doubler
-    temp = AP_AON->RTCCFG2;
-    AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0108;  //[16] 16M [8:4] cnt [3] track_en_rc32k
+    temp = AP_PCRM->RTCCFG2;
+    AP_PCRM->RTCCFG2 = (temp & 0xfffefe00) | 0x0108;  //[16] 16M [8:4] cnt [3] track_en_rc32k
 #if defined(CLK_16M_ONLY) &&  CLK_16M_ONLY != 0
     WaitRTCCount(pGlobal_config[WAKEUP_DELAY]);
 #else
@@ -5480,7 +5480,7 @@ void wakeup_init1()
                 for hclk=32M DBL
                 switch to 32M RC and reset DBL
             */
-            if((AP_AON->RTCCLK0 & 0x07)==SYS_CLK_DBL_32M)
+            if((AP_PCRM->CLKSEL & 0x07)==SYS_CLK_DBL_32M)
             {
                 clk_init(SYS_CLK_RC_32M);
             }
@@ -5565,14 +5565,14 @@ void wakeup_init1()
     ll_hw_set_timing(pktFmt); // =PKT_FMT_BLE1M
     ll_hw_ign_rfifo(LL_HW_IGN_SSN | LL_HW_IGN_CRC | LL_HW_IGN_EMP);
     // ======== enable tracking 32KHz RC timer with 16MHz crystal clock
-//    temp = AP_AON->RTCCFG2;
-//    AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0108;  //[16] 16M [8:4] cnt [3] track_en_rc32k
+//    temp = AP_PCRM->RTCCFG2;
+//    AP_PCRM->RTCCFG2 = (temp & 0xfffefe00) | 0x0108;  //[16] 16M [8:4] cnt [3] track_en_rc32k
     //get wakeup tracking counter
 #if 0
     if (pGlobal_config[LL_SWITCH] & RC32_TRACKINK_ALLOW)
     {
         WaitRTCCount(17);
-        uint32_t  counter_tracking_wakeup = AP_AON->RTCTRCCNT; // *(volatile uint32_t *)0x4000f064 & 0x1ffff;
+        uint32_t  counter_tracking_wakeup = AP_PCRM->RTCTRCCNT; // *(volatile uint32_t *)0x4000f064 & 0x1ffff;
         counter_tracking = (counter_tracking_wakeup + counter_tracking)>>1;
     }
 #endif
@@ -5585,21 +5585,21 @@ void config_RTC1(uint32_t time)
     //WaitRTCCount(1);
 #if TEST_RTC_DELTA
     do
-    	sleep_tick = AP_AON->RTCCNT;          // read current RTC counter
-    while(sleep_tick != AP_AON->RTCCNT);
+    	sleep_tick = AP_RTC->RTCCNT;          // read current RTC counter
+    while(sleep_tick != AP_RTC->RTCCNT);
 #else
-    sleep_tick = AP_AON->RTCCNT;          // *(volatile uint32_t*) 0x4000f028; read current RTC counter
+    sleep_tick = AP_RTC->RTCCNT;          // *(volatile uint32_t*) 0x4000f028; read current RTC counter
 #endif
     //update for cal ll next time after wakeup
     ll_remain_time = read_LL_remainder_time();
     // comparator configuration
     g_TIM2_IRQ_to_Sleep_DeltTick = (g_TIM2_IRQ_TIM3_CurrCount > (AP_TIM3->CurrentCount))
                                    ? (g_TIM2_IRQ_TIM3_CurrCount - (AP_TIM3->CurrentCount)) : 0;
-    AP_AON->RTCCC0 = sleep_tick + time;  //set RTC comparatr0 value
+    AP_RTC->RTCCC0 = sleep_tick + time;  //set RTC comparatr0 value
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 20;           //enable comparator0 envent
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 18;           //counter overflow interrupt
 //  *(volatile uint32_t *) 0x4000f024 |= 1 << 15;           //enable comparator0 inerrupt
-    AON_RTCCTL |= AON_RTCCTL_COMP0INT | AON_RTCCTL_COUNTOVF | AON_RTCCTL_COMP0EVT; // |= 0x148000 combine above 3 statement to save MCU time
+    RTC_RTCCTL |= RTC_RTCCTL_COMP0INT | RTC_RTCCTL_COUNTOVF | RTC_RTCCTL_COMP0EVT; // |= 0x148000 combine above 3 statement to save MCU time
 
     //compensate for cal wakeup next_time
     if (llState != LL_STATE_IDLE)
@@ -7697,7 +7697,7 @@ void enterSleepProcess1(uint32_t time)
 {
 	uint32_t regtrck, regctl, temp;
 	int x;
-	regtrck = AP_AON->RTCTRCCNT  & 0x1ffff; // [0x4000f064]
+	regtrck = AP_PCRM->RTCTRCCNT  & 0x1ffff; // [0x4000f064]
 	regctl = AP_AON->PMCTL1; // [0x4000F018]
 	if(regtrck >= 8203)
 		x = -2;
@@ -8218,8 +8218,8 @@ __attribute__((aligned(4))) static uint8_t s_trng_iv[16];
 static void TRNG_Output(uint32_t* buf, uint8_t len)
 {
     uint32_t temp,temp1,status;
-    temp = AP_AON->RTCCFG2;
-    AP_AON->RTCCFG2 = (temp & 0xfffefe00) | 0x0108;
+    temp = AP_PCRM->RTCCFG2;
+    AP_PCRM->RTCCFG2 = (temp & 0xfffefe00) | 0x0108;
 
     for(uint8_t j=0; j < len; j++)
     {
@@ -8228,7 +8228,7 @@ static void TRNG_Output(uint32_t* buf, uint8_t len)
         for(uint8_t i = 0; i < 16; i++)
         {
             WaitRTCCount(17);
-            temp1 = AP_AON->RTCTRCCNT;
+            temp1 = AP_PCRM->RTCTRCCNT;
             status |= ((temp1 & 0x03)<<(i<<1));
         }
         *buf++ = status;

@@ -1,11 +1,13 @@
 
 #include <types.h> /* for UNUSED */
 #include <phy62xx.h>
-#include <driver/gpio/gpio.h>
-#include <driver/uart/uart.h>
+#include <driver/adc/adc.h>
 #include <driver/clock/clock.h>
 #include <driver/flash/flash.h>
+#include <driver/gpio/gpio.h>
+#include <driver/uart/uart.h>
 
+#include <string.h>
 #include <log/log.h>
 
 #include "FreeRTOS.h"
@@ -73,6 +75,141 @@ void genericTask(void *argument)
         vTaskDelay(pdMS_TO_TICKS(500));
     }
 }
+
+
+/*
+    channel:
+    is_differential_mode:
+    is_high_resolution:
+    [bit7~bit2]=[p20,p15~p11],ignore[bit1,bit0]
+    when measure adc(not battery),we'd better use high_resolution.
+    when measure battery,we'd better use no high_resolution and keep the gpio alone.
+
+    differential_mode is rarely used,
+    if use please config channel as one of [ADC_CH3DIFF,ADC_CH2DIFF,ADC_CH1DIFF],
+    and is_high_resolution as one of [0x80,0x20,0x08],
+    then the pair of [P20~P15,P14~P13,P12~P11] will work.
+    other adc channel cannot work.
+*/
+static adc_Cfg_t adc_cfg =
+{
+
+    .channel = ADC_BIT(ADC_CH3P_P20),
+    .is_continue_mode = 0,
+    .is_differential_mode = 0x00,
+    .is_high_resolution = 0x00,
+
+};
+
+#define MAX_SAMPLE_POINT    64
+static uint16_t adc_debug[MAX_SAMPLE_POINT];
+static volatile uint8_t channel_done_flag = 0;
+
+static volatile uint8_t busy = 0;
+static void adc_Poilling_evt(adc_Evt_t* pev)
+{
+    float value = 0;
+    int i = 0;
+    uint8_t is_high_resolution = pev->is_high;
+    uint8_t is_differential_mode = pev->is_diff;
+    uint8_t ch = pev->ch;
+
+    if((pev->type != HAL_ADC_EVT_DATA) || (pev->ch < 2))
+        return;
+
+    memcpy(adc_debug,pev->data,2*(pev->size));
+    channel_done_flag |= BIT(pev->ch);
+
+    if(channel_done_flag == adc_cfg.channel)
+    {
+        //for(i=2; i<8; i++)
+        i = 7;
+        {
+            if(channel_done_flag & BIT(i))
+            {
+                //is_high_resolution = (adc_cfg.is_high_resolution & BIT(i))?1:0;
+                //is_differential_mode = (adc_cfg.is_differential_mode & BIT(i))?1:0;
+                value = hal_adc_value_cal((adc_CH_t)i,adc_debug, pev->size, is_high_resolution,is_differential_mode);
+
+                switch(i)
+                {
+                case ADC_CH1N_P11:
+                    ch=11;
+                    break;
+
+                case ADC_CH1P_P23:
+                    ch=23;
+                    break;
+
+                case ADC_CH2N_P24:
+                    ch=24;
+                    break;
+
+                case ADC_CH2P_P14:
+                    ch=14;
+                    break;
+
+                case ADC_CH3N_P15:
+                    ch=15;
+                    break;
+
+                case ADC_CH3P_P20:
+                    ch=20;
+                    break;
+
+                default:
+                    break;
+                }
+
+                //if(ch!=0)
+                {
+                    LOG("P%d %d mv is dif %d, is high %d",ch, (int)value, is_differential_mode, is_high_resolution);
+                }
+                /*else
+                {
+                    LOG("invalid channel");
+                }*/
+            }
+        }
+
+        //LOG(" mode:%d ",adc_cfg.is_continue_mode);
+        channel_done_flag = 0;
+        busy = 0;
+    }
+}
+
+void adcTask(void *argument)
+{
+    LOG("Hi from genericTask");
+
+    hal_adc_init();
+
+    hal_adc_clock_config(HAL_ADC_CLOCK_80K);
+
+    int ret = hal_adc_config_single_ended(CH9, 0, adc_Poilling_evt);// hal_adc_config_channel(adc_cfg, adc_Poilling_evt);
+
+    if(ret)
+    {
+        LOG("ret = %d",ret);
+        return;
+    }
+
+    busy = 1;
+    ret = hal_adc_start();
+
+    while (1)
+    {
+        if (busy == 0) {
+            ret = hal_adc_config_single_ended(CH9, 0, adc_Poilling_evt);//hal_adc_config_channel(adc_cfg, adc_Poilling_evt);
+            busy = 1;
+            ret = hal_adc_start();
+            //LOG("trigger ADC sampling..., ret is %d", ret);
+        }
+        vTaskDelay(pdMS_TO_TICKS(750));
+    }
+
+}
+
 #if 0
 void genericTask2(void *argument)
 {
@@ -180,7 +317,7 @@ int main(void)
     // NVIC_SetPriority((IRQn_Type)PendSV_IRQn, 15);
 
     xTaskCreate(genericTask, "genericTask", 256, NULL, 1, NULL);
-    //xTaskCreate(genericTask2, "genericTask2", 256, NULL, 1, NULL);
+    xTaskCreate(adcTask, "adcTask", 256, NULL, 1, NULL);
 
 #ifdef ENABLE_BTSTACK
     extern void port_thread(void *args);

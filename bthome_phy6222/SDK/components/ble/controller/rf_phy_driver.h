@@ -96,7 +96,7 @@ extern volatile uint8_t   g_rc32kCalRes   ;
 /*
     0x4000f0c4 is AON-SLEEP_R[1], used for xtal tracking
 */
-#define AON_CLEAR_XTAL_TRACKING_AND_CALIB          AP_AON->SLEEP_R[1]=0
+#define PCRM_CLEAR_XTAL_TRACKING_AND_CALIB          AP_PCRM->SLEEP_R[1]=0
 
 #define AON_SAVE_RC32K_CALIB_FLG(x)                 subWriteReg(0x4000f0c4, 7, 7, (0x01&(x)))
 #define AON_LOAD_RC32K_CALIB_FLG                    (((*(volatile uint32_t*)0x4000f0c4) & 0x80) == 0x80)

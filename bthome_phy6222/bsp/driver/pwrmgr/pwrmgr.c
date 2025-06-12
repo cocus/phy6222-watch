@@ -395,7 +395,7 @@ void hal_pwrmgr_poweroff(pwroff_cfg_t *pcfg, uint8_t wakeup_pin_num)
      *     reset path walkaround dwc
      */
 
-    AON_SLEEPR0 = 2;
+    PCRM_SLEEPR0 = 2;
     AON_PWROFF = 0x5a5aa5a5;
 
     while (1)

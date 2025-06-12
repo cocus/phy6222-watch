@@ -449,8 +449,8 @@ int hal_gpio_init(void)
     AP_GPIO->intmask = 0;
 
     /* disable all wakeup pin */
-    AP_WAKEUP->io_wu_mask_31_0 = 0;
-    AP_WAKEUP->io_wu_mask_34_32 = 0;
+    AP_PCRM->io_wu_mask_31_0 = 0;
+    AP_PCRM->io_wu_mask_34_32 = 0;
 
     JUMP_FUNCTION(GPIO_IRQ_HANDLER) = (uint32_t)&hal_GPIO_IRQHandler;
 
@@ -679,22 +679,22 @@ void hal_gpio_wakeup_control(gpio_pin_e pin, bit_action_e value)
     {
         if (value)
         {
-            AP_AON->REG_S9 |= BIT(c_gpio_index[pin]);
+            AP_AON->io_wu_mask_31_0 |= BIT(c_gpio_index[pin]);
         }
         else
         {
-            AP_AON->REG_S9 &= ~BIT(c_gpio_index[pin]);
+            AP_AON->io_wu_mask_31_0 &= ~BIT(c_gpio_index[pin]);
         }
     }
     else
     {
         if (value)
         {
-            AP_AON->REG_S10 |= BIT(c_gpio_index[pin] - 32);
+            AP_AON->io_wu_mask_34_32 |= BIT(c_gpio_index[pin] - 32);
         }
         else
         {
-            AP_AON->REG_S10 &= ~BIT(c_gpio_index[pin] - 32);
+            AP_AON->io_wu_mask_34_32 &= ~BIT(c_gpio_index[pin] - 32);
         }
     }
 }

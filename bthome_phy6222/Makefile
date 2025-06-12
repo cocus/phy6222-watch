@@ -56,7 +56,7 @@ CFLAGS     += -specs=nosys.specs
 CFLAGS     += -Wl,--gc-sections
 
 
-LDSCRIPT   ?= $(SDK_PATH)/misc/phy6222.ld
+LDSCRIPT   ?= bsp/phy6222.ld
 
 ADD_OPT =
 
@@ -68,7 +68,7 @@ LDFLAGS    += -Wl,--script=$(LDSCRIPT)
 ifeq ($(OFFLOAD_GPIO),1)
 LDFLAGS    += -Wl,--just-symbols=bsp/symbols/bb_rom_sym_m0_gpio.gcc
 endif
-LDFLAGS    += -Wl,--just-symbols=$(SDK_PATH)/misc/bb_rom_sym_m0.gcc
+LDFLAGS    += -Wl,--just-symbols=bsp/symbols/bb_rom_sym_m0.gcc
 LDFLAGS    += -Wl,-Map=$(OBJ_DIR)/$(PROJECT_NAME).map
 LIBS       += -Wl,--start-group -lgcc -lnosys -Wl,--end-group
 
@@ -79,15 +79,16 @@ INCLUDES += -Ibsp/ -Ibsp/CMSIS/include -Ibsp/CMSIS/device/phyplus/ -Ibsp/log
 ###########################################
 # LIBs
 SRCS += bsp/jump_table.c \
-	bsp/log/log.c \
-	bsp/driver/uart/uart.c \
-	bsp/driver/gpio/gpio.c \
-	bsp/driver/clock/clock.c \
-	bsp/driver/pwrmgr/pwrmgr.c \
-	bsp/driver/flash/flash.c \
-	bsp/driver/spi/spi.c \
 	bsp/ble/rf/patch.c \
 	bsp/ble/controller/rf_phy_driver.c \
+	bsp/driver/adc/adc.c \
+	bsp/driver/clock/clock.c \
+	bsp/driver/flash/flash.c \
+	bsp/driver/gpio/gpio.c \
+	bsp/driver/pwrmgr/pwrmgr.c \
+	bsp/driver/spi/spi.c \
+	bsp/driver/uart/uart.c \
+	bsp/log/log.c \
 
 #	bsp/profiles/GATT/gattservapp.c
 #	bsp/ble/host/l2cap_task.c

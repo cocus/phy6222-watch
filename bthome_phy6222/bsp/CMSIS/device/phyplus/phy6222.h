@@ -402,30 +402,7 @@ typedef struct
   __IO uint32_t PMCTL0;           /*!< 0x14 */
   __IO uint32_t PMCTL1;           /*!< 0x18 */
   __IO uint32_t PMCTL2_0;         /*!< 0x1c bit6 enable software control 32k_clk */
-  __IO uint32_t PMCTL2_1;         /*!< 0x20 */
-  __IO uint32_t RTCCTL;           /*!< 0x24 bit20 - enable comparator0 envent, bit18 counter overflow interrupt, bit15 enable comparator0 inerrupt, */
-  __IO uint32_t RTCCNT;           /*!< 0x28 current RTC counter */
-  __IO uint32_t RTCCC0;           /*!< 0x2c */
-  __IO uint32_t RTCCC1;           /*!< 0x30 */
-  __IO uint32_t RTCCC2;           /*!< 0x34 */
-  __IO uint32_t RTCFLAG;          /*!< 0x38 */
-  __IO uint32_t RTCCLK0;          /*!< 0x3C bit3:0 = sysclk_t: 1 dll 32m,  2 xtal 16m, 3 dll 48m, 4 dll 64m, 5 dll 96m */
-  __IO uint32_t RTCCLK1;          /*!< 0x40 bit18 - xtal output to digital enable */
-  __IO uint32_t RTCCFG1;          /*!< 0x44 - [bit16] enable digclk 96M, [bit7] enable DLL, 25:24 g_rxAdcClkSel 26:25 sel_rxadc_dbl_clk_32M_polarity, 23:22 g_rfPhyClkSel, 6:5 trim dll/dbl ldo vout */
-  __IO uint32_t reserved0[5];     /*!< 0x48 4c 50 54 58 */
-  __IO uint32_t RTCCFG2;          /*!< 0x5C - [bit16] 16M [bit8:4] cnt [bit3] track_en_rc32k */
-  __IO uint32_t reserved1;        /*!< 0x60 */
-  __IO uint32_t RTCTRCCNT;        /*!< 0x64 RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle, counter_tracking_wakeup */
-  __IO uint32_t RTCTRCNT;         /*!< 0x68 */
-  __IO uint32_t reserved2[13];    /*!< 0x6c 70 74 78 7c 80 84 88 8c 90 94 98 9c */
-  __IO uint32_t REG_S9;           /*!< 0xa0 Bitfield of GPIO indices (P0-P32), bit set = wakeup enabled, bit clear = wakeup disabled */
-  __IO uint32_t REG_S10;          /*!< 0xa4 Bitfield of GPIO indices (P32 onwards), bit set = wakeup enabled, bit clear = wakeup disabled */
-  __IO uint32_t REG_S11;          /*!< 0xa8 bit0 sleep_flag */
-  __IO uint32_t IDLE_REG;         /*!< 0xac */
-  __IO uint32_t GPIO_WAKEUP_SRC[2];/*!< 0xb0 b4 */
-  __IO uint32_t PCLK_CLK_GATE;    /*!< 0xb8 bit0 pclk_clk_gate_en */
-  __IO uint32_t XTAL_16M_CTRL;    /*!< 0xbc */
-  __IO uint32_t SLEEP_R[4];       /*!< 0xc0 c4 c8 cc: SLEEP_R[0]: flags =2 RSTC_OFF_MODE, =4 RSTC_WARM_NDWC */
+  __IO uint32_t PMCTL2_1;         /*!< 0x20 [14:8] One bit per AIO about ch high resolution (0 = on, 1 = off)  [7:0] One bit per AIO about ch high resolution (1 = on, 0 = off) */
 } AP_AON_TypeDef;
 
 /**
@@ -440,15 +417,6 @@ typedef struct
   __IO uint32_t RTCCC2;           /*!< 0x34 */
   __IO uint32_t RTCFLAG;          /*!< 0x38 */
 } AP_RTC_TypeDef;
-
-/**
-  * @brief Wakeup/Sleep?
-  */
-typedef struct
-{
-  __IO uint32_t io_wu_mask_31_0;  /*!< 0xa0 */
-  __IO uint32_t io_wu_mask_34_32; /*!< 0xa4 */
-} AP_Wakeup_TypeDef;
 
 /**
   * @brief Power Clock Reset (PCR)
@@ -468,33 +436,52 @@ typedef struct
   __IO uint32_t CACHE_BYPASS;     /*!< 0x28 */
 } AP_PCR_TypeDef;
 
+/**
+  * @brief Power Management and misc
+  */
 typedef struct
 {
-  __IO uint32_t CLKSEL;           /*!< 0x3c */
-  __IO uint32_t CLKHF_CTL0;       /*!< 0x40 */
-  __IO uint32_t CLKHF_CTL1;       /*!< 0x44: bit8 doubler enabled */
-  __IO uint32_t ANA_CTL;          /*!< 0x48 */
+  /*!< Clock related stuff */
+  __IO uint32_t CLKSEL;           /*!< 0x3c: bit3:0 = sysclk_t: 1 dll 32m,  2 xtal 16m, 3 dll 48m, 4 dll 64m, 5 dll 96m */
+  __IO uint32_t CLKHF_CTL0;       /*!< 0x40 bit18 - xtal output to digital enable */
+  __IO uint32_t CLKHF_CTL1;       /*!< 0x44: 25:24 g_rxAdcClkSel, 26:25 sel_rxadc_dbl_clk_32M_polarity, 23:22 g_rfPhyClkSel, bit16 enable digclk 96M, bit13 ADC clock enable, bit7 enable DLL doubler, 6:5 trim dll/dbl ldo vout */
+  /*!< Analog stuff */
+  __IO uint32_t ANA_CTL;          /*!< 0x48: bit23 MIC Bias (1 = enabled, 0 = disabled), bit11 and bit8 Differential Mode (0 = differential, 1 = single ended), [7:5] differential pair channel select or something, bit3 ADC enable (1 = enabled, 0 = disabled), bit0 Analog LDO (1 = ON, 0 = OFF) */
   __IO uint32_t mem_0_1_dvs;      /*!< 0x4c */
   __IO uint32_t mem_2_3_4_dvs;    /*!< 0x50 */
-  __IO uint32_t efuse_cfg;        /*!< 0x54 */
+  /*!< eFuses #1 */
+  __IO uint32_t efuse_cfg;        /*!< 0x54: access control to eFuses, [19:16] select which eFuse block to read */
   __IO uint32_t chip_state;       /*!< 0x58 */
-  __IO uint32_t cal_rw;           /*!< 0x5c */
-  __IO uint32_t cal_ro0;          /*!< 0x60 */
-  __IO uint32_t cal_ro1;          /*!< 0x64 */
-  __IO uint32_t cal_ro2;          /*!< 0x68 */
+  /*!< RTC? */
+  __IO uint32_t RTCCFG2;          /*!< 0x5c: - [bit16] 16M [bit8:4] cnt [bit3] track_en_rc32k */
+  __IO uint32_t RTCTRCNT;         /*!< 0x60 */
+  __IO uint32_t RTCTRCCNT;        /*!< 0x64: RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle, counter_tracking_wakeup */
+  uint32_t RESERVED0;             /*!< 0x68 */
+  /*!< ADC block */
   __IO uint32_t ADC_CTL0;         /*!< 0x6c */
   __IO uint32_t ADC_CTL1;         /*!< 0x70 */
   __IO uint32_t ADC_CTL2;         /*!< 0x74 */
   __IO uint32_t ADC_CTL3;         /*!< 0x78 */
-  __IO uint32_t ADC_CTL4;         /*!< 0x7c */
-  uint32_t      RESERVED0[48];
+  __IO uint32_t ADC_CTL4;         /*!< 0x7c: bit4 ADC mode (1 = manual, 0 = automatic), [2:1] Clock selection (0 = 80kHz, 1 = 160kHz, 2 = 320kHz, 3 = NA), bit0 unknown */
+  __IO uint32_t RESERVED1[8];     /*!< 0x80 84 88 8c 90 94 98 9c */
+  /*!< ex-Wakeup stuff */
+  __IO uint32_t io_wu_mask_31_0;           /*!< 0xa0 Bitfield of GPIO indices (P0-P32), bit set = wakeup enabled, bit clear = wakeup disabled */
+  __IO uint32_t io_wu_mask_34_32;          /*!< 0xa4 Bitfield of GPIO indices (P32 onwards), bit set = wakeup enabled, bit clear = wakeup disabled */
+  __IO uint32_t REG_S11;          /*!< 0xa8 bit0 sleep_flag */
+  __IO uint32_t IDLE_REG;         /*!< 0xac */
+  __IO uint32_t GPIO_WAKEUP_SRC[2];/*!< 0xb0 b4 */
+  __IO uint32_t PCLK_CLK_GATE;    /*!< 0xb8 bit0 pclk_clk_gate_en */
+  __IO uint32_t XTAL_16M_CTRL;    /*!< 0xbc */
+  __IO uint32_t SLEEP_R[4];       /*!< 0xc0 c4 c8 cc: SLEEP_R[0]: flags =2 RSTC_OFF_MODE, =4 RSTC_WARM_NDWC */
+  uint32_t      RESERVED2[28];    /*!< 0xd0 - 0x13c */
+  /*!< eFuses #2 */
   __IO uint32_t EFUSE_PROG[2];    /*!< 0x140 */
-  uint32_t      RESERVED1[6];
+  uint32_t      RESERVED3[6];
   __IO uint32_t EFUSE0[2];        /*!< 0x160 */
   __IO uint32_t EFUSE1[2];        /*!< 0x168 */
   __IO uint32_t EFUSE2[2];        /*!< 0x170 */
   __IO uint32_t EFUSE3[2];        /*!< 0x178 */
-  __IO uint32_t SECURTY_STATE;    /*!< 0x180 */
+  __IO uint32_t SECURTY_STATE;    /*!< 0x180: [3:0] determines security access to the EFUSEx[] (1 = can access, 0 = can't access) */
 } AP_PCRM_TypeDef;
 
 /**
@@ -502,12 +489,13 @@ typedef struct
   */
 typedef struct
 {
-  __IO uint32_t enable;           /*!< 0x00: ADCC voice enable. Setting this to “1” will enable voice core work */
-  __IO uint32_t RESERVED0[2];     /*!< 0x04~0x08 */
-  __IO uint32_t control_1;        /*!< 0x0c: ADCC voice control 1 */
-  __IO uint32_t control_2;        /*!< 0x10: ADCC voice control 2 */
-  __IO uint32_t control_3;        /*!< 0x14: ADCC voice control 3 */
-  __IO uint32_t control_4;        /*!< 0x18: ADCC voice control 4 */
+  __IO uint32_t enable;           /*!< 0x00: ADCC voice enable. Setting this to "1" will enable voice core work */
+  __IO uint32_t RESERVED0[2];     /*!< 0x04 */
+  /*!< These are just for the Voice Input */
+  __IO uint32_t control_1;        /*!< 0x0c: [22:16] Gain, [13:12] Encoder, [9:8] Sample rate, bit7 fir bandwidth (1 = 4k, 0 = 8k), bit6 pcmau (1 = alaw, 0 = ulaw), [3:2] notch filter, bit1 polarity, bit0 A/DMIC (1 = DMIC, 0 = AMIC) */
+  __IO uint32_t control_2;        /*!< 0x10: [30:20] Gain Max in auto mute, [19:16] Max Gain BW in auto mute, [13:8] Auto mute duration, [7:4] Auto mute increase step2, [3:0] Auto mute increase step1*/
+  __IO uint32_t control_3;        /*!< 0x14: [30:20] Auto mute stop level, [18:8] Auto mute start level, bit0 Bypass auto mute */
+  __IO uint32_t control_4;        /*!< 0x18: [15:8] Adaptative mute level, [6:4] Voice level estimation filter bw, [3:0] Voice level estimation window length */
   __IO uint32_t compare_reset;    /*!< 0x1c */
   __IO uint32_t int_pointer_ch0_ch3;/*!< 0x20 */
   __IO uint32_t int_pointer_ch4_ch7;/*!< 0x24 */
@@ -515,8 +503,10 @@ typedef struct
   __IO uint32_t RESERVED1[3];     /*!< 0x28~0x30 */
   __IO uint32_t intr_mask;        /*!< 0x34 */
   __IO uint32_t intr_clear;       /*!< 0x38 */
-  __IO uint32_t intr_status;      /*!< 0x3c */
+  __IO uint32_t intr_status;      /*!< 0x3c: bit8 interrupt triggered by Voice, [7:0] interrupt triggered by ADC channel 7-0 */
   __IO uint32_t compare_cfg[8];   /*!< 0x40~0x5c */
+  uint32_t RESERVED2[928];
+  __IO uint32_t adc_data[8][32];  /*!< 0x400: ADC values buffer */
 } AP_ADCC_TypeDef;
 
 /**
@@ -706,7 +696,7 @@ typedef struct
   __IO uint32_t DMA_ID_H;         /*!< 0x3fc */
 } AP_DMA_MISC_TypeDef;
 
-// TODO!!!: EFUSES, MDM
+// TODO!!!: MDM
 
 /**
   * @}
@@ -749,7 +739,6 @@ typedef struct
 #define AP_AON_BASE           (AP_APB2_BASE + 0x0000)
 #define AP_RTC_BASE           (AP_APB2_BASE + 0x0024)
 #define AP_PCRM_BASE          (AP_APB2_BASE + 0x003c)
-#define AP_WAKEUP_BASE        (AP_APB2_BASE + 0x00a0)
 
 /*!< Peripheral memory map (others) */
 #define AP_DMAC_BASE          (0x40010000UL)
@@ -802,7 +791,6 @@ typedef struct
 #define AP_AON              ((AP_AON_TypeDef *)AP_AON_BASE)
 #define AP_RTC              ((AP_RTC_TypeDef *)AP_RTC_BASE)
 #define AP_PCRM             ((AP_PCRM_TypeDef *)AP_PCRM_BASE)
-#define AP_WAKEUP           ((AP_Wakeup_TypeDef *)AP_WAKEUP_BASE)
 #define AP_ADCC             ((AP_ADCC_TypeDef *)ADCC_BASE_ADDR)
 #define AP_DMA_CH_CFG(n)    ((AP_DMA_CH_TypeDef *)(AP_DMAC_BASE + 0x58 * n))
 #define AP_DMA_INT          ((AP_DMA_INT_TypeDef *)(AP_DMAC_BASE + 0x2c0))
@@ -833,6 +821,105 @@ typedef struct
 /******************************************************************************/
 /*                         Peripheral Registers_Bits_Definition               */
 /******************************************************************************/
+/******************************************************************************/
+/*                                                                            */
+/*                               PCRM registers                               */
+/*                                                                            */
+/******************************************************************************/
+
+/*!< Endpoint-specific registers */
+#define PCRM_CLKSEL                         (AP_PCRM->CLKSEL)
+#define PCRM_CLKHF_CTL0                     (AP_PCRM->CLKHF_CTL0)
+#define PCRM_CLKHF_CTL1                     (AP_PCRM->CLKHF_CTL1)
+#define PCRM_ANACTL                         (AP_PCRM->ANA_CTL)
+
+#define PCRM_ADCCTL0                        (AP_PCRM->ADC_CTL0)
+#define PCRM_ADCCTL1                        (AP_PCRM->ADC_CTL1)
+#define PCRM_ADCCTL2                        (AP_PCRM->ADC_CTL2)
+#define PCRM_ADCCTL3                        (AP_PCRM->ADC_CTL3)
+#define PCRM_ADCCTL4                        (AP_PCRM->ADC_CTL4)
+
+/******************  Bit definition for ANA_CTL register  *********************/
+#define PCRM_ANACTL_ADLDO_Pos               (0U)
+#define PCRM_ANACTL_ADLDO_Msk               (0x1UL << PCRM_ANACTL_ADLDO_Pos)    /*!< 0x00000001 */
+#define PCRM_ANACTL_ADLDO                   PCRM_ANACTL_ADLDO_Msk               /*!< Analog LDO power flag */
+
+#define PCRM_ANACTL_ADCEN_Pos               (3U)
+#define PCRM_ANACTL_ADCEN_Msk               (0x1UL << PCRM_ANACTL_ADCEN_Pos)    /*!< 0x00000008 */
+#define PCRM_ANACTL_ADCEN                   PCRM_ANACTL_ADCEN_Msk               /*!< ADC Enable flag */
+
+#define PCRM_ANACTL_DIFF1_Pos               (8U)
+#define PCRM_ANACTL_DIFF1_Msk               (0x1UL << PCRM_ANACTL_DIFF1_Pos)    /*!< 0x00000100 */
+#define PCRM_ANACTL_DIFF1                   PCRM_ANACTL_DIFF1_Msk               /*!< ADC Differential flag 1 */
+
+#define PCRM_ANACTL_DIFF2_Pos               (11U)
+#define PCRM_ANACTL_DIFF2_Msk               (0x1UL << PCRM_ANACTL_DIFF2_Pos)    /*!< 0x00000800 */
+#define PCRM_ANACTL_DIFF2                   PCRM_ANACTL_DIFF2_Msk               /*!< ADC Differential flag 2 */
+
+#define PCRM_ANACTL_MICBIAS_Pos             (23U)
+#define PCRM_ANACTL_MICBIAS_Msk             (0x1UL << PCRM_ANACTL_MICBIAS_Pos)  /*!< 0x00800000 */
+#define PCRM_ANACTL_MICBIAS                 PCRM_ANACTL_MICBIAS_Msk             /*!< Mic bias output enable flag */
+
+/*****************  Bit definition for CLKHF_CTL0 register  *******************/
+#define PCRM_CLKHF_CTL0_XTALOUT_Pos         (18U)
+#define PCRM_CLKHF_CTL0_XTALOUT_Msk         (0x1UL << PCRM_CLKHF_CTL0_XTALOUT_Pos)  /*!< 0x00040000 */
+#define PCRM_CLKHF_CTL0_XTALOUT             PCRM_CLKHF_CTL0_XTALOUT_Msk         /*!< XTAL 16M Output enable flag (generates the 32M DLL Clock?) */
+
+/*****************  Bit definition for CLKHF_CTL1 register  *******************/
+#define PCRM_CLKHF_CTL1_DLL_Pos             (7U)
+#define PCRM_CLKHF_CTL1_DLL_Msk             (0x1UL << PCRM_CLKHF_CTL1_DLL_Pos)  /*!< 0x00000080 */
+#define PCRM_CLKHF_CTL1_DLL                 PCRM_CLKHF_CTL1_DLL_Msk             /*!< DLL Enable flag */
+
+#define PCRM_CLKHF_CTL1_ADC_Pos             (13U)
+#define PCRM_CLKHF_CTL1_ADC_Msk             (0x1UL << PCRM_CLKHF_CTL1_ADC_Pos)  /*!< 0x00002000 */
+#define PCRM_CLKHF_CTL1_ADC                 PCRM_CLKHF_CTL1_ADC_Msk             /*!< ADC Clock Enable flag */
+
+#define PCRM_CLKHF_CTL1_ADCDBL_Pos          (21U)
+#define PCRM_CLKHF_CTL1_ADCDBL_Msk          (0x1UL << PCRM_CLKHF_CTL1_ADCDBL_Pos)   /*!< 0x00200000 */
+#define PCRM_CLKHF_CTL1_ADCDBL              PCRM_CLKHF_CTL1_DLL_Msk             /*!< DLL Enable flag */
+
+/*******************  Bit definition for CLKSEL register  *********************/
+#define PCRM_CLKSEL_1P28M_Pos               (6U)
+#define PCRM_CLKSEL_1P28M_Msk               (0x1UL << PCRM_CLKSEL_1P28M_Pos)    /*!< 0x00000040 */
+#define PCRM_CLKSEL_1P28M                   PCRM_CLKSEL_1P28M_Msk               /*!< Clock 1P28M Enable flag */
+
+/******************  Bit definition for ADC_CTL1 register  ********************/
+#define PCRM_ADCCTL1_CH1N_Pos              (20U)
+#define PCRM_ADCCTL1_CH1N_Msk              (0x1UL << PCRM_ADCCTL1_CH1N_Pos)     /*!< 0x00100000 */
+#define PCRM_ADCCTL1_CH1N                  PCRM_ADCCTL1_CH1N_Msk                /*!< ADC "Channel 1", P11 (AIO_0), Input B- */
+
+#define PCRM_ADCCTL1_CH1P_Pos              (4U)
+#define PCRM_ADCCTL1_CH1P_Msk              (0x1UL << PCRM_ADCCTL1_CH1P_Pos)     /*!< 0x00000010 */
+#define PCRM_ADCCTL1_CH1P                  PCRM_ADCCTL1_CH1P_Msk                /*!< ADC "Channel 1", P23 (AIO_1), Input B+ */
+
+/******************  Bit definition for ADC_CTL2 register  ********************/
+#define PCRM_ADCCTL2_CH2N_Pos              (20U)
+#define PCRM_ADCCTL2_CH2N_Msk              (0x1UL << PCRM_ADCCTL2_CH2N_Pos)     /*!< 0x00100000 */
+#define PCRM_ADCCTL2_CH2N                  PCRM_ADCCTL2_CH2N_Msk                /*!< ADC "Channel 2", P24 (AIO_2), Input C- */
+
+#define PCRM_ADCCTL2_CH2P_Pos              (4U)
+#define PCRM_ADCCTL2_CH2P_Msk              (0x1UL << PCRM_ADCCTL2_CH2P_Pos)     /*!< 0x00000010 */
+#define PCRM_ADCCTL2_CH2P                  PCRM_ADCCTL2_CH2P_Msk                /*!< ADC "Channel 2", P23 (AIO_3), Input C+ */
+
+/******************  Bit definition for ADC_CTL3 register  ********************/
+#define PCRM_ADCCTL3_CH3N_Pos              (20U)
+#define PCRM_ADCCTL3_CH3N_Msk              (0x1UL << PCRM_ADCCTL3_CH3N_Pos)     /*!< 0x00100000 */
+#define PCRM_ADCCTL3_CH3N                  PCRM_ADCCTL3_CH3N_Msk                /*!< ADC "Channel 3", P15 (AIO_4), Input D- */
+
+#define PCRM_ADCCTL3_CH3P_Pos              (4U)
+#define PCRM_ADCCTL3_CH3P_Msk              (0x1UL << PCRM_ADCCTL3_CH3P_Pos)     /*!< 0x00000010 */
+#define PCRM_ADCCTL3_CH3P                  PCRM_ADCCTL3_CH3P_Msk                /*!< ADC "Channel 3", P20 (AIO_9), Input D+ */
+
+/******************  Bit definition for ADC_CTL4 register  ********************/
+#define PCRM_ADCCTL4_SEL_Pos                (1U)
+#define PCRM_ADCCTL4_SEL_Msk                (0x11UL << PCRM_ADCCTL4_MODE_Pos)   /*!< 0x00000110 */
+
+#define PCRM_ADCCTL4_MODE_Pos               (4U)
+#define PCRM_ADCCTL4_MODE_Msk               (0x1UL << PCRM_ADCCTL4_MODE_Pos)    /*!< 0x00000010 */
+#define PCRM_ADCCTL4_MODE_MANUAL            PCRM_ADCCTL4_MODE_Msk               /*!< ADC Mode: Manual */
+#define PCRM_ADCCTL4_MODE_AUTOMATIC         0                                   /*!< ADC Mode: Automatic */
+
+
 /******************************************************************************/
 /*                                                                            */
 /*                             SPI FLASH registers                            */
@@ -920,38 +1007,59 @@ typedef struct
 
 /******************************************************************************/
 /*                                                                            */
-/*                       RTC Control in AON register                          */
+/*                              Real Time Clock                               */
+/*                                                                            */
+/******************************************************************************/
+
+/*!< Endpoint-specific registers */
+#define RTC_RTCCTL                          (AP_RTC->RTCCTL)
+
+/*******************  Bit definition for RTCCTL register  *********************/
+#define RTC_RTCCTL_RTC_Pos                  (0U)
+#define RTC_RTCCTL_RTC_Msk                  (0x1UL << RTC_RTCCTL_RTC_Pos)       /*!< 0x00000001 */
+#define RTC_RTCCTL_RTC                      RTC_RTCCTL_RTC_Msk                  /*!< RTC Run/Stop Control Flag */
+
+#define RTC_RTCCTL_RTCCLR_Pos               (1U)
+#define RTC_RTCCTL_RTCCLR_Msk               (0x1UL << RTC_RTCCTL_RTCCLR_Pos)    /*!< 0x00000002 */
+#define RTC_RTCCTL_RTCCLR                   RTC_RTCCTL_RTCCLR_Msk               /*!< RTC Count Clear Flag */
+
+#define RTC_RTCCTL_COMP0INT_Pos             (15U)
+#define RTC_RTCCTL_COMP0INT_Msk             (0x1UL << RTC_RTCCTL_COMP0INT_Pos)  /*!< 0x0008000 */
+#define RTC_RTCCTL_COMP0INT                 RTC_RTCCTL_COMP0INT_Msk             /*!< Enable Comparator 0 Interrupt */
+
+#define RTC_RTCCTL_COUNTOVF_Pos             (18U)
+#define RTC_RTCCTL_COUNTOVF_Msk             (0x1UL << RTC_RTCCTL_COUNTOVF_Pos)  /*!< 0x0040000 */
+#define RTC_RTCCTL_COUNTOVF                 RTC_RTCCTL_COUNTOVF_Msk             /*!< Enable Counter Overflow Interrupt */
+
+#define RTC_RTCCTL_COMP0EVT_Pos             (20U)
+#define RTC_RTCCTL_COMP0EVT_Msk             (0x1UL << RTC_RTCCTL_COMP0EVT_Pos)  /*!< 0x0100000 */
+#define RTC_RTCCTL_COMP0EVT                 RTC_RTCCTL_COMP0EVT_Msk             /*!< Enable Comparator 0 Event Flag */
+
+
+/******************************************************************************/
+/*                                                                            */
+/*                               Power Control                                */
+/*                                                                            */
+/******************************************************************************/
+
+/*!< Endpoint-specific registers */
+#define PCRM_SLEEPR0                        (AP_PCRM->SLEEP_R[0])
+#define PCRM_SLEEPR1                        (AP_PCRM->SLEEP_R[1])
+
+
+/******************************************************************************/
+/*                                                                            */
+/*                              AON register                                  */
 /*                                                                            */
 /******************************************************************************/
 
 /*!< Endpoint-specific registers */
 #define AON_PWROFF                          (AP_AON->PWROFF)
-#define AON_RTCCTL                          (AP_AON->RTCCTL)
+
 #define AON_PMCTL0                          (AP_AON->PMCTL0)
 #define AON_PMCTL2_0                        (AP_AON->PMCTL2_0)
-#define AON_SLEEPR0                         (AP_AON->SLEEP_R[0])
-#define AON_SLEEPR1                         (AP_AON->SLEEP_R[1])
+#define AON_PMCTL2_1                        (AP_AON->PMCTL2_1)
 
-/*******************  Bit definition for RTCCTL register  *********************/
-#define AON_RTCCTL_RTC_Pos                  (0U)
-#define AON_RTCCTL_RTC_Msk                  (0x1UL << AON_RTCCTL_RTC_Pos)       /*!< 0x00000001 */
-#define AON_RTCCTL_RTC                      AON_RTCCTL_RTC_Msk                  /*!< RTC Run/Stop Control Flag */
-
-#define AON_RTCCTL_RTCCLR_Pos               (1U)
-#define AON_RTCCTL_RTCCLR_Msk               (0x1UL << AON_RTCCTL_RTCCLR_Pos)    /*!< 0x00000002 */
-#define AON_RTCCTL_RTCCLR                   AON_RTCCTL_RTCCLR_Msk               /*!< RTC Count Clear Flag */
-
-#define AON_RTCCTL_COMP0INT_Pos             (15U)
-#define AON_RTCCTL_COMP0INT_Msk             (0x1UL << AON_RTCCTL_COMP0INT_Pos)  /*!< 0x0008000 */
-#define AON_RTCCTL_COMP0INT                 AON_RTCCTL_COMP0INT_Msk             /*!< Enable Comparator 0 Interrupt */
-
-#define AON_RTCCTL_COUNTOVF_Pos             (18U)
-#define AON_RTCCTL_COUNTOVF_Msk             (0x1UL << AON_RTCCTL_COUNTOVF_Pos)  /*!< 0x0040000 */
-#define AON_RTCCTL_COUNTOVF                 AON_RTCCTL_COUNTOVF_Msk             /*!< Enable Counter Overflow Interrupt */
-
-#define AON_RTCCTL_COMP0EVT_Pos             (20U)
-#define AON_RTCCTL_COMP0EVT_Msk             (0x1UL << AON_RTCCTL_COMP0EVT_Pos)  /*!< 0x0100000 */
-#define AON_RTCCTL_COMP0EVT                 AON_RTCCTL_COMP0EVT_Msk             /*!< Enable Comparator 0 Event Flag */
 
 /******************************************************************************/
 /*                                                                            */
@@ -1069,8 +1177,8 @@ typedef struct
 
 
 /*********************************** AON **************************************/
-#define AON_CLEAR_RTC_COUNT               (AON_RTCCTL |= AON_RTCCTL_RTCCLR)
-#define AON_CLEAR_XTAL_TRACKING_AND_CALIB AON_SLEEPR1 = 0
+#define RTC_CLEAR_RTC_COUNT                 (RTC_RTCCTL |= AON_RTCCTL_RTCCLR)
+#define PCRM_CLEAR_XTAL_TRACKING_AND_CALIB  PCRM_SLEEPR1 = 0
 
 /*********************************** WDT **************************************/
 #define AP_WDT_ENABLE_STATE ((AP_WDT->CR & 0x01)) // 1:enable 0:disable
