@@ -402,7 +402,7 @@ typedef struct
   __IO uint32_t PMCTL0;           /*!< 0x14 */
   __IO uint32_t PMCTL1;           /*!< 0x18 */
   __IO uint32_t PMCTL2_0;         /*!< 0x1c bit6 enable software control 32k_clk */
-  __IO uint32_t PMCTL2_1;         /*!< 0x20 [14:8] One bit per AIO about ch high resolution (0 = on, 1 = off)  [7:0] One bit per AIO about ch high resolution (1 = on, 0 = off) */
+  __IO uint32_t PMCTL2_1;         /*!< 0x20 [15:8] Attenuation (1 att 1/4, 0 no att) for AIO_9, 8, 7, 4, 3, 2, 1. [7:0] Passthrough (1 pass, 0 not connected) for AIO_9, 8, 7, 4, 3, 2, 1. */
 } AP_AON_TypeDef;
 
 /**
@@ -458,10 +458,10 @@ typedef struct
   __IO uint32_t RTCTRCCNT;        /*!< 0x64: RC 32KHz tracking counter, calculate 16MHz ticks number per RC32KHz cycle, counter_tracking_wakeup */
   uint32_t RESERVED0;             /*!< 0x68 */
   /*!< ADC block */
-  __IO uint32_t ADC_CTL0;         /*!< 0x6c */
-  __IO uint32_t ADC_CTL1;         /*!< 0x70 */
-  __IO uint32_t ADC_CTL2;         /*!< 0x74 */
-  __IO uint32_t ADC_CTL3;         /*!< 0x78 */
+  __IO uint32_t ADC_CTL0;         /*!< 0x6c: [Temp Sense/PGA] input [31:16] auto mode config, temp sense, diff inp; [15:0] auto mode config PGA, diff inputs */
+  __IO uint32_t ADC_CTL1;         /*!< 0x70: [Input A-/A+] */
+  __IO uint32_t ADC_CTL2;         /*!< 0x74: [Input B-/B+] */
+  __IO uint32_t ADC_CTL3;         /*!< 0x78: [Input C-/C+] */
   __IO uint32_t ADC_CTL4;         /*!< 0x7c: bit4 ADC mode (1 = manual, 0 = automatic), [2:1] Clock selection (0 = 80kHz, 1 = 160kHz, 2 = 320kHz, 3 = NA), bit0 unknown */
   __IO uint32_t RESERVED1[8];     /*!< 0x80 84 88 8c 90 94 98 9c */
   /*!< ex-Wakeup stuff */
@@ -506,7 +506,7 @@ typedef struct
   __IO uint32_t intr_status;      /*!< 0x3c: bit8 interrupt triggered by Voice, [7:0] interrupt triggered by ADC channel 7-0 */
   __IO uint32_t compare_cfg[8];   /*!< 0x40~0x5c */
   uint32_t RESERVED2[232];
-  __IO uint32_t adc_data[9][32];  /*!< 0x400: ADC values buffer */
+  __IO uint32_t adc_data[10][32]; /*!< 0x400: ADC 128-byte buffer per each channel (10 channel in total) */
 } AP_ADCC_TypeDef;
 
 /**
@@ -883,32 +883,31 @@ typedef struct
 #define PCRM_CLKSEL_1P28M_Msk               (0x1UL << PCRM_CLKSEL_1P28M_Pos)    /*!< 0x00000040 */
 #define PCRM_CLKSEL_1P28M                   PCRM_CLKSEL_1P28M_Msk               /*!< Clock 1P28M Enable flag */
 
-/******************  Bit definition for ADC_CTL1 register  ********************/
-#define PCRM_ADCCTL1_CH1N_Pos              (20U)
-#define PCRM_ADCCTL1_CH1N_Msk              (0x1UL << PCRM_ADCCTL1_CH1N_Pos)     /*!< 0x00100000 */
-#define PCRM_ADCCTL1_CH1N                  PCRM_ADCCTL1_CH1N_Msk                /*!< ADC "Channel 1", P11 (AIO_0), Input B- */
+/*****************  Bit definition for ADC_CTLx registers  ********************/
+#define PCRM_ADCCTL_PCHEN_Pos              (4U)
+#define PCRM_ADCCTL_PCHEN_Msk              (0x1UL << PCRM_ADCCTL_PCHEN_Pos)     /*!< 0x00000010 */
+#define PCRM_ADCCTL_PCHEN                  PCRM_ADCCTL_PCHEN_Msk                /*!< ADC Positive channel: enable flag */
 
-#define PCRM_ADCCTL1_CH1P_Pos              (4U)
-#define PCRM_ADCCTL1_CH1P_Msk              (0x1UL << PCRM_ADCCTL1_CH1P_Pos)     /*!< 0x00000010 */
-#define PCRM_ADCCTL1_CH1P                  PCRM_ADCCTL1_CH1P_Msk                /*!< ADC "Channel 1", P23 (AIO_1), Input B+ */
+#define PCRM_ADCCTL_PDIFF_Pos              (5U)
+#define PCRM_ADCCTL_PDIFF_Msk              (0x1UL << PCRM_ADCCTL_PDIFF_Pos)     /*!< 0x00000020 */
+#define PCRM_ADCCTL_PDIFF                  PCRM_ADCCTL_PDIFF_Msk                /*!< ADC Positive channel: differential mode flag */
 
-/******************  Bit definition for ADC_CTL2 register  ********************/
-#define PCRM_ADCCTL2_CH2N_Pos              (20U)
-#define PCRM_ADCCTL2_CH2N_Msk              (0x1UL << PCRM_ADCCTL2_CH2N_Pos)     /*!< 0x00100000 */
-#define PCRM_ADCCTL2_CH2N                  PCRM_ADCCTL2_CH2N_Msk                /*!< ADC "Channel 2", P24 (AIO_2), Input C- */
+#define PCRM_ADCCTL_PONE_Pos               (6U)
+#define PCRM_ADCCTL_PONE_Msk               (0x1UL << PCRM_ADCCTL_PONE_Pos)      /*!< 0x00000040 */
+#define PCRM_ADCCTL_PONE                   PCRM_ADCCTL_PONE_Msk                 /*!< ADC Positive channel: one-shot mode flag (set to zero on auto channel sweep) */
 
-#define PCRM_ADCCTL2_CH2P_Pos              (4U)
-#define PCRM_ADCCTL2_CH2P_Msk              (0x1UL << PCRM_ADCCTL2_CH2P_Pos)     /*!< 0x00000010 */
-#define PCRM_ADCCTL2_CH2P                  PCRM_ADCCTL2_CH2P_Msk                /*!< ADC "Channel 2", P23 (AIO_3), Input C+ */
+#define PCRM_ADCCTL_NCHEN_Pos              (16U + PCRM_ADCCTL_PCHEN_Pos)
+#define PCRM_ADCCTL_NCHEN_Msk              (0x1UL << PCRM_ADCCTL_NCHEN_Pos)     /*!< 0x00100000 */
+#define PCRM_ADCCTL_NCHEN                  PCRM_ADCCTL_NCHEN_Msk                /*!< ADC Negative channel: enable flag */
 
-/******************  Bit definition for ADC_CTL3 register  ********************/
-#define PCRM_ADCCTL3_CH3N_Pos              (20U)
-#define PCRM_ADCCTL3_CH3N_Msk              (0x1UL << PCRM_ADCCTL3_CH3N_Pos)     /*!< 0x00100000 */
-#define PCRM_ADCCTL3_CH3N                  PCRM_ADCCTL3_CH3N_Msk                /*!< ADC "Channel 3", P15 (AIO_4), Input D- */
+#define PCRM_ADCCTL_NDIFF_Pos              (16U + PCRM_ADCCTL_PDIFF_Pos)
+#define PCRM_ADCCTL_NDIFF_Msk              (0x1UL << PCRM_ADCCTL_NDIFF_Pos)     /*!< 0x00200000 */
+#define PCRM_ADCCTL_NDIFF                  PCRM_ADCCTL_NDIFF_Msk                /*!< ADC Negative channel: differential mode flag */
 
-#define PCRM_ADCCTL3_CH3P_Pos              (4U)
-#define PCRM_ADCCTL3_CH3P_Msk              (0x1UL << PCRM_ADCCTL3_CH3P_Pos)     /*!< 0x00000010 */
-#define PCRM_ADCCTL3_CH3P                  PCRM_ADCCTL3_CH3P_Msk                /*!< ADC "Channel 3", P20 (AIO_9), Input D+ */
+#define PCRM_ADCCTL_NONE_Pos               (6U + PCRM_ADCCTL_PONE_Pos)
+#define PCRM_ADCCTL_NONE_Msk               (0x1UL << PCRM_ADCCTL_NONE_Pos)      /*!< 0x00400000 */
+#define PCRM_ADCCTL_NONE                   PCRM_ADCCTL_NONE_Msk                 /*!< ADC Negative channel: one-shot mode flag (set to zero on auto channel sweep) */
+
 
 /******************  Bit definition for ADC_CTL4 register  ********************/
 #define PCRM_ADCCTL4_SEL_Pos                (1U)
