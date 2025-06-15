@@ -93,100 +93,36 @@ void genericTask(void *argument)
 */
 static adc_Cfg_t adc_cfg =
 {
-
-    .channel = ADC_BIT(ADC_CH3P_P20),
-    .is_continue_mode = 0,
-    .is_differential_mode = 0x00,
-    .is_high_resolution = 0x00,
-
+    .enabled = 1,
+    .continuously_sampled_mode = 0,
+    .attenuated = 0,
+    .sample_time = 255, /* slow it down */
 };
 
 #define MAX_SAMPLE_POINT    64
-static uint16_t adc_debug[MAX_SAMPLE_POINT];
-static volatile uint8_t channel_done_flag = 0;
 
 static volatile uint8_t busy = 0;
-static void adc_Poilling_evt(adc_Evt_t* pev)
+static void adc_Poilling_evt(const adc_channels_t ch, const uint16_t* data)
 {
     float value = 0;
-    int i = 0;
-    uint8_t is_high_resolution = pev->is_high;
-    uint8_t is_differential_mode = pev->is_diff;
-    uint8_t ch = pev->ch;
 
-    if((pev->type != HAL_ADC_EVT_DATA) || (pev->ch < 2))
-        return;
+    value = hal_adc_value_cal(ch, data, (MAX_ADC_SAMPLE_SIZE - 3));
 
-    memcpy(adc_debug,pev->data,2*(pev->size));
-    channel_done_flag |= BIT(pev->ch);
+    LOG("ch = %d, %d mv", ch, (int)value);
+    busy = 0;
 
-    if(channel_done_flag == adc_cfg.channel)
-    {
-        //for(i=2; i<8; i++)
-        i = 7;
-        {
-            if(channel_done_flag & BIT(i))
-            {
-                //is_high_resolution = (adc_cfg.is_high_resolution & BIT(i))?1:0;
-                //is_differential_mode = (adc_cfg.is_differential_mode & BIT(i))?1:0;
-                value = hal_adc_value_cal((adc_CH_t)i,adc_debug, pev->size, is_high_resolution,is_differential_mode);
-
-                switch(i)
-                {
-                case ADC_CH1N_P11:
-                    ch=11;
-                    break;
-
-                case ADC_CH1P_P23:
-                    ch=23;
-                    break;
-
-                case ADC_CH2N_P24:
-                    ch=24;
-                    break;
-
-                case ADC_CH2P_P14:
-                    ch=14;
-                    break;
-
-                case ADC_CH3N_P15:
-                    ch=15;
-                    break;
-
-                case ADC_CH3P_P20:
-                    ch=20;
-                    break;
-
-                default:
-                    break;
-                }
-
-                //if(ch!=0)
-                {
-                    LOG("P%d %d mv is dif %d, is high %d",ch, (int)value, is_differential_mode, is_high_resolution);
-                }
-                /*else
-                {
-                    LOG("invalid channel");
-                }*/
-            }
-        }
-
-        //LOG(" mode:%d ",adc_cfg.is_continue_mode);
-        channel_done_flag = 0;
-        busy = 0;
-    }
 }
 
 void adcTask(void *argument)
 {
+    UNUSED(argument);
     LOG("Hi from genericTask");
 
     hal_adc_init();
 
     hal_adc_clock_config(HAL_ADC_CLOCK_80K);
 
-    int ret = hal_adc_config_single_ended(CH9, 0, adc_Poilling_evt);// hal_adc_config_channel(adc_cfg, adc_Poilling_evt);
+    int ret = hal_adc_configure_channel(CH9, adc_cfg);
 
     if(ret)
     {
@@ -194,15 +130,11 @@ void adcTask(void *argument)
         return;
     }
 
-    busy = 1;
-    ret = hal_adc_start();
-
     while (1)
     {
         if (busy == 0) {
-            ret = hal_adc_config_single_ended(CH9, 0, adc_Poilling_evt);//hal_adc_config_channel(adc_cfg, adc_Poilling_evt);
             busy = 1;
-            ret = hal_adc_start();
+            ret = hal_adc_start(1, 1, adc_Poilling_evt);
             //LOG("trigger ADC sampling..., ret is %d", ret);
         }
         vTaskDelay(pdMS_TO_TICKS(750));

@@ -143,7 +143,6 @@ typedef struct
   __IO uint32_t ControlReg;       /*!< 0x8 */
   __IO uint32_t EOI;              /*!< 0xc */
   __IO uint32_t status;           /*!< 0x10 */
-
 } AP_TIM_TypeDef;
 
 /**
@@ -303,7 +302,6 @@ typedef struct
   __IO uint32_t TFCR;             /*!< 0x4c */
   __IO uint32_t RFF;              /*!< 0x50 */
   __IO uint32_t TFF;              /*!< 0x54 */
-
 } AP_I2S_TypeDef;
 
 /**
@@ -446,7 +444,7 @@ typedef struct
   __IO uint32_t CLKHF_CTL0;       /*!< 0x40 bit18 - xtal output to digital enable */
   __IO uint32_t CLKHF_CTL1;       /*!< 0x44: 25:24 g_rxAdcClkSel, 26:25 sel_rxadc_dbl_clk_32M_polarity, 23:22 g_rfPhyClkSel, bit16 enable digclk 96M, bit13 ADC clock enable, bit7 enable DLL doubler, 6:5 trim dll/dbl ldo vout */
   /*!< Analog stuff */
-  __IO uint32_t ANA_CTL;          /*!< 0x48: bit23 MIC Bias (1 = enabled, 0 = disabled), bit11 and bit8 Differential Mode (0 = differential, 1 = single ended), [7:5] differential pair channel select or something, bit3 ADC enable (1 = enabled, 0 = disabled), bit0 Analog LDO (1 = ON, 0 = OFF) */
+  __IO uint32_t ANA_CTL;          /*!< 0x48: bit23 MIC Bias (1 = enabled, 0 = disabled), bit22 pga_gain1 (0 = 5v/v, 1 = 15v/v), [21:19] pga_gain1, bit11 and bit8 Differential Mode (0 = differential, 1 = single ended), [7:5] differential pair channel select or something (set to 0 to select PGA), bit3 ADC enable (1 = enabled, 0 = disabled), bit0 Analog LDO (1 = ON, 0 = OFF) */
   __IO uint32_t mem_0_1_dvs;      /*!< 0x4c */
   __IO uint32_t mem_2_3_4_dvs;    /*!< 0x50 */
   /*!< eFuses #1 */
@@ -506,7 +504,7 @@ typedef struct
   __IO uint32_t intr_status;      /*!< 0x3c: bit8 interrupt triggered by Voice, [7:0] interrupt triggered by ADC channel 7-0 */
   __IO uint32_t compare_cfg[8];   /*!< 0x40~0x5c */
   uint32_t RESERVED2[232];
-  __IO uint32_t adc_data[10][32]; /*!< 0x400: ADC 128-byte buffer per each channel (10 channel in total) */
+  __IO uint16_t adc_data[10][64]; /*!< 0x400: ADC 128-byte buffer per each channel (10 channel in total) */
 } AP_ADCC_TypeDef;
 
 /**
@@ -856,6 +854,15 @@ typedef struct
 #define PCRM_ANACTL_DIFF2_Msk               (0x1UL << PCRM_ANACTL_DIFF2_Pos)    /*!< 0x00000800 */
 #define PCRM_ANACTL_DIFF2                   PCRM_ANACTL_DIFF2_Msk               /*!< ADC Differential flag 2 */
 
+#define PCRM_ANACTL_PGA_2ND_Pos             (19U)
+#define PCRM_ANACTL_PGA_2ND_Msk             (0x7UL << PCRM_ANACTL_PGA_2ND_Pos)  /*!< 0x00380000 */
+
+#define PCRM_ANACTL_PGA_1ST_Pos             (22U)
+#define PCRM_ANACTL_PGA_1ST_Msk             (0x1UL << PCRM_ANACTL_PGA_1ST_Pos)  /*!< 0x00400000 */
+#define PCRM_ANACTL_PGA_1ST                 PCRM_ANACTL_PGA_1ST_Msk             /*!< PGA 1st stage gain set to 15v/v */
+#define PCRM_ANACTL_PGA_1ST_15V_V           PCRM_ANACTL_PGA_1ST                 /*!< PGA 1st stage gain set to 15v/v */
+#define PCRM_ANACTL_PGA_1ST_5V_V            0                                   /*!< PGA 1st stage gain set to 5v/v */
+
 #define PCRM_ANACTL_MICBIAS_Pos             (23U)
 #define PCRM_ANACTL_MICBIAS_Msk             (0x1UL << PCRM_ANACTL_MICBIAS_Pos)  /*!< 0x00800000 */
 #define PCRM_ANACTL_MICBIAS                 PCRM_ANACTL_MICBIAS_Msk             /*!< Mic bias output enable flag */
@@ -884,6 +891,9 @@ typedef struct
 #define PCRM_CLKSEL_1P28M                   PCRM_CLKSEL_1P28M_Msk               /*!< Clock 1P28M Enable flag */
 
 /*****************  Bit definition for ADC_CTLx registers  ********************/
+#define PCRM_ADCCTL_PSAMP_Pos              (0U)
+#define PCRM_ADCCTL_PSAMP_Msk              (0xFUL << PCRM_ADCCTL_PSAMP_Pos)     /*!< 0x0000000F */
+
 #define PCRM_ADCCTL_PCHEN_Pos              (4U)
 #define PCRM_ADCCTL_PCHEN_Msk              (0x1UL << PCRM_ADCCTL_PCHEN_Pos)     /*!< 0x00000010 */
 #define PCRM_ADCCTL_PCHEN                  PCRM_ADCCTL_PCHEN_Msk                /*!< ADC Positive channel: enable flag */
@@ -896,6 +906,9 @@ typedef struct
 #define PCRM_ADCCTL_PONE_Msk               (0x1UL << PCRM_ADCCTL_PONE_Pos)      /*!< 0x00000040 */
 #define PCRM_ADCCTL_PONE                   PCRM_ADCCTL_PONE_Msk                 /*!< ADC Positive channel: one-shot mode flag (set to zero on auto channel sweep) */
 
+#define PCRM_ADCCTL_NSAMP_Pos              (16U + PCRM_ADCCTL_PSAMP_Pos)
+#define PCRM_ADCCTL_NSAMP_Msk              (0xFUL << PCRM_ADCCTL_NSAMP_Pos)     /*!< 0x00F00000 */
+
 #define PCRM_ADCCTL_NCHEN_Pos              (16U + PCRM_ADCCTL_PCHEN_Pos)
 #define PCRM_ADCCTL_NCHEN_Msk              (0x1UL << PCRM_ADCCTL_NCHEN_Pos)     /*!< 0x00100000 */
 #define PCRM_ADCCTL_NCHEN                  PCRM_ADCCTL_NCHEN_Msk                /*!< ADC Negative channel: enable flag */
@@ -907,7 +920,6 @@ typedef struct
 #define PCRM_ADCCTL_NONE_Pos               (6U + PCRM_ADCCTL_PONE_Pos)
 #define PCRM_ADCCTL_NONE_Msk               (0x1UL << PCRM_ADCCTL_NONE_Pos)      /*!< 0x00400000 */
 #define PCRM_ADCCTL_NONE                   PCRM_ADCCTL_NONE_Msk                 /*!< ADC Negative channel: one-shot mode flag (set to zero on auto channel sweep) */
-
 
 /******************  Bit definition for ADC_CTL4 register  ********************/
 #define PCRM_ADCCTL4_SEL_Pos                (1U)
