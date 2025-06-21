@@ -76,6 +76,7 @@ const uint8_t FreeMono9pt7bBitmaps[] = {
     0x2C, 0x61, 0x24, 0x30
 };
 
+__ATTR_SECTION_XIP__
 const GFXglyph FreeMono9pt7bGlyphs[] = {
     {0, 0, 0, 11, 0, 1},      // 0x20 ' '
     {0, 2, 11, 11, 4, -10},   // 0x21 '!'

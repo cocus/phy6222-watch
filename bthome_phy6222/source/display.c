@@ -2,11 +2,12 @@
 #include <driver/gpio/gpio.h>
 #include "display.h"
 
+#include <types.h>
 #include <FreeRTOS.h>
+#include <semphr.h>
 #include <task.h>
 
 static hal_spi_t s_spi;
-static uint8_t tabcolor = INITR_GREENTAB;
 static uint8_t _colstart = 0, _rowstart = 0;
 static uint16_t _width = 0;
 static uint16_t _height = 0;
@@ -14,17 +15,45 @@ static uint8_t rotation = 0;
 static gpio_pin_e gpio_DC = -1;
 static gpio_pin_e gpio_BK = -1;
 
+static SemaphoreHandle_t spi_done;
+
+static void spi_transmit_and_wait(uint8_t *tx_buf, uint16_t tx_len)
+{
+    hal_spi_transmit(&s_spi, SPI_TXD, tx_buf, NULL, tx_len, 0);
+    // xSemaphoreTake(spi_done, portMAX_DELAY);
+}
+
+extern int hal_spi_transmit_same(
+    hal_spi_t *spi_ptr,
+    SPI_TMOD_e mod,
+    uint8_t *tx_buf,
+    size_t tx_buf_sz,
+    uint16_t tx_buf_nums);
+
+static void spi_transmit_same_and_wait(uint8_t *tx_buf, size_t tx_buf_sz, uint16_t tx_buf_nums)
+{
+
+    hal_spi_transmit_same(&s_spi, SPI_TXD, tx_buf, tx_buf_sz, tx_buf_nums);
+    // xSemaphoreTake(spi_done, portMAX_DELAY);
+}
+
 // Inline the small helper functions for reduced overhead
 static inline void ST7735_Command(uint8_t cmd)
 {
     hal_gpio_write(gpio_DC, 0);
-    hal_spi_send_byte(&s_spi, cmd);
+    // hal_spi_transmit(&s_spi, SPI_TXD, &cmd, NULL, 1, 0);
+    spi_transmit_and_wait(&cmd, 1);
+    // hal_spi_send_byte(&s_spi, cmd);
+    // LOG("command ret = %d", hal_spi_send_byte(&s_spi, cmd));
+    // LOG("command ret = %d", hal_spi_transmit(&s_spi, SPI_TXD, &cmd, NULL, 1, 0));
 }
 
 static inline void ST7735_Data(uint8_t *buff, uint8_t buff_size)
 {
     hal_gpio_write(gpio_DC, 1);
-    hal_spi_transmit(&s_spi, SPI_TXD, buff, NULL, buff_size, 0);
+    // hal_spi_transmit(&s_spi, SPI_TXD, buff, NULL, buff_size, 0);
+    spi_transmit_and_wait(buff, buff_size);
+    // LOG("data ret = %d", hal_spi_transmit(&s_spi, SPI_TXD, buff, NULL, buff_size, 0));
 }
 
 static inline void ST7735_WriteCommand(uint8_t cmd)
@@ -42,6 +71,7 @@ static inline void ST7735_WriteDataMultiple(uint8_t *data, uint8_t size)
     ST7735_Data(data, size);
 }
 
+__ATTR_SECTION_XIP__
 static void ST7735_ExecuteCommandList(const uint8_t *addr)
 {
     uint8_t numCommands, numArgs;
@@ -68,17 +98,20 @@ static void ST7735_ExecuteCommandList(const uint8_t *addr)
         {
             if (ms == 255)
                 ms = 500;
+            if (pdMS_TO_TICKS(ms) == 0)
+                ms = 1;
             vTaskDelay(pdMS_TO_TICKS(ms));
         }
     }
 }
 
+__ATTR_SECTION_XIP__
 void display_set_addr_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
 {
     uint8_t data[4];
 
     // Column address set
-    ST7735_WriteCommand(ST77XX_CASET);
+    ST7735_WriteCommand(GC9106_CASET);
     data[0] = 0x00;
     data[1] = x0 + _colstart;
     data[2] = 0x00;
@@ -86,7 +119,7 @@ void display_set_addr_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     ST7735_WriteDataMultiple(data, 4);
 
     // Row address set
-    ST7735_WriteCommand(ST77XX_RASET);
+    ST7735_WriteCommand(GC9106_PASET);
     data[0] = 0x00;
     data[1] = y0 + _rowstart;
     data[2] = 0x00;
@@ -94,184 +127,172 @@ void display_set_addr_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     ST7735_WriteDataMultiple(data, 4);
 
     // Memory write
-    ST7735_WriteCommand(ST77XX_RAMWR);
+    ST7735_WriteCommand(GC9106_RAMWR);
 }
 
-void display_fill_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t *color_buffer, uint32_t size)
+__ATTR_SECTION_XIP__
+void display_fill_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color, uint32_t size)
 {
+    uint16_t small_buffer = color;
+
     // Set the address window once
     display_set_addr_window(x0, y0, x1, y1);
 
     // Switch to data mode and transfer the color buffer
     hal_gpio_write(gpio_DC, 1);
-    hal_spi_transmit(&s_spi, SPI_TXD, (uint8_t *)color_buffer, NULL, size * 2, 0);
-}
-
-static void ST7735_InitR(uint8_t options)
-{
-    static const uint8_t Rcmd1[] = {
-        15,                   // 15 commands in list:
-        ST77XX_SWRESET, 0x80, // Software reset, w/delay
-        10,                   // 10 ms delay
-        ST77XX_SLPOUT, 0x80,  // Out of sleep mode, w/delay
-        10,                   // 10 ms delay
-        ST7735_FRMCTR1, 3,    // Framerate ctrl - normal mode, 3 args:
-        0x01, 0x2C, 0x2D,
-        ST7735_FRMCTR2, 3, // Framerate ctrl - idle mode, 3 args:
-        0x01, 0x2C, 0x2D,
-        ST7735_FRMCTR3, 6, // Framerate - partial mode, 6 args:
-        0x01, 0x2C, 0x2D,
-        0x01, 0x2C, 0x2D,
-        ST7735_INVCTR, 1, // Display inversion ctrl, 1 arg:
-        0x07,
-        ST7735_PWCTR1, 3, // Power control, 3 args:
-        0xA2, 0x02, 0x84,
-        ST7735_PWCTR2, 1, // Power control, 1 arg:
-        0xC5,
-        ST7735_PWCTR3, 2, // Power control, 2 args:
-        0x0A, 0x00,
-        ST7735_PWCTR4, 2, // Power control, 2 args:
-        0x8A, 0x2A,
-        ST7735_PWCTR5, 2, // Power control, 2 args:
-        0x8A, 0xEE,
-        ST7735_VMCTR1, 1, // Power control, 1 arg:
-        0x0E,
-        ST77XX_INVOFF, 0, // Inversion off, no args
-        ST77XX_MADCTL, 1, // Memory access control, 1 arg:
-        0xC8,
-        ST77XX_COLMOD, 1, // Set color mode, 1 arg:
-        0x05};
-
-    static const uint8_t Rcmd2green[] = {
-        2,               // 2 commands:
-        ST77XX_CASET, 4, // Column address set, 4 args:
-        0x00, 0x02,
-        0x00, 0x7F + 0x02,
-        ST77XX_RASET, 4, // Row address set, 4 args:
-        0x00, 0x01,
-        0x00, 0x9F + 0x01};
-
-    static const uint8_t Rcmd2red[] = {
-        2,               // 2 commands:
-        ST77XX_CASET, 4, // Column address set, 4 args:
-        0x00, 0x00,
-        0x00, 0x7F,
-        ST77XX_RASET, 4, // Row address set, 4 args:
-        0x00, 0x00,
-        0x00, 0x9F};
-
-    static const uint8_t Rcmd3[] = {
-        4,                  // 4 commands:
-        ST7735_GMCTRP1, 16, // Gamma Adjustments (pos. polarity), 16 args:
-        0x02, 0x1c, 0x07, 0x12,
-        0x37, 0x32, 0x29, 0x2d,
-        0x29, 0x25, 0x2B, 0x39,
-        0x00, 0x01, 0x03, 0x10,
-        ST7735_GMCTRN1, 16, // Gamma Adjustments (neg. polarity), 16 args:
-        0x03, 0x1d, 0x07, 0x06,
-        0x2E, 0x2C, 0x29, 0x2D,
-        0x2E, 0x2E, 0x37, 0x3F,
-        0x00, 0x00, 0x02, 0x10,
-        ST77XX_NORON, 0x80, // Normal display on, w/delay
-        10,
-        ST77XX_DISPON, 0x80, // Main screen turn on, w/delay
-        10};
-
-    // Execute command lists:
-    ST7735_ExecuteCommandList(Rcmd1);
-
-    if (options == INITR_GREENTAB)
+    uint16_t *buffer = pvPortMalloc(size * 2);
+    if (!buffer)
     {
-        ST7735_ExecuteCommandList(Rcmd2green);
-        _colstart = 2;
-        _rowstart = 1;
+        LOG("Slow for %d bytes", size * 2);
+        spi_transmit_same_and_wait((uint8_t *)&small_buffer, 2, size);
     }
     else
     {
-        ST7735_ExecuteCommandList(Rcmd2red);
-        // Use default _colstart and _rowstart (0)
+        for (size_t i = 0; i < size; i++)
+        {
+            buffer[i] = color;
+        }
+        spi_transmit_and_wait((uint8_t *)buffer, size * 2);
+        vPortFree(buffer);
     }
-
-    ST7735_ExecuteCommandList(Rcmd3);
-
-    tabcolor = options;
-
-    // Set default rotation (0)
-    display_set_rotation(0);
+    // hal_spi_transmit(&s_spi, SPI_TXD, (uint8_t *)color_buffer, NULL, size * 2, 0);
+    // LOG("x0 %d, y0 %d, x1 %d, y1 %d, ret %d", x0, y0, x1, y1, spi_transmit_same_and_wait(&s_spi, SPI_TXD, (uint8_t *)&small_buffer, 2, size));
 }
 
+static const uint8_t
+    initcmd[] = {
+        30, /* 29 commands in list: */
+        //  (COMMAND_BYTE), n, data_bytes....
+        0x01, ST_CMD_DELAY, 150, // Soft reset, then delay 150 ms
+        (0x28), 0,               // Display Off
+        (0xfe), 0,               // GC9106_ENAB1
+        (0xfe), 0,
+        (0xfe), 0,
+        (0xef), 0,                // GC9106_ENAB2
+        (0xb3), 1, 0x03,          // GC9106_ACCESS_F0_F1
+        (GC9106_MADCTL), 1, 0xd8, // USER_MADCTL: BGR
+        (GC9106_PIXFMT), 1, 0x05, // USER_COLMOD: 16 bits per pixel
+        (0xb6), 1, 0x11,          // GC9106_ACCESS_A3_AA_AC
+        (0xac), 1, 0x0b,          // undocumented
+        (0xb4), 1, 0x21,          // GC9106_INVCTR
+        (GC9106_INVON), 0,        // invert the LCD (watch LCD thing)
+        (0xb0), 1, 0x00,          // GC9106_ACCESS_C0_C1_C2_C3_C6
+        (0xb2), 1, 0x00,          // GC9106_ACCESS_E4_EB
+        (0xb1), 1, 0xc0,          // GC9106_ACCESS_E6_E7
+        (0xe6), 2, 0x50, 0x43,    // GC9106_VREG1 [50 43]
+        (0xe7), 2, 0x56, 0x43,    // GC9106_VREG2 [38 43]
+        (0xF0), 14, 0x1f, 0x41, 0x1B, 0x55, 0x36, 0x3d, 0x3e, 0x0, 0x16, 0x08, 0x09, 0x15, 0x14, 0xf,
+        (0xF1), 14, 0x1f, 0x41, 0x1B, 0x55, 0x36, 0x3d, 0x3e, 0x0, 0x16, 0x08, 0x09, 0x15, 0x14, 0xf,
+        (0xfe), 0,                 // GC9106_ENAB1
+        (0xff), 0,                 //???
+        (0x35), 1, 0x00,           // USER_TEON
+        (0x44), 1, 0x00,           // GC9106_SETSCANLINE
+        (0x11), ST_CMD_DELAY, 150, // USER_SLPOUT
+        (0x29), 0,                 // USER_DISPON
+        (0x2A), 4, /***Set Column Address***/ 0x00, 0x18, 0x00, 0x67,
+        (0x2B), 4, /***Set Page Address***/ 0x00, 0x00, 0x00, 0x9f,
+        //(0x2c), 0,       //USER_MEMWR
+        0x11, ST_CMD_DELAY, 150, // Exit Sleep, then delay 150 ms
+        0x29, ST_CMD_DELAY, 150, // Main screen turn on, delay 150 ms
+};
+
+__ATTR_SECTION_XIP__
+void display_setScrollMargins(uint16_t top, uint16_t bottom)
+{
+    // TFA+VSA+BFA must equal 480
+    if (top + bottom <= GC9106_TFTHEIGHT)
+    {
+        uint16_t middle = GC9106_TFTHEIGHT - top - bottom;
+        uint8_t data[6];
+        data[0] = top >> 8;
+        data[1] = top & 0xff;
+        data[2] = middle >> 8;
+        data[3] = middle & 0xff;
+        data[4] = bottom >> 8;
+        data[5] = bottom & 0xff;
+
+        ST7735_WriteCommand(GC9106_VSCRDEF);
+        ST7735_WriteDataMultiple((uint8_t *)data, 6);
+    }
+}
+
+__ATTR_SECTION_XIP__
+void display_scrollTo(uint16_t y)
+{
+    uint8_t data[2];
+    data[0] = y >> 8;
+    data[1] = y & 0xff;
+    ST7735_WriteCommand(GC9106_VSCRSADD);
+    ST7735_WriteDataMultiple((uint8_t *)data, 2);
+}
+
+__ATTR_SECTION_XIP__
 void display_set_rotation(uint8_t m)
 {
-    // Support 4 rotation modes (0 - 3)
-    m %= 4;
-    rotation = m;
-    uint8_t madctl = 0;
-
-    if (tabcolor == INITR_GREENTAB)
-    {
-        _colstart = (m == 0 || m == 2) ? 2 : 1;
-        _rowstart = (m == 0 || m == 1) ? 1 : 2;
-    }
-
-    // Set madctl bits for 4 rotation options
-    switch (m)
+    rotation = m % 4; // can't be higher than 3
+    switch (rotation)
     {
     case 0:
-        madctl = ST7735_MADCTL_BGR;
-        _colstart = (tabcolor == INITR_GREENTAB) ? 2 : 0;
+        m = (MADCTL_MX | MADCTL_ML | MADCTL_RGB);
+        _width = GC9106_TFTWIDTH;
+        _height = GC9106_TFTHEIGHT;
+        _colstart = 24;
+        _rowstart = 0;
         break;
     case 1:
-        madctl = ST77XX_MADCTL_MV | ST7735_MADCTL_BGR;
-        _colstart = (tabcolor == INITR_GREENTAB) ? 1 : 0;
+        m = (MADCTL_MV | MADCTL_ML | MADCTL_RGB);
+        _width = GC9106_TFTHEIGHT;
+        _height = GC9106_TFTWIDTH;
+        _colstart = 0;
+        _rowstart = 24;
         break;
     case 2:
-        madctl = ST77XX_MADCTL_MY | ST77XX_MADCTL_MX | ST7735_MADCTL_BGR;
-        _colstart = (tabcolor == INITR_GREENTAB) ? 2 : 0;
+        m = (MADCTL_MY | MADCTL_RGB);
+        _width = GC9106_TFTWIDTH;
+        _height = GC9106_TFTHEIGHT;
+        _colstart = 24;
+        _rowstart = 0;
         break;
     case 3:
-        madctl = ST77XX_MADCTL_MV | ST77XX_MADCTL_MY | ST7735_MADCTL_BGR;
-        _colstart = (tabcolor == INITR_GREENTAB) ? 1 : 0;
+        m = (MADCTL_MX | MADCTL_MY | MADCTL_MV | MADCTL_RGB);
+        _width = GC9106_TFTHEIGHT;
+        _height = GC9106_TFTWIDTH;
+        _colstart = 0;
+        _rowstart = 24;
         break;
     }
+    m ^= 0x80; //.kbv
+
+    display_setScrollMargins(0, 0); //.kbv
+    display_scrollTo(0);
 
     ST7735_WriteCommand(ST77XX_MADCTL);
-    ST7735_WriteData(madctl);
+    ST7735_WriteData(m);
 }
 
 // Fill the screen with a specific color using chunked DMA-friendly transfers.
 void display_fill_screen(uint16_t color)
 {
-#define BUFFER_ROWS 128
-    static uint16_t buffer[ST7735_TFTWIDTH_128 * BUFFER_ROWS];
-    uint16_t i, rows_remaining = _height;
-
-    // Fill buffer with the desired color
-    for (i = 0; i < ST7735_TFTWIDTH_128 * BUFFER_ROWS; i++)
-    {
-        buffer[i] = color;
-    }
-
-    display_set_addr_window(0, 0, _width - 1, _height - 1);
-    hal_gpio_write(gpio_DC, 1); // Data mode
-
-    while (rows_remaining > 0)
-    {
-        uint16_t rows_to_send = (rows_remaining > BUFFER_ROWS) ? BUFFER_ROWS : rows_remaining;
-        hal_spi_transmit(&s_spi, SPI_TXD, (uint8_t *)buffer, NULL, rows_to_send * _width * 2, 0);
-        rows_remaining -= rows_to_send;
-    }
+    display_fill_window(0, 0, _width - 1, _height - 1, color, _width * _height);
 }
 
-uint16_t display_get_color(uint8_t r, uint8_t g, uint8_t b)
+__ATTR_SECTION_XIP__
+uint16_t display_get_color(uint16_t r, uint16_t g, uint16_t b)
 {
     // Convert to RGB565 format using swapped channel mappings to match custom defines:
     // ST77XX_RED  = 0x07E0 (green bits),
     // ST77XX_GREEN= 0x001F (blue bits),
     // ST77XX_BLUE = 0xF800 (red bits)
     // So map R→green field, G→blue field, B→red field:
-    return ((b & 0xF8) << 8)    // B into bits 15:11
-           | ((r & 0xFC) << 3)  // R into bits 5:0
-           | ((g & 0xF8) >> 3); // G into bits 4:0
+
+    // [3:0] green
+    // [7:4] blue
+    // [12:8] red
+    // [15:13] green low
+
+    return ((r & 0x0F8) << 5)                          // R into bits 15:11
+           | ((b & 0x0F8))                             // G into bits 10:5
+           | ((g & 0x0E0) >> 5) | ((g & 0x01C) << 11); // G into bits 4:0
 }
 
 void display_draw_pixel(uint16_t x, uint16_t y, uint16_t color)
@@ -283,7 +304,25 @@ void display_draw_pixel(uint16_t x, uint16_t y, uint16_t color)
 
     display_set_addr_window(x, y, x, y);
     hal_gpio_write(gpio_DC, 1); // Data mode
-    hal_spi_transmit(&s_spi, SPI_TXD, color_data, NULL, 2, 0);
+    spi_transmit_and_wait(color_data, 2);
+}
+
+void spi_handle_int(spi_evt_t *pevt)
+{
+    LOG("Evt %d", pevt->evt);
+
+    if (pevt->evt != SPI_TX_COMPLETED)
+    {
+        return;
+    }
+
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    xSemaphoreGiveFromISR(spi_done, &xHigherPriorityTaskWoken);
+
+    /* Yield if xHigherPriorityTaskWoken is true. The
+    actual macro used here is port specific. */
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
 }
 
 void display_init(gpio_pin_e pin_BK, gpio_pin_e pin_DC, gpio_pin_e pin_RST, gpio_pin_e pin_CS, gpio_pin_e pin_SCLK, gpio_pin_e pin_MOSI, uint16_t width, uint16_t height, uint8_t _rotation)
@@ -305,32 +344,36 @@ void display_init(gpio_pin_e pin_BK, gpio_pin_e pin_DC, gpio_pin_e pin_RST, gpio
     hal_gpio_write(pin_RST, 1);
     vTaskDelay(pdMS_TO_TICKS(10));
 
+    spi_done = xSemaphoreCreateBinary();
     // SPI configuration with an increased baudrate (adjust as necessary)
     spi_Cfg_t spi_cfg = {
         .sclk_pin = pin_SCLK,
         .ssn_pin = pin_CS,
         .MOSI = pin_MOSI,
-        .MISO = 0, // not used
-        .baudrate = 15000000,
+        .MISO = GPIO_DUMMY,                 // not used
+        .baudrate = 20UL * 1000UL * 1000UL, /* 10MHz */
         .spi_tmod = SPI_TXD,
         .spi_scmod = SPI_MODE0,
         .spi_dfsmod = SPI_8BIT,
-        .int_mode = false,
-        .force_cs = false,
-        .evt_handler = NULL,
+        .int_mode = SPI_INT_MODE_DISABLED,
+        .force_cs = SPI_FORCE_CS_DISABLED,
+        .evt_handler = spi_handle_int,
     };
 
     s_spi.spi_index = SPI0;
     hal_spi_bus_init(&s_spi, spi_cfg);
 
-    // Initialize the display with chosen tab color; you may want to allow other options
-    ST7735_InitR(INITR_GREENTAB);
+    ST7735_ExecuteCommandList(initcmd);
+    _width = GC9106_TFTWIDTH;
+    _height = GC9106_TFTHEIGHT;
+    _colstart = 24;
+    _rowstart = 0;
 
     // Set rotation based on the caller’s parameter (now supports values 0-3)
     display_set_rotation(rotation);
 
     // Clear screen (black)
-    display_fill_screen(0x0000);
+    display_fill_screen(ST77XX_BLACK);
 
     // Backlight control initialization
     hal_gpio_pin_init(gpio_BK, GPIO_OUTPUT);

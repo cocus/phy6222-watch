@@ -1,11 +1,9 @@
 
 #include <types.h> /* for UNUSED */
 #include <phy62xx.h>
-#include <driver/adc/adc.h>
 #include <driver/clock/clock.h>
 #include <driver/flash/flash.h>
 #include <driver/gpio/gpio.h>
-#include <driver/uart/uart.h>
 
 #include <string.h>
 #include <log/log.h>
@@ -18,18 +16,6 @@
 // LED
 #define GPIO_LED GPIO_P00
 
-// Vibrator
-#define GPIO_VIBRATOR GPIO_P03
-
-// Display
-#define DC_PIN GPIO_P25
-#define RST_PIN GPIO_P24
-#define CS_PIN GPIO_P31
-#define BKL_PIN GPIO_P01
-
-#define SCLK_PIN GPIO_P34
-#define MOSI_PIN GPIO_P32
-
 // Button
 #define BUTTON_PIN GPIO_P11
 
@@ -39,8 +25,8 @@ void genericTask(void *argument)
     LOG("Hi from genericTask");
     hal_gpio_pin_init(GPIO_LED, GPIO_OUTPUT);
     hal_gpio_write(GPIO_LED, 1);
-//void (*p)(void) = (void(*)(void))0;
-//p();
+// void (*p)(void) = (void(*)(void))0;
+// p();
 #if 0
     LOG("NVIC:");
     LOG("  ISER:       %08x ICER:   %08x",
@@ -74,72 +60,6 @@ void genericTask(void *argument)
         hal_gpio_write(GPIO_LED, 0);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
-}
-
-
-/*
-    channel:
-    is_differential_mode:
-    is_high_resolution:
-    [bit7~bit2]=[p20,p15~p11],ignore[bit1,bit0]
-    when measure adc(not battery),we'd better use high_resolution.
-    when measure battery,we'd better use no high_resolution and keep the gpio alone.
-
-    differential_mode is rarely used,
-    if use please config channel as one of [ADC_CH3DIFF,ADC_CH2DIFF,ADC_CH1DIFF],
-    and is_high_resolution as one of [0x80,0x20,0x08],
-    then the pair of [P20~P15,P14~P13,P12~P11] will work.
-    other adc channel cannot work.
-*/
-static adc_Cfg_t adc_cfg =
-{
-    .enabled = 1,
-    .continuously_sampled_mode = 0,
-    .attenuated = 0,
-    .sample_time = 255, /* slow it down */
-};
-
-#define MAX_SAMPLE_POINT    64
-
-static volatile uint8_t busy = 0;
-static void adc_Poilling_evt(const adc_channels_t ch, const uint16_t* data)
-{
-    float value = 0;
-
-    value = hal_adc_value_cal(ch, data, (MAX_ADC_SAMPLE_SIZE - 3));
-
-    LOG("ch = %d, %d mv", ch, (int)value);
-    busy = 0;
-
-}
-
-void adcTask(void *argument)
-{
-    UNUSED(argument);
-    LOG("Hi from genericTask");
-
-    hal_adc_init();
-
-    hal_adc_clock_config(HAL_ADC_CLOCK_80K);
-
-    int ret = hal_adc_configure_channel(CH9, adc_cfg);
-
-    if(ret)
-    {
-        LOG("ret = %d",ret);
-        return;
-    }
-
-    while (1)
-    {
-        if (busy == 0) {
-            busy = 1;
-            ret = hal_adc_start(1, 1, adc_Poilling_evt);
-            //LOG("trigger ADC sampling..., ret is %d", ret);
-        }
-        vTaskDelay(pdMS_TO_TICKS(750));
-    }
-
 }
 
 #if 0
@@ -179,18 +99,54 @@ extern void app_update();
 #endif
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-
-
 /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+// Yet, another good itoa implementation
+// returns: the length of the number string
+int itoa_custom(int value, char *sp, int radix)
+{
+    char tmp[16]; // be carefLul with the length of the buffer
+    char *tp = tmp;
+    int i;
+    unsigned v;
 
-const char *hex_ascii = {"0123456789ABCDEF"};
+    int sign = (radix == 10 && value < 0);
+    if (sign)
+        v = -value;
+    else
+        v = (unsigned)value;
+
+    while (v || tp == tmp)
+    {
+        i = v % radix;
+        v /= radix;
+        if (i < 10)
+            *tp++ = i + '0';
+        else
+            *tp++ = i + 'a' - 10;
+    }
+
+    int len = tp - tmp;
+
+    if (sign)
+    {
+        *sp++ = '-';
+        len++;
+    }
+
+    while (tp > tmp)
+        *sp++ = *--tp;
+
+    return len;
+}
+
+extern const char *digits;
 uint8_t *str_bin2hex(uint8_t *d, uint8_t *s, int len)
 {
     while (len--)
     {
-        *d++ = hex_ascii[(*s >> 4) & 0xf];
-        *d++ = hex_ascii[(*s++ >> 0) & 0xf];
+        *d++ = digits[(*s >> 4) & 0xf];
+        *d++ = digits[(*s++ >> 0) & 0xf];
     }
     return d;
 }
@@ -207,7 +163,7 @@ void hal_lowpower_init(void)
 {
     hal_rtc_clock_config((CLK32K_e)g_clk32K_config);
 
-    DCDC_REF_CLK_SETTING(1);
+    DCDC_REFL_CLK_SETTING(1);
     DCDC_CONFIG_SETTING(0x0a);
     DIG_LDO_CURRENT_SETTING(0x01);
     // drv_pm_ram_retention(RET_SRAM0 | RET_SRAM1 | RET_SRAM2);
@@ -229,27 +185,29 @@ void hal_lowpower_init(void)
 int main(void)
 {
     /* init stuff as if OSAL was in charge */
-    osal_nuker_init(SYS_CLK_DLL_96M);//SYS_CLK_XTAL_16M);
+    osal_nuker_init(SYS_CLK_DLL_96M); // SYS_CLK_XTAL_16M);
 
-    //hal_lowpower_init();
+    // hal_lowpower_init();
 
     LOG("Build time: %s %s", __DATE__, __TIME__);
 
-    //LOG("SDK Version ID %08x ", SDK_VER_RELEASE_ID);
+    // LOG("SDK Version ID %08x ", SDK_VER_RELEASE_ID);
 
-    //hal_get_flash_info();
-    //uint8_t *p = str_bin2hex(devInfoSerialNumber, (uint8_t *)&phy_flash.IdentificationID, 3);
+    // hal_get_flash_info();
+    // uint8_t *p = str_bin2hex(devInfoSerialNumber, (uint8_t *)&phy_flash.IdentificationID, 3);
     //*p++ = '-';
-    //LOG("serialnum '%s'", devInfoSerialNumber);
+    // LOG("serialnum '%s'", devInfoSerialNumber);
 
-    //osal_nuker_freertos_patch();
+    // osal_nuker_freertos_patch();
 
     LOG("g_hclk %d", g_hclk);
 
     // NVIC_SetPriority((IRQn_Type)PendSV_IRQn, 15);
 
-    xTaskCreate(genericTask, "genericTask", 256, NULL, 1, NULL);
-    xTaskCreate(adcTask, "adcTask", 256, NULL, 1, NULL);
+    xTaskCreate(genericTask, "genericTask", 256, NULL, tskIDLE_PRIORITY + 1, NULL);
+
+    extern void vu_meter_init();
+    vu_meter_init();
 
 #ifdef ENABLE_BTSTACK
     extern void port_thread(void *args);

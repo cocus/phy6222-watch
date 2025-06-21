@@ -99,6 +99,7 @@ void spi_int_enable(hal_spi_t *spi_ptr, uint32_t mask)
         JUMP_FUNCTION(SPI1_IRQ_HANDLER) = (uint32_t)&hal_SPI1_IRQHandler;
     }
 
+    LOG("Enable IRQ for %d", SPI0_IRQn + spi_ptr->spi_index);
     NVIC_EnableIRQ((IRQn_Type)(SPI0_IRQn + spi_ptr->spi_index));
     NVIC_SetPriority((IRQn_Type)(SPI0_IRQn + spi_ptr->spi_index), IRQ_PRIO_HAL);
 }
@@ -273,6 +274,7 @@ void __attribute__((used)) hal_SPI0_IRQHandler(void)
 {
     spi_Ctx_t *pctx = &m_spiCtx[0];
 
+    LOG("irq for spi0");
     if (pctx->spi_info == NULL)
         return;
 
@@ -861,6 +863,56 @@ static void hal_spi_ndf_set(hal_spi_t *spi_ptr, uint16_t len)
     Ssix->SSIEN = 1;
 }
 
+int hal_spi_transmit_same(
+    hal_spi_t *spi_ptr,
+    SPI_TMOD_e mod,
+    uint8_t *tx_buf,
+    size_t tx_buf_sz,
+    uint16_t tx_buf_nums)
+{
+    int ret;
+    spi_Ctx_t *pctx;
+    AP_SSI_TypeDef *Ssix = NULL;
+    spi_xmit_t *trans_ptr;
+    SPI_HDL_VALIDATE(spi_ptr);
+    pctx = &m_spiCtx[spi_ptr->spi_index];
+    trans_ptr = &(pctx->transmit);
+
+    if ((tx_buf_sz*tx_buf_nums == 0) || (mod > SPI_EEPROM) || (tx_buf == NULL))
+        return PPlus_ERR_INVALID_PARAM;
+
+    if (pctx->transmit.state != SPI_XMIT_IDLE)
+        return PPlus_ERR_BUSY;
+
+    Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
+    hal_spi_tmod_set(spi_ptr, mod);
+
+    if (pctx->cfg.force_cs == SPI_FORCE_CS_ENABLED /*&& pctx->is_slave_mode == SPI_MASTER */)
+    {
+        hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_DISABLE);
+        hal_gpio_write(pctx->cfg.ssn_pin, 0);
+    }
+
+    if (pctx->cfg.int_mode == SPI_INT_MODE_DISABLED)
+    {
+        for (size_t i = 0; i < (tx_buf_sz*tx_buf_nums); i++)
+        {
+            ret = hal_spi_xmit_polling(spi_ptr, tx_buf, NULL, tx_buf_sz, 0);
+            if (ret != PPlus_SUCCESS)
+                break;
+        }
+
+        if (pctx->cfg.force_cs == SPI_FORCE_CS_ENABLED && pctx->is_slave_mode == SPI_MASTER)
+            hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_ENABLE);
+
+        if (ret)
+            return PPlus_ERR_TIMEOUT;
+    }
+
+    return PPlus_SUCCESS;
+}
+
+
 int hal_spi_transmit(
     hal_spi_t *spi_ptr,
     SPI_TMOD_e mod,
@@ -880,7 +932,7 @@ int hal_spi_transmit(
     if (((tx_len == 0) && (rx_len == 0)) || (mod > SPI_EEPROM) || (tx_buf == NULL))
         return PPlus_ERR_INVALID_PARAM;
 
-    if (pctx->transmit.state == SPI_XMIT_IDLE)
+    if (pctx->transmit.state != SPI_XMIT_IDLE)
         return PPlus_ERR_BUSY;
 
 #if DMAC_USE
