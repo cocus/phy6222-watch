@@ -265,6 +265,9 @@ erase_and_flash:
 reset:
 	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -r i
 
+dump:
+	@$(PYTHON) ./rdwr_phy62x2.py -p$(COM_PORT) -b $(COM_SPEED) --startbaud $(COM_STARTBAUD) rc 0x11000000 0x00080000 ff_phy6222_512k.bin
+
 directory:
 	@mkdir -p $(OBJ_DIR)
 	@mkdir -p $(OBJ_DIR)/btstack/example

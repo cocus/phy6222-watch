@@ -102,7 +102,7 @@ typedef struct
   __IO uint32_t remap;              /*!< 0x20 */
   __IO uint32_t RXEV_EN;            /*!< 0x24 */
   __IO uint32_t STCALIB;            /*!< 0x28 */
-  __IO uint32_t PERI_MASTER_SELECT; /*!< 0x2c */
+  __IO uint32_t PERI_MASTER_SELECT; /*!< 0x2c: bit1 SPI1 master mode (0 = slave, 1 = master), bit0 SPI0 master mode (0 = slave, 1 = master) */
 } AP_COM_TypeDef;
 
 /**
@@ -336,24 +336,24 @@ typedef struct
   */
 typedef struct
 {
-  __IO uint16_t CR0;              /*!< 0x00: Control Register 0 (R/W) */
+  __IO uint16_t CR0;              /*!< 0x00: Control Register 0, [6:7] SPI Mode (0-3), [8:9] tx/rx mode (0 = tx/rx, 1 = only tx, 2 = only rx, 3 = tx/rx for eeprom) */
   uint16_t      RESERVED0;
-  __IO uint16_t CR1;              /*!< 0x04: Control Register 1 (R/W) */
+  __IO uint16_t CR1;              /*!< 0x04: Control Register 1, "Read data length" (minus 1) */
   uint16_t      RESERVED1;
-  __IO uint8_t  SSIEN;            /*!< 0x08 */
+  __IO uint8_t  SSIEN;            /*!< 0x08: bit0 enable SPI (0 = disabled, 1 = enabled) */
   uint8_t       RESERVED2[3];
   __IO uint8_t  MWCR;             /*!< 0x0c */
   uint8_t       RESERVED3[3];
-  __IO uint8_t  SER;              /*!< 0x10 */
+  __IO uint8_t  SER;              /*!< 0x10: Enable master mode (0 = slave, 1 = master) */
   uint8_t       RESERVED4[3];
   __IO uint32_t BAUDR;            /*!< 0x14 */
-  __IO uint32_t TXFTLR;           /*!< 0x18 */
-  __IO uint32_t RXFTLR;           /*!< 0x1c */
+  __IO uint32_t TXFTLR;           /*!< 0x18: TX FIFO Threshold (in bytes) to trigger interrupt */
+  __IO uint32_t RXFTLR;           /*!< 0x1c: RX FIFO Threshold (in bytes) to trigger interrupt */
   __O uint32_t  TXFLR;            /*!< 0x20 */
   __O uint32_t  RXFLR;            /*!< 0x24 */
   __IO uint8_t  SR;               /*!< 0x28 */
   uint8_t       RESERVED5[3];
-  __IO uint32_t IMR;              /*!< 0x2c */
+  __IO uint32_t IMR;              /*!< 0x2c: interrupt mask, bit4 TX IRQ, bit0 RX IRQ */
   __IO uint32_t ISR;              /*!< 0x30 */
   __IO uint32_t RISR;             /*!< 0x34 */
   __IO uint32_t TXOICR;           /*!< 0x38 */

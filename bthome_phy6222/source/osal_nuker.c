@@ -524,10 +524,11 @@ int _efuse_chip_version_check(void)
 {
     uint32_t buf[2];
     // uint8_t key[16];
-    int v = efuse_read(1, buf);
-
-    LOG("efuse read = %d: %08X %08X", v, buf[0], buf[1]);
-
+    for (int i = 0; i < 4; i++)
+    {
+        int v = efuse_read(i, buf);
+        LOG("efuse read block %d = %d: %08X %08X", i, v, buf[0], buf[1]);
+    }
     return PPlus_SUCCESS;
 }
 

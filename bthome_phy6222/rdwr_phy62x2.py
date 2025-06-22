@@ -76,11 +76,11 @@ class phyflasher:
 		self.port = port
 		self.baud = start_baud
 		try:
-			self._port = serial.Serial(self.port, self.baud)
+			self._port = serial.Serial(self.port, self.baud, dsrdtr=None)
 			self._port.timeout = 1
 		except Exception as e:
 			print ('Error: Open %s, %d baud! Error: %s' % (self.port, self.baud, e))
-			sys.exit(1)			
+			sys.exit(1)
 	def SetAutoErase(self, enable = True):
 		self.autoerase = enable
 	def AddSectionToHead(self, addr, size):
@@ -175,13 +175,13 @@ class phyflasher:
 			return r & 0x0ff
 		return None
 	def FlashUnlock(self):
-		#Flash cmd: Write Enable, Write Status Register 0x00 
-		return self.wr_flash_cmd(6) and self.wr_flash_cmd(1, 0, 1)	
+		#Flash cmd: Write Enable, Write Status Register 0x00
+		return self.wr_flash_cmd(6) and self.wr_flash_cmd(1, 0, 1)
 	def ReadRevision(self):
 		#0x001364c8 6222M005 #OK>>:
-		self._port.write(str.encode('rdrev+ '));
+		self._port.write(str.encode('rdrev+ '))
 		self._port.timeout = 0.1
-		read = self._port.read(26);
+		read = self._port.read(26)
 		if len(read) == 26 and read[0:2] == b'0x' and read[20:26] == b'#OK>>:':
 			print('Revision:', read[2:19])
 			if read[11:15] != b'6222':
@@ -196,9 +196,9 @@ class phyflasher:
 	def SetBaud(self, baud):
 		if self._port.baudrate != baud:
 			print ('Reopen %s port %i baud...' % (self.port, baud), end = ' '),
-			self._port.write(str.encode("uarts%i" % baud));
+			self._port.write(str.encode("uarts%i" % baud))
 			self._port.timeout = 1
-			read = self._port.read(3);
+			read = self._port.read(3)
 			if read == b'#OK':
 				print ('ok')
 				self.baud = baud
@@ -206,7 +206,7 @@ class phyflasher:
 					self._port.baudrate = baud
 				except Exception as e:
 					print ('Error set %i baud on %s port!' % (baud, self.port))
-					sys.exit(1)			
+					sys.exit(1)
 			else:
 				print ('error!')
 				print ('Error set %i baud on %s port!' % (baud, self.port))
@@ -218,21 +218,22 @@ class phyflasher:
 			self._port.flushInput()
 		return True
 	def Connect(self, baud=DEF_RUN_BAUD):
-		self._port.setDTR(True) #TM   (lo)
-		self._port.setRTS(True) #RSTN (lo)
+		self._port.dtr = True #TM   (lo)
+		self._port.rts = True #RSTN (lo)
 		time.sleep(0.1)
 		self._port.flushOutput()
 		self._port.flushInput()
-		time.sleep(0.1)
-		self._port.setDTR(False) #TM  (hi)
-		self._port.setRTS(False) #RSTN (hi)
+		time.sleep(0.5)
+		self._port.dtr = False #TM  (hi)
+		self._port.rts = False #RSTN (hi)
 		self._port.timeout = 0.04
-		ttcl = 50;
+		ttcl = 50
 		fct_mode = False
 		pkt = 'UXTDWU' # UXTL16 UDLL48 UXTDWU
 		while ttcl > 0:
-			sent = self._port.write(pkt.encode());
-			read = self._port.read(6);
+			sent = self._port.write(pkt.encode())
+			read = self._port.read(6)
+			print("RX '" + read.decode("utf-8") + "'")
 			if read == b'cmd>>:' :
 				break
 			if read == b'fct>>:' :
@@ -256,15 +257,15 @@ class phyflasher:
 		if not self.FlashUnlock():
 			self._port.close()
 			exit(4)
-		if not self.write_reg(0x4000f054, 0):
+		if not self.write_reg(0x4000f054, 0): # PCRM->efuse_cfg
 			print('PHY62x2 - Error init1!')
 			self._port.close()
 			exit(4)
-		if not self.write_reg(0x4000f140, 0):
+		if not self.write_reg(0x4000f140, 0): # PCRM->EFUSE_PROG[0]
 			print('PHY62x2 - Error init2!')
 			self._port.close()
 			exit(4)
-		if not self.write_reg(0x4000f144, 0):
+		if not self.write_reg(0x4000f144, 0): # PCRM->EFUSE_PROG[1]
 			print('PHY62x2 - Error init3!')
 			self._port.close()
 			exit(4)
@@ -376,7 +377,7 @@ class phyflasher:
 	def send_blk(self, stream, offset, size, blkcnt, blknum):
 		self._port.timeout = 1
 		print ('Write 0x%08x bytes to Flash at 0x%08x...' % (size, offset), end = ' '),
-		if blknum == 0:  
+		if blknum == 0:
 			if not self.write_cmd('cpnum %d ' % blkcnt):
 				print ('error!')
 				return False

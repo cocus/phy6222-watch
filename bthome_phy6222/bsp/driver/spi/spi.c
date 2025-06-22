@@ -27,15 +27,26 @@ typedef enum
     SPI_SLAVE = 1U,
 } spi_ctx_slave_t;
 
+typedef enum
+{
+    SPI_CTX_UNINITIALIZED = 0U,
+    SPI_CTX_INITIALIZED = 1U,
+} spi_ctx_init_t;
+
 typedef struct _spi_Context
 {
+    spi_ctx_init_t state;
     spi_Cfg_t cfg;
-    hal_spi_t *spi_info;
     spi_ctx_slave_t is_slave_mode;
     spi_xmit_t transmit;
+    SPI_TMOD_e current_transaction_mode;
 } spi_Ctx_t;
 
-static spi_Ctx_t m_spiCtx[2];
+static spi_Ctx_t m_spiCtx[2] =
+{
+    { SPI_CTX_UNINITIALIZED, },
+    { SPI_CTX_UNINITIALIZED, },
+};
 
 #if (SPI_USE_TIMEOUT == 1)
 #define SPI_INIT_TOUT(to) int to = getMcuPrecisionCount()
@@ -52,13 +63,17 @@ static spi_Ctx_t m_spiCtx[2];
 #define SPI_CHECK_TOUT(to, timeout, loginfo)
 #endif
 
-#define SPI_HDL_VALIDATE(hdl)                                               \
-    {                                                                       \
-        if ((hdl == NULL) || (hdl->spi_index > 1))                          \
-            return PPlus_ERR_INVALID_PARAM;                                 \
-        if ((hdl != m_spiCtx[0].spi_info) && (hdl != m_spiCtx[1].spi_info)) \
-            return PPlus_ERR_NOT_REGISTED;                                  \
-    }
+#define SPI_HDL_VALIDATE(hdl)                       \
+{                                                   \
+    if (hdl > 1)                                    \
+    {                                               \
+        return PPlus_ERR_INVALID_PARAM;             \
+    }                                               \
+    if (m_spiCtx[hdl].state != SPI_CTX_INITIALIZED) \
+    {                                               \
+        return PPlus_ERR_NOT_REGISTED;              \
+    }                                               \
+}
 
 ////////////////// SPI  /////////////////////////////////////////
 static void hal_spi_write_fifo(AP_SSI_TypeDef *Ssix, uint8_t len, uint8_t *tx_rx_ptr)
@@ -84,35 +99,23 @@ static void hal_spi_write_fifo(AP_SSI_TypeDef *Ssix, uint8_t len, uint8_t *tx_rx
     HAL_EXIT_CRITICAL_SECTION();
 }
 
-void spi_int_enable(hal_spi_t *spi_ptr, uint32_t mask)
+static void spi_int_enable(SPI_INDEX_e spi, uint32_t mask)
 {
-    AP_SSI_TypeDef *Ssix = NULL;
-    Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
+    NVIC_EnableIRQ((IRQn_Type)(SPI0_IRQn + spi));
+
+    AP_SSI_TypeDef *Ssix = (spi == SPI0) ? AP_SPI0 : AP_SPI1;
     Ssix->IMR = mask & 0x11;
-
-    if (Ssix == AP_SPI0)
-    {
-        JUMP_FUNCTION(SPI0_IRQ_HANDLER) = (uint32_t)&hal_SPI0_IRQHandler;
-    }
-    else
-    {
-        JUMP_FUNCTION(SPI1_IRQ_HANDLER) = (uint32_t)&hal_SPI1_IRQHandler;
-    }
-
-    LOG("Enable IRQ for %d", SPI0_IRQn + spi_ptr->spi_index);
-    NVIC_EnableIRQ((IRQn_Type)(SPI0_IRQn + spi_ptr->spi_index));
-    NVIC_SetPriority((IRQn_Type)(SPI0_IRQn + spi_ptr->spi_index), IRQ_PRIO_HAL);
 }
 
-static void spi_int_disable(hal_spi_t *spi_ptr)
+static void spi_int_disable(SPI_INDEX_e spi)
 {
-    AP_SSI_TypeDef *Ssix = NULL;
-    Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
-    NVIC_DisableIRQ((IRQn_Type)(SPI0_IRQn + spi_ptr->spi_index));
+    NVIC_DisableIRQ((IRQn_Type)(SPI0_IRQn + spi));
+
+    AP_SSI_TypeDef *Ssix = (spi == SPI0) ? AP_SPI0 : AP_SPI1;
     Ssix->IMR = 0x00;
 }
 
-static void spi_int_handle(uint8_t id, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
+static void spi_int_handle(SPI_INDEX_e spi, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
 {
     volatile uint8_t spi_irs_status;
     spi_evt_t evt;
@@ -120,6 +123,33 @@ static void spi_int_handle(uint8_t id, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
     spi_xmit_t *trans_ptr;
     trans_ptr = &pctx->transmit;
     spi_irs_status = Ssix->ISR;
+
+    if (spi_irs_status & RECEIVE_FIFO_FULL)
+    {
+        LOG("irq for spi0, receive fifo empty");
+
+        cnt = Ssix->RXFTLR;
+
+        for (i = 0; i < cnt; i++)
+        {
+            trans_ptr->rx_buf[trans_ptr->rx_offset++] = Ssix->DataReg;
+        }
+
+        if (trans_ptr->rx_offset == trans_ptr->xmit_len)
+        {
+            if (pctx->cfg.force_cs == SPI_FORCE_CS_ENABLED)
+                hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_ENABLE);
+
+            trans_ptr->state = SPI_XMIT_IDLE;
+            trans_ptr->rx_buf = NULL;
+            trans_ptr->rx_offset = 0;
+
+            evt.id = spi;
+            evt.evt = SPI_RX_COMPLETED;
+            hal_pwrmgr_unlock((MODULE_e)(MOD_SPI0 + spi));
+            pctx->cfg.evt_handler(&evt);
+        }
+    }
 
     if (spi_irs_status & TRANSMIT_FIFO_EMPTY)
     {
@@ -140,35 +170,14 @@ static void spi_int_handle(uint8_t id, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
             if (trans_ptr->tx_offset == trans_ptr->xmit_len)
             {
                 Ssix->IMR = 0x10;
-                m_spiCtx[pctx->spi_info->spi_index].transmit.state = SPI_XMIT_IDLE;
+                m_spiCtx[spi].transmit.state = SPI_XMIT_IDLE;
+
+                hal_pwrmgr_unlock((MODULE_e)(MOD_SPI0 + spi));
+                evt.id = spi;
+                evt.evt = SPI_TX_COMPLETED;
+                pctx->cfg.evt_handler(&evt);
                 break;
             }
-        }
-    }
-
-    if (spi_irs_status & RECEIVE_FIFO_FULL)
-    {
-        cnt = Ssix->RXFTLR;
-
-        for (i = 0; i < cnt; i++)
-        {
-            trans_ptr->rx_buf[trans_ptr->rx_offset++] = Ssix->DataReg;
-        }
-
-        if (trans_ptr->rx_offset == trans_ptr->xmit_len)
-        {
-            if (pctx->cfg.force_cs == SPI_FORCE_CS_ENABLED)
-                hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_ENABLE);
-
-            trans_ptr->state = SPI_XMIT_IDLE;
-            trans_ptr->rx_buf = NULL;
-            trans_ptr->rx_offset = 0;
-            evt.id = id;
-            evt.evt = SPI_RX_COMPLETED;
-            hal_pwrmgr_unlock((MODULE_e)(MOD_SPI0 + id));
-            pctx->cfg.evt_handler(&evt);
-            evt.evt = SPI_TX_COMPLETED;
-            pctx->cfg.evt_handler(&evt);
         }
     }
 }
@@ -272,16 +281,16 @@ static void spis_int_handle(uint8_t id, spi_Ctx_t *pctx, AP_SSI_TypeDef *Ssix)
  **************************************************************************************/
 void __attribute__((used)) hal_SPI0_IRQHandler(void)
 {
-    spi_Ctx_t *pctx = &m_spiCtx[0];
-
-    LOG("irq for spi0");
-    if (pctx->spi_info == NULL)
+    if (m_spiCtx[0].state == SPI_CTX_UNINITIALIZED)
+    {
+        /* TODO!!!: mask irq? */
         return;
+    }
 
-    if (pctx->is_slave_mode == SPI_SLAVE)
-        spis_int_handle(0, pctx, AP_SPI0);
+    if (m_spiCtx[0].is_slave_mode == SPI_SLAVE)
+        spis_int_handle(0, &m_spiCtx[0], AP_SPI0);
     else
-        spi_int_handle(0, pctx, AP_SPI0);
+        spi_int_handle(0, &m_spiCtx[0], AP_SPI0);
 }
 
 /**************************************************************************************
@@ -301,15 +310,16 @@ void __attribute__((used)) hal_SPI0_IRQHandler(void)
  **************************************************************************************/
 void __attribute__((used)) hal_SPI1_IRQHandler(void)
 {
-    spi_Ctx_t *pctx = &m_spiCtx[1];
-
-    if (pctx->spi_info == NULL)
+    if (m_spiCtx[1].state == SPI_CTX_UNINITIALIZED)
+    {
+        /* TODO!!!: mask irq? */
         return;
+    }
 
-    if (pctx->is_slave_mode == SPI_SLAVE)
-        spis_int_handle(1, pctx, AP_SPI1);
+    if (m_spiCtx[1].is_slave_mode == SPI_SLAVE)
+        spis_int_handle(1, &m_spiCtx[1], AP_SPI1);
     else
-        spi_int_handle(1, pctx, AP_SPI1);
+        spi_int_handle(1, &m_spiCtx[1], AP_SPI1);
 }
 
 /**************************************************************************************
@@ -330,16 +340,16 @@ void __attribute__((used)) hal_SPI1_IRQHandler(void)
 
     @return      None.
  **************************************************************************************/
-static void hal_spi_pin_init(hal_spi_t *spi_ptr, gpio_pin_e sck_pin, gpio_pin_e ssn_pin, gpio_pin_e tx_pin, gpio_pin_e rx_pin)
+static void hal_spi_pin_init(SPI_INDEX_e spi, gpio_pin_e sck_pin, gpio_pin_e ssn_pin, gpio_pin_e tx_pin, gpio_pin_e rx_pin)
 {
-    if (spi_ptr->spi_index == SPI0)
+    if (spi == SPI0)
     {
         hal_gpio_fmux_set(sck_pin, FMUX_SPI_0_SCK);
         hal_gpio_fmux_set(ssn_pin, FMUX_SPI_0_SSN);
         hal_gpio_fmux_set(tx_pin, FMUX_SPI_0_TX);
         hal_gpio_fmux_set(rx_pin, FMUX_SPI_0_RX);
     }
-    else if (spi_ptr->spi_index == SPI1)
+    else if (spi == SPI1)
     {
         hal_gpio_fmux_set(sck_pin, FMUX_SPI_1_SCK);
         hal_gpio_fmux_set(ssn_pin, FMUX_SPI_1_SSN);
@@ -363,7 +373,7 @@ static void hal_spi_pin_deinit(gpio_pin_e sck_pin, gpio_pin_e ssn_pin, gpio_pin_
 
     input parameters
 
-    @param       uint32_t baud: baudrate select
+    @param       uint32_t speed: frequency select
                 SPI_SCMOD_e scmod: Serial Clock Polarity and Phase select;  SPI_MODE0,        //SCPOL=0,SCPH=0(default)
                                                                             SPI_MODE1,        //SCPOL=0,SCPH=1
                                                                             SPI_MODE2,        //SCPOL=1,SCPH=0
@@ -379,24 +389,23 @@ static void hal_spi_pin_deinit(gpio_pin_e sck_pin, gpio_pin_e ssn_pin, gpio_pin_
 
     @return      None.
  **************************************************************************************/
-static void hal_spi_master_init(hal_spi_t *spi_ptr, uint32_t baud, SPI_SCMOD_e scmod, SPI_TMOD_e tmod)
+static void hal_spi_master_init(SPI_INDEX_e spi, uint32_t speed, SPI_SCMOD_e scmod, SPI_TMOD_e tmod)
 {
     uint8_t shift = 0;
     AP_SSI_TypeDef *Ssix = NULL;
-    AP_COM_TypeDef *apcom = AP_COM;
     uint16_t baud_temp;
     int pclk = clk_get_pclk();
 
-    if (spi_ptr->spi_index == SPI1)
+    if (spi == SPI1)
     {
         shift = 1;
     }
 
-    Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
+    Ssix = (spi == SPI0) ? AP_SPI0 : AP_SPI1;
     Ssix->SSIEN = 0; // DISABLE_SPI;
-    apcom->PERI_MASTER_SELECT |= (BIT(shift) | BIT(shift + 4));
+    AP_COM->PERI_MASTER_SELECT |= (BIT(shift) | BIT(shift + 4));
     Ssix->CR0 = ((Ssix->CR0) & 0xfffffc3f) | (scmod << 6) | (tmod << 8);
-    baud_temp = (pclk + (baud >> 1)) / baud;
+    baud_temp = (pclk + (speed >> 1)) / speed;
 
     if (baud_temp < 2)
     {
@@ -442,7 +451,6 @@ static void hal_spi_master_init(hal_spi_t *spi_ptr, uint32_t baud, SPI_SCMOD_e s
 {
     uint8_t shift = 0;
     AP_SSI_TypeDef *Ssix = NULL;
-    AP_COM_TypeDef *apcom = AP_COM;
     uint16_t baud_temp;
     int pclk = clk_get_pclk();
 
@@ -453,7 +461,7 @@ static void hal_spi_master_init(hal_spi_t *spi_ptr, uint32_t baud, SPI_SCMOD_e s
 
     Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
     Ssix->SSIEN = 0; // DISABLE_SPI;
-    apcom->PERI_MASTER_SELECT &= ~(BIT(shift));
+    AP_COM->PERI_MASTER_SELECT &= ~(BIT(shift));
     Ssix->CR0 = ((Ssix->CR0) & 0xfffffc3f) | (scmod << 6) | (tmod << 8) | 0x400;
     baud_temp = (pclk + (baud >> 1)) / baud;
 
@@ -537,7 +545,7 @@ static void config_dma_channel4spirx(hal_spi_t *spi_ptr, uint8_t *rx_buf, uint16
 #endif
 
 static int hal_spi_xmit_polling(
-    hal_spi_t *spi_ptr,
+    SPI_INDEX_e spi,
     uint8_t *tx_buf,
     uint8_t *rx_buf,
     uint16_t tx_len,
@@ -550,7 +558,7 @@ static int hal_spi_xmit_polling(
     spi_Ctx_t *pctx;
     pctx = &m_spiCtx[spi_ptr->spi_index];
 #endif
-    Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
+    Ssix = (spi == SPI0) ? AP_SPI0 : AP_SPI1;
     SPI_INIT_TOUT(to);
 #if DMAC_USE
 
@@ -586,7 +594,7 @@ static int hal_spi_xmit_polling(
             if (tx_buf)
             {
                 // support divider 2
-                if (m_spiCtx[spi_ptr->spi_index].cfg.spi_dfsmod <= SPI_1BYTE)
+                if (m_spiCtx[spi].cfg.spi_dfsmod <= SPI_1BYTE)
                 {
                     switch (tmp_len)
                     {
@@ -798,14 +806,18 @@ static int hal_spi_xmit_polling(
 
 static void spi0_sleep_handler(void)
 {
-    if (m_spiCtx[0].spi_info != NULL)
-        hal_spi_bus_deinit(m_spiCtx[0].spi_info);
+    if (m_spiCtx[0].state == SPI_CTX_INITIALIZED)
+    {
+        hal_spi_bus_deinit(SPI0);
+    }
 }
 
 static void spi1_sleep_handler(void)
 {
-    if (m_spiCtx[1].spi_info != NULL)
-        hal_spi_bus_deinit(m_spiCtx[1].spi_info);
+    if (m_spiCtx[1].state == SPI_CTX_INITIALIZED)
+    {
+        hal_spi_bus_deinit(SPI1);
+    }
 }
 
 static void spi0_wakeup_handler(void)
@@ -818,36 +830,40 @@ static void spi1_wakeup_handler(void)
     NVIC_SetPriority((IRQn_Type)SPI1_IRQn, IRQ_PRIO_HAL);
 }
 
-void hal_spi_tmod_set(hal_spi_t *spi_ptr, SPI_TMOD_e mod)
+static void hal_spi_tmod_set(SPI_INDEX_e spi, SPI_TMOD_e mod)
 {
     /* not using a pointer to AP_SPIx due to some gcc warning on subWriteReg */
-    if (spi_ptr->spi_index == SPI0)
+    if (spi == SPI0)
     {
         AP_SPI0->SSIEN = 0;
         subWriteReg(&(AP_SPI0->CR0), 9, 8, mod);
         AP_SPI0->SSIEN = 1;
-    } else {
+    }
+    else if (spi == SPI1)
+    {
         AP_SPI1->SSIEN = 0;
         subWriteReg(&(AP_SPI1->CR0), 9, 8, mod);
         AP_SPI1->SSIEN = 1;
     }
 }
 
-void hal_spi_dfs_set(hal_spi_t *spi_ptr, SPI_DFS_e mod)
+static void hal_spi_dfs_set(SPI_INDEX_e spi, SPI_DFS_e mod)
 {
     /* not using a pointer to AP_SPIx due to some gcc warning on subWriteReg */
-    if (spi_ptr->spi_index == SPI0)
+    if (spi == SPI0)
     {
         AP_SPI0->SSIEN = 0;
         subWriteReg(&(AP_SPI0->CR0), 3, 0, mod);
         AP_SPI0->SSIEN = 1;
-    } else {
+    }
+    else if (spi == SPI1)
+    {
         AP_SPI1->SSIEN = 0;
         subWriteReg(&(AP_SPI1->CR0), 3, 0, mod);
         AP_SPI1->SSIEN = 1;
     }
 
-    m_spiCtx[spi_ptr->spi_index].cfg.spi_dfsmod = mod;
+    m_spiCtx[spi].cfg.spi_dfsmod = mod;
 }
 
 static void hal_spi_ndf_set(hal_spi_t *spi_ptr, uint16_t len)
@@ -864,7 +880,7 @@ static void hal_spi_ndf_set(hal_spi_t *spi_ptr, uint16_t len)
 }
 
 int hal_spi_transmit_same(
-    hal_spi_t *spi_ptr,
+    SPI_INDEX_e spi,
     SPI_TMOD_e mod,
     uint8_t *tx_buf,
     size_t tx_buf_sz,
@@ -872,20 +888,16 @@ int hal_spi_transmit_same(
 {
     int ret;
     spi_Ctx_t *pctx;
-    AP_SSI_TypeDef *Ssix = NULL;
-    spi_xmit_t *trans_ptr;
-    SPI_HDL_VALIDATE(spi_ptr);
-    pctx = &m_spiCtx[spi_ptr->spi_index];
-    trans_ptr = &(pctx->transmit);
+    SPI_HDL_VALIDATE(spi);
+    pctx = &m_spiCtx[spi];
 
-    if ((tx_buf_sz*tx_buf_nums == 0) || (mod > SPI_EEPROM) || (tx_buf == NULL))
+    if ((tx_buf_sz * tx_buf_nums == 0) || (mod > SPI_EEPROM) || (tx_buf == NULL))
         return PPlus_ERR_INVALID_PARAM;
 
     if (pctx->transmit.state != SPI_XMIT_IDLE)
         return PPlus_ERR_BUSY;
 
-    Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
-    hal_spi_tmod_set(spi_ptr, mod);
+    hal_spi_tmod_set(spi, mod);
 
     if (pctx->cfg.force_cs == SPI_FORCE_CS_ENABLED /*&& pctx->is_slave_mode == SPI_MASTER */)
     {
@@ -895,9 +907,9 @@ int hal_spi_transmit_same(
 
     if (pctx->cfg.int_mode == SPI_INT_MODE_DISABLED)
     {
-        for (size_t i = 0; i < (tx_buf_sz*tx_buf_nums); i++)
+        for (size_t i = 0; i < (tx_buf_sz * tx_buf_nums); i++)
         {
-            ret = hal_spi_xmit_polling(spi_ptr, tx_buf, NULL, tx_buf_sz, 0);
+            ret = hal_spi_xmit_polling(spi, tx_buf, NULL, tx_buf_sz, 0);
             if (ret != PPlus_SUCCESS)
                 break;
         }
@@ -912,152 +924,179 @@ int hal_spi_transmit_same(
     return PPlus_SUCCESS;
 }
 
-
 int hal_spi_transmit(
-    hal_spi_t *spi_ptr,
-    SPI_TMOD_e mod,
+    SPI_INDEX_e spi,
     uint8_t *tx_buf,
-    uint8_t *rx_buf,
     uint16_t tx_len,
-    uint16_t rx_len)
+    uint32_t timeout)
 {
     int ret;
-    spi_Ctx_t *pctx;
+    UNUSED(timeout); /* TODO!!!: for now it's unused */
+
+    SPI_HDL_VALIDATE(spi);
+
+    if (m_spiCtx[spi].transmit.state != SPI_XMIT_IDLE)
+    {
+        return PPlus_ERR_BUSY;
+    }
+
+    m_spiCtx[spi].current_transaction_mode = SPI_TXD;
+
+    hal_spi_tmod_set(spi, m_spiCtx[spi].current_transaction_mode);
+
+
+    if (m_spiCtx[spi].cfg.force_cs == SPI_FORCE_CS_ENABLED && m_spiCtx[spi].is_slave_mode == SPI_MASTER)
+    {
+        /* TODO!!!: get rid of this on this function */
+        hal_gpio_fmux(m_spiCtx[spi].cfg.ssn_pin, Bit_DISABLE);
+        /* TODO!!!: this one is ok, but pin needs to be set as output */
+        hal_gpio_write(m_spiCtx[spi].cfg.ssn_pin, 0);
+    }
+
+    ret = hal_spi_xmit_polling(spi, tx_buf, NULL, tx_len, 0);
+
+    if (m_spiCtx[spi].cfg.force_cs == SPI_FORCE_CS_ENABLED && m_spiCtx[spi].is_slave_mode == SPI_MASTER)
+    {
+        /* TODO!!!: shouldn't it also write the pin as 1? */
+        hal_gpio_fmux(m_spiCtx[spi].cfg.ssn_pin, Bit_ENABLE);
+    }
+
+    return ret;
+}
+
+
+int hal_spi_transmit_it(
+    SPI_INDEX_e spi,
+    uint8_t *tx_buf,
+    uint16_t tx_len)
+{
     AP_SSI_TypeDef *Ssix = NULL;
     spi_xmit_t *trans_ptr;
-    SPI_HDL_VALIDATE(spi_ptr);
-    pctx = &m_spiCtx[spi_ptr->spi_index];
-    trans_ptr = &(pctx->transmit);
 
-    if (((tx_len == 0) && (rx_len == 0)) || (mod > SPI_EEPROM) || (tx_buf == NULL))
-        return PPlus_ERR_INVALID_PARAM;
+    SPI_HDL_VALIDATE(spi);
 
-    if (pctx->transmit.state != SPI_XMIT_IDLE)
+
+    trans_ptr = &(m_spiCtx[spi].transmit);
+
+    if (m_spiCtx[spi].transmit.state != SPI_XMIT_IDLE)
+    {
         return PPlus_ERR_BUSY;
-
-#if DMAC_USE
-
-    if ((pctx->cfg.dma_rx_enable && (rx_len == 0)) ||
-        (pctx->cfg.dma_tx_enable && (tx_len == 0)))
-    {
-        return PPlus_ERR_INVALID_PARAM;
     }
 
-#endif
-    Ssix = (spi_ptr->spi_index == SPI0) ? AP_SPI0 : AP_SPI1;
-    hal_spi_tmod_set(spi_ptr, mod);
+    m_spiCtx[spi].current_transaction_mode = SPI_TXD;
 
-    if (mod > SPI_TXD) // spi receive only or eeprom read,should set read data len(ndf)
+    Ssix = (spi == SPI0) ? AP_SPI0 : AP_SPI1;
+
+    if ((Ssix->SR & TX_FIFO_NOT_FULL) == 0)
     {
-        hal_spi_ndf_set(spi_ptr, rx_len);
+        LOG("IS BUSY!!!");
+        return PPlus_ERR_BUSY;
     }
 
-    if (pctx->cfg.force_cs == SPI_FORCE_CS_ENABLED /*&& pctx->is_slave_mode == SPI_MASTER */)
+    hal_spi_tmod_set(spi, m_spiCtx[spi].current_transaction_mode);
+
+    if (m_spiCtx[spi].cfg.force_cs == SPI_FORCE_CS_ENABLED /*&& pctx->is_slave_mode == SPI_MASTER */)
     {
-        hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_DISABLE);
-        hal_gpio_write(pctx->cfg.ssn_pin, 0);
+        /* TODO!!!: get rid of this on this function */
+        hal_gpio_fmux(m_spiCtx[spi].cfg.ssn_pin, Bit_DISABLE);
+        /* TODO!!!: this one is ok, but pin needs to be set as output */
+        hal_gpio_write(m_spiCtx[spi].cfg.ssn_pin, 0);
     }
 
-    if (pctx->cfg.int_mode == SPI_INT_MODE_DISABLED)
+
+
+    spi_int_disable(spi);
+
+    if (trans_ptr->buf_len < tx_len)
+        return PPlus_ERR_NO_MEM;
+
+    if (tx_buf)
     {
-        ret = hal_spi_xmit_polling(spi_ptr, tx_buf, rx_buf, tx_len, rx_len);
+        if (!trans_ptr->tx_buf)
+            return PPlus_ERR_NO_MEM;
+    }
 
-        if (pctx->cfg.force_cs == SPI_FORCE_CS_ENABLED && pctx->is_slave_mode == SPI_MASTER)
-            hal_gpio_fmux(pctx->cfg.ssn_pin, Bit_ENABLE);
+    trans_ptr->tx_offset = 0;
+    // memcpy(trans_ptr->tx_buf, tx_buf, tx_len);
 
-        if (ret)
-            return PPlus_ERR_TIMEOUT;
+    uint16_t _tx_len;
+    uint8_t dummy[8];
+
+
+    hal_pwrmgr_lock((MODULE_e)(MOD_SPI0 + spi));
+
+    /* Kickstart the first transaction if tx_len is greater than the FIFO size (8) */
+    _tx_len = (tx_len >= 8) ? 8 : tx_len;
+
+    if (trans_ptr->tx_buf)
+    {
+        // trans_ptr->tx_offset += _tx_len;
+        hal_spi_write_fifo(Ssix, _tx_len, tx_buf);
     }
     else
     {
-        spi_int_disable(spi_ptr);
-
-        if (trans_ptr->buf_len < tx_len)
-            return PPlus_ERR_NO_MEM;
-
-        if (tx_buf)
-        {
-            if (!trans_ptr->tx_buf)
-                return PPlus_ERR_NO_MEM;
-        }
-
-        trans_ptr->tx_offset = 0;
-        memcpy(trans_ptr->tx_buf, tx_buf, tx_len);
-
-        if (Ssix->SR & TX_FIFO_NOT_FULL)
-        {
-            uint16_t _tx_len;
-            uint8_t dummy[8];
-
-            if (rx_buf)
-            {
-                trans_ptr->rx_buf = rx_buf;
-            }
-
-            hal_pwrmgr_lock((MODULE_e)(MOD_SPI0 + spi_ptr->spi_index));
-            _tx_len = (tx_len >= 8) ? 8 : tx_len;
-
-            if (trans_ptr->tx_buf)
-            {
-                trans_ptr->tx_offset += _tx_len;
-                hal_spi_write_fifo(Ssix, _tx_len, tx_buf);
-            }
-            else
-            {
-                hal_spi_write_fifo(Ssix, _tx_len, dummy);
-            }
-
-            trans_ptr->xmit_len = tx_len;
-        }
-
-        pctx->transmit.state = SPI_XMIT_IDLE;
-        spi_int_enable(spi_ptr, 0x11);
+        hal_spi_write_fifo(Ssix, _tx_len, dummy);
     }
+
+    trans_ptr->xmit_len = tx_len;
+
+    /* TODO!!!: IT's NOT FUCKING IDLE!!!! */
+    m_spiCtx[spi].transmit.state = SPI_XMIT_IDLE;
+
+    spi_int_enable(spi, 0x11);
 
     return PPlus_SUCCESS;
 }
 
-int hal_spi_set_tx_buffer(hal_spi_t *spi_ptr, uint8_t *tx_buf, uint16_t len)
+///////////////////////////  stuff that modifies a previously configured spi
+
+
+int hal_spi_set_tx_buffer(SPI_INDEX_e spi, uint8_t *tx_buf, uint16_t len)
 {
-    SPI_HDL_VALIDATE(spi_ptr);
+    SPI_HDL_VALIDATE(spi);
 
     if ((tx_buf == NULL) || (len == 0))
         return PPlus_ERR_INVALID_PARAM;
 
-    m_spiCtx[spi_ptr->spi_index].transmit.tx_buf = tx_buf; // used when tx int
-    m_spiCtx[spi_ptr->spi_index].transmit.buf_len = len;
+    m_spiCtx[spi].transmit.tx_buf = tx_buf; // used when tx int
+    m_spiCtx[spi].transmit.buf_len = len;
+
     return PPlus_SUCCESS;
 }
 
-int hal_spi_set_int_mode(hal_spi_t *spi_ptr, spi_cfg_int_mode_t en)
+int hal_spi_set_int_mode(SPI_INDEX_e spi, spi_cfg_int_mode_t en)
 {
-    SPI_HDL_VALIDATE(spi_ptr);
-    m_spiCtx[spi_ptr->spi_index].cfg.int_mode = en;
+    SPI_HDL_VALIDATE(spi);
+    m_spiCtx[spi].cfg.int_mode = en;
 
     if (en)
     {
-        spi_int_enable(spi_ptr, 0x10);
+        spi_int_enable(spi, 0x10);
     }
     else
     {
-        spi_int_disable(spi_ptr);
+        spi_int_disable(spi);
     }
 
     return PPlus_SUCCESS;
 }
 
-int hal_spi_set_force_cs(hal_spi_t *spi_ptr, spi_cfg_force_cs_t en)
+int hal_spi_set_force_cs(SPI_INDEX_e spi, spi_cfg_force_cs_t en)
 {
-    SPI_HDL_VALIDATE(spi_ptr);
-    m_spiCtx[spi_ptr->spi_index].cfg.force_cs = en;
+    SPI_HDL_VALIDATE(spi);
+    m_spiCtx[spi].cfg.force_cs = en;
     return PPlus_SUCCESS;
 }
 
-spi_xmit_state_t hal_spi_get_transmit_bus_state(hal_spi_t *spi_ptr)
+spi_xmit_state_t hal_spi_get_transmit_bus_state(SPI_INDEX_e spi)
 {
-    return m_spiCtx[spi_ptr->spi_index].transmit.state;
+    return m_spiCtx[spi].transmit.state;
 }
 
+
+/////////////////////////// end of stuff that modifies a previously configured spi
+
+#if 0 /////// these should not be exposed
 int hal_spi_TxComplete(hal_spi_t *spi_ptr)
 {
     AP_SSI_TypeDef *Ssix = NULL;
@@ -1092,36 +1131,9 @@ int hal_spi_send_byte(hal_spi_t *spi_ptr, uint8_t data)
 
     return PPlus_SUCCESS;
 }
+#endif
 
-int hal_spi_bus_init(hal_spi_t *spi_ptr, spi_Cfg_t cfg)
-{
-    spi_Ctx_t *pctx = NULL;
-
-    if ((spi_ptr == NULL) || (spi_ptr->spi_index > 1))
-        return PPlus_ERR_INVALID_PARAM;
-
-    pctx = &m_spiCtx[spi_ptr->spi_index];
-
-    if (pctx->spi_info != NULL)
-        return PPlus_ERR_BUSY;
-
-    hal_clk_gate_enable((MODULE_e)(MOD_SPI0 + spi_ptr->spi_index));
-    hal_spi_pin_init(spi_ptr, cfg.sclk_pin, cfg.ssn_pin, cfg.MOSI, cfg.MISO);
-    hal_spi_master_init(spi_ptr, cfg.baudrate, cfg.spi_scmod, cfg.spi_tmod);
-    hal_spi_dfs_set(spi_ptr, cfg.spi_dfsmod);
-    pctx->cfg = cfg;
-    pctx->transmit.state = SPI_XMIT_IDLE;
-    pctx->spi_info = spi_ptr;
-
-    if (cfg.int_mode)
-        spi_int_enable(spi_ptr, 0x10);
-    else
-        spi_int_disable(spi_ptr);
-
-    pctx->is_slave_mode = SPI_MASTER;
-    return PPlus_SUCCESS;
-}
-
+#ifdef USE_SLAVE
 int hal_spis_clear_rx(hal_spi_t *spi_ptr)
 {
     AP_SSI_TypeDef *Ssix = NULL;
@@ -1186,73 +1198,98 @@ int hal_spis_bus_init(hal_spi_t *spi_ptr, spi_Cfg_t cfg)
 
     return PPlus_SUCCESS;
 }
-
-/**************************************************************************************
-    @fn          hal_spi_deinit
-
-    @brief       This function will deinit the spi you select.
-
-    input parameters
-
-    @param         hal_spi_t* spi_ptr: spi module handle.
+#endif
 
 
-    output parameters
 
-    @param       None.
 
-    @return
-                PPlus_SUCCESS
-                PPlus_ERR_INVALID_PARAM
- **************************************************************************************/
-int hal_spi_bus_deinit(hal_spi_t *spi_ptr)
-{
-    SPI_HDL_VALIDATE(spi_ptr);
-    hal_clk_gate_disable((MODULE_e)(MOD_SPI0 + spi_ptr->spi_index));
-    // spi_int_disable(spi_ptr);
-    hal_spi_pin_deinit(m_spiCtx[spi_ptr->spi_index].cfg.sclk_pin, m_spiCtx[spi_ptr->spi_index].cfg.ssn_pin, m_spiCtx[spi_ptr->spi_index].cfg.MOSI, m_spiCtx[spi_ptr->spi_index].cfg.MISO);
-    memset(&m_spiCtx, 0, 2 * sizeof(spi_Ctx_t));
-    return PPlus_SUCCESS;
-}
 
-/**************************************************************************************
-    @fn          hal_spi_init
 
-    @brief       it is used to init spi module.
 
-    input parameters
-    @param       None
 
-    output parameters
-    @param       None.
 
-    @return      None.
- **************************************************************************************/
-int hal_spi_init(SPI_INDEX_e channel)
+
+
+
+
+
+
+
+int hal_spi_init(void)
 {
     int ret = 0;
 
-    if (channel == SPI0)
+    memset(m_spiCtx, 0, sizeof(m_spiCtx));
+
+    ret = hal_pwrmgr_register(MOD_SPI0, spi0_sleep_handler, spi0_wakeup_handler);
+    if (ret != PPlus_SUCCESS)
     {
-        ret = hal_pwrmgr_register(MOD_SPI0, spi0_sleep_handler, spi0_wakeup_handler);
-
-        if (ret == PPlus_SUCCESS)
-            memset(&m_spiCtx[0], 0, sizeof(spi_Ctx_t));
-
         return ret;
     }
-    else if (channel == SPI1)
+
+    ret = hal_pwrmgr_register(MOD_SPI1, spi1_sleep_handler, spi1_wakeup_handler);
+    if (ret != PPlus_SUCCESS)
     {
-        ret = hal_pwrmgr_register(MOD_SPI1, spi1_sleep_handler, spi1_wakeup_handler);
-
-        if (ret == PPlus_SUCCESS)
-            memset(&m_spiCtx[1], 0, sizeof(spi_Ctx_t));
-
         return ret;
     }
+
+    spi_int_disable(SPI0);
+    spi_int_disable(SPI1);
+
+    NVIC_SetPriority((IRQn_Type)SPI0_IRQn, IRQ_PRIO_HAL);
+    NVIC_SetPriority((IRQn_Type)SPI1_IRQn, IRQ_PRIO_HAL);
+
+    JUMP_FUNCTION(SPI0_IRQ_HANDLER) = (uint32_t)&hal_SPI0_IRQHandler;
+    JUMP_FUNCTION(SPI1_IRQ_HANDLER) = (uint32_t)&hal_SPI1_IRQHandler;
 
     return PPlus_ERR_INVALID_PARAM;
 }
+
+int hal_spi_bus_init(SPI_INDEX_e spi, spi_Cfg_t cfg)
+{
+    if (spi > 1)
+    {
+        return PPlus_ERR_INVALID_PARAM;
+    }
+
+    if (m_spiCtx[spi].state == SPI_CTX_INITIALIZED)
+    {
+        return PPlus_ERR_BUSY;
+    }
+
+    hal_clk_gate_enable((MODULE_e)(MOD_SPI0 + spi));
+    hal_spi_pin_init(spi, cfg.sclk_pin, cfg.ssn_pin, cfg.MOSI, cfg.MISO);
+    hal_spi_master_init(spi, cfg.baudrate, cfg.spi_scmod, cfg.spi_tmod);
+    hal_spi_dfs_set(spi, cfg.spi_dfsmod);
+
+    m_spiCtx[spi].cfg = cfg;
+    m_spiCtx[spi].transmit.state = SPI_XMIT_IDLE;
+    m_spiCtx[spi].state = SPI_CTX_INITIALIZED;
+    m_spiCtx[spi].is_slave_mode = SPI_MASTER;
+
+    return PPlus_SUCCESS;
+}
+
+int hal_spi_bus_deinit(SPI_INDEX_e spi)
+{
+    SPI_HDL_VALIDATE(spi);
+
+    hal_clk_gate_disable((MODULE_e)(MOD_SPI0 + spi));
+    hal_spi_pin_deinit(m_spiCtx[spi].cfg.sclk_pin, m_spiCtx[spi].cfg.ssn_pin, m_spiCtx[spi].cfg.MOSI, m_spiCtx[spi].cfg.MISO);
+    spi_int_disable(spi);
+
+    m_spiCtx[spi].state = SPI_CTX_UNINITIALIZED;
+
+    return PPlus_SUCCESS;
+}
+
+
+
+
+
+
+
+
 
 #if DMAC_USE
 int hal_spi_dma_set(hal_spi_t *spi_ptr, bool ten, bool ren)

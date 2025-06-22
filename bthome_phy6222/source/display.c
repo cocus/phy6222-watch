@@ -19,8 +19,15 @@ static SemaphoreHandle_t spi_done;
 
 static void spi_transmit_and_wait(uint8_t *tx_buf, uint16_t tx_len)
 {
-    hal_spi_transmit(&s_spi, SPI_TXD, tx_buf, NULL, tx_len, 0);
-    // xSemaphoreTake(spi_done, portMAX_DELAY);
+    hal_spi_set_tx_buffer(SPI0, tx_buf, tx_len);
+    int ret = hal_spi_transmit_it(SPI0, tx_buf, tx_len);
+    if (ret != PPlus_SUCCESS)
+    {
+        LOG("SPI TX ERROR, ret = %d", ret);
+        return;
+    }
+
+    xSemaphoreTake(spi_done, portMAX_DELAY);
 }
 
 extern int hal_spi_transmit_same(
@@ -309,8 +316,6 @@ void display_draw_pixel(uint16_t x, uint16_t y, uint16_t color)
 
 void spi_handle_int(spi_evt_t *pevt)
 {
-    LOG("Evt %d", pevt->evt);
-
     if (pevt->evt != SPI_TX_COMPLETED)
     {
         return;
@@ -345,6 +350,9 @@ void display_init(gpio_pin_e pin_BK, gpio_pin_e pin_DC, gpio_pin_e pin_RST, gpio
     vTaskDelay(pdMS_TO_TICKS(10));
 
     spi_done = xSemaphoreCreateBinary();
+
+    hal_spi_init();
+
     // SPI configuration with an increased baudrate (adjust as necessary)
     spi_Cfg_t spi_cfg = {
         .sclk_pin = pin_SCLK,
@@ -355,13 +363,12 @@ void display_init(gpio_pin_e pin_BK, gpio_pin_e pin_DC, gpio_pin_e pin_RST, gpio
         .spi_tmod = SPI_TXD,
         .spi_scmod = SPI_MODE0,
         .spi_dfsmod = SPI_8BIT,
-        .int_mode = SPI_INT_MODE_DISABLED,
+        .int_mode = SPI_INT_MODE_ENABLED,
         .force_cs = SPI_FORCE_CS_DISABLED,
         .evt_handler = spi_handle_int,
     };
 
-    s_spi.spi_index = SPI0;
-    hal_spi_bus_init(&s_spi, spi_cfg);
+    hal_spi_bus_init(SPI0, spi_cfg);
 
     ST7735_ExecuteCommandList(initcmd);
     _width = GC9106_TFTWIDTH;
