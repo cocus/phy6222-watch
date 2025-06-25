@@ -4,9 +4,9 @@
 
 #include <types.h>
 #include <FreeRTOS.h>
+#include <semphr.h>
 #include <task.h>
 
-static hal_spi_t s_spi;
 static uint8_t tabcolor = INITR_GREENTAB;
 static uint8_t _colstart = 0, _rowstart = 0;
 static uint16_t _width = 0;
@@ -15,21 +15,68 @@ static uint8_t rotation = 0;
 static gpio_pin_e gpio_DC = -1;
 static gpio_pin_e gpio_BK = -1;
 
+
+static SemaphoreHandle_t spi_done;
+
+static void spi_handle_int(spi_evt_t *pevt)
+{
+    if (pevt->evt != SPI_TX_COMPLETED)
+    {
+        return;
+    }
+
+    BaseType_t xHigherPriorityTaskWoken = pdFALSE;
+
+    xSemaphoreGiveFromISR(spi_done, &xHigherPriorityTaskWoken);
+
+    /* Yield if xHigherPriorityTaskWoken is true. The
+    actual macro used here is port specific. */
+    portYIELD_FROM_ISR(xHigherPriorityTaskWoken);
+}
+
+static void spi_transmit_and_wait(uint8_t *tx_buf, uint16_t tx_len)
+{
+    int ret = hal_spi_transmit_it(SPI0, tx_buf, tx_len);
+    if (ret != PPlus_SUCCESS)
+    {
+        LOG("SPI TX ERROR, ret = %d", ret);
+        return;
+    }
+
+    /* Wait for the interrupt */
+    xSemaphoreTake(spi_done, portMAX_DELAY);
+}
+
+static void spi_transmit_same16_and_wait(uint16_t tx_data, uint16_t tx_buf_nums)
+{
+    /* switch to 16 bits temporarly */
+    hal_spi_dfs_set(SPI0, SPI_2BYTE);
+
+    int ret = hal_spi_transmit_same_it(SPI0, tx_data, tx_buf_nums);
+    if (ret != PPlus_SUCCESS)
+    {
+        LOG("SPI TX ERROR, ret = %d, tx_buf_nums %d", ret, tx_buf_nums);
+        return;
+    }
+
+    /* Wait for the interrupt */
+    xSemaphoreTake(spi_done, portMAX_DELAY);
+
+    /* switch back to 8 bits */
+    hal_spi_dfs_set(SPI0, SPI_1BYTE);
+}
+
 // Inline the small helper functions for reduced overhead
 static inline void ST7735_Command(uint8_t cmd)
 {
     hal_gpio_write(gpio_DC, 0);
-    hal_spi_transmit(&s_spi, SPI_TXD, &cmd, NULL, 1, 0);
-    // hal_spi_send_byte(&s_spi, cmd);
-    // LOG("command ret = %d", hal_spi_send_byte(&s_spi, cmd));
-    // LOG("command ret = %d", hal_spi_transmit(&s_spi, SPI_TXD, &cmd, NULL, 1, 0));
+    spi_transmit_and_wait(&cmd, 1);
 }
 
 static inline void ST7735_Data(uint8_t *buff, uint8_t buff_size)
 {
     hal_gpio_write(gpio_DC, 1);
-    hal_spi_transmit(&s_spi, SPI_TXD, buff, NULL, buff_size, 0);
-    // LOG("data ret = %d", hal_spi_transmit(&s_spi, SPI_TXD, buff, NULL, buff_size, 0));
+    spi_transmit_and_wait(buff, buff_size);
 }
 
 static inline void ST7735_WriteCommand(uint8_t cmd)
@@ -106,25 +153,30 @@ void display_set_addr_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1)
     ST7735_WriteCommand(ST77XX_RAMWR);
 }
 
-extern int hal_spi_transmit_same(
-    hal_spi_t *spi_ptr,
-    SPI_TMOD_e mod,
-    uint8_t *tx_buf,
-    size_t tx_buf_sz,
-    uint16_t tx_buf_nums);
-
 __ATTR_SECTION_XIP__
 void display_fill_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color, uint32_t size)
 {
-    uint16_t small_buffer = color;
-
     // Set the address window once
     display_set_addr_window(x0, y0, x1, y1);
 
     // Switch to data mode and transfer the color buffer
     hal_gpio_write(gpio_DC, 1);
-    // hal_spi_transmit(&s_spi, SPI_TXD, (uint8_t *)color_buffer, NULL, size * 2, 0);
-    LOG("x0 %d, y0 %d, x1 %d, y1 %d, ret %d", x0, y0, x1, y1, hal_spi_transmit_same(&s_spi, SPI_TXD, (uint8_t *)&small_buffer, 2, size));
+    uint16_t *buffer = pvPortMalloc(size * 2);
+    if (!buffer)
+    {
+        LOG("Slow for %d bytes", size * 2);
+        /* TODO!!!: "color" needs to have the endinaness swapped, I think. */
+        spi_transmit_same16_and_wait(color, size);
+    }
+    else
+    {
+        for (size_t i = 0; i < size; i++)
+        {
+            buffer[i] = color;
+        }
+        spi_transmit_and_wait((uint8_t*)buffer, size*2);
+        vPortFree(buffer);
+    }
 }
 
 static const uint8_t
@@ -241,11 +293,12 @@ static const uint8_t
         0x00, 0x9F},     //     XEND = 159
 
     Rcmd2green144[] = {  // 7735R init, part 2 (green 1.44 tab)
-        2,               //  2 commands in list:
-        ST77XX_CASET, 4, //  1: Column addr set, 4 args, no delay:
+        3,               //  3 commands in list:
+        ST77XX_INVON, 0, //  1: Display is inverted
+        ST77XX_CASET, 4, //  2: Column addr set, 4 args, no delay:
         0x00, 0x00,      //     XSTART = 0
         0x00, 0x7F,      //     XEND = 127
-        ST77XX_RASET, 4, //  2: Row addr set, 4 args, no delay:
+        ST77XX_RASET, 4, //  3: Row addr set, 4 args, no delay:
         0x00, 0x00,      //     XSTART = 0
         0x00, 0x7F},     //     XEND = 127
 
@@ -484,7 +537,7 @@ void display_fill_screen(uint16_t color)
 }
 
 __ATTR_SECTION_XIP__
-uint16_t display_get_color(uint8_t r, uint8_t g, uint8_t b)
+uint16_t display_get_color(uint16_t r, uint16_t g, uint16_t b)
 {
     // Convert to RGB565 format using swapped channel mappings to match custom defines:
     // ST77XX_RED  = 0x07E0 (green bits),
@@ -505,7 +558,7 @@ void display_draw_pixel(uint16_t x, uint16_t y, uint16_t color)
 
     display_set_addr_window(x, y, x, y);
     hal_gpio_write(gpio_DC, 1); // Data mode
-    hal_spi_transmit(&s_spi, SPI_TXD, color_data, NULL, 2, 0);
+    spi_transmit_and_wait(color_data, 2);
 }
 
 void display_init(gpio_pin_e pin_BK, gpio_pin_e pin_DC, gpio_pin_e pin_RST, gpio_pin_e pin_CS, gpio_pin_e pin_SCLK, gpio_pin_e pin_MOSI, uint16_t width, uint16_t height, uint8_t _rotation)
@@ -527,26 +580,26 @@ void display_init(gpio_pin_e pin_BK, gpio_pin_e pin_DC, gpio_pin_e pin_RST, gpio
     hal_gpio_write(pin_RST, 1);
     vTaskDelay(pdMS_TO_TICKS(10));
 
+    spi_done = xSemaphoreCreateBinary();
+
+    hal_spi_init();
+
     // SPI configuration with an increased baudrate (adjust as necessary)
     spi_Cfg_t spi_cfg = {
         .sclk_pin = pin_SCLK,
         .ssn_pin = pin_CS,
         .MOSI = pin_MOSI,
         .MISO = GPIO_DUMMY,                 // not used
-        .baudrate = 15UL * 1000UL * 1000UL, /* 15MHz */
-        .spi_tmod = SPI_TXD,
+        .frequency = 20UL * 1000UL * 1000UL, /* 10MHz */
         .spi_scmod = SPI_MODE0,
         .spi_dfsmod = SPI_8BIT,
-        .int_mode = SPI_INT_MODE_DISABLED,
         .force_cs = SPI_FORCE_CS_DISABLED,
-        .evt_handler = NULL,
+        .evt_handler = spi_handle_int,
     };
-
-    s_spi.spi_index = SPI0;
-    hal_spi_bus_init(&s_spi, spi_cfg);
+    hal_spi_bus_init(SPI0, spi_cfg);
 
     // Initialize the display with chosen tab color; you may want to allow other options
-    ST7735_InitR(INITR_MINI160x80_PLUGIN);
+    ST7735_InitR(INITR_144GREENTAB);
 
     // Set rotation based on the caller’s parameter (now supports values 0-3)
     // display_set_rotation(rotation);

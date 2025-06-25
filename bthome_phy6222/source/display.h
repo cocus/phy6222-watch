@@ -4,6 +4,7 @@
 #include <stdint.h>
 #include <driver/gpio/gpio.h>
 
+#define USE_GC9107
 
 #define ST_CMD_DELAY 0x80 // special signifier for command lists
 
@@ -81,6 +82,9 @@
 #define GC9106_TFTWIDTH 80  ///< GC9106 max TFT width
 #define GC9106_TFTHEIGHT 160 ///< GC9106 max TFT height
 
+#define GC9107_TFTWIDTH 128  ///< GC9107 max TFT width
+#define GC9107_TFTHEIGHT 128 ///< GC9107 max TFT height
+
 #define GC9106_NOP 0x00     ///< No-op register
 #define GC9106_SWRESET 0x01 ///< Software reset register
 #define GC9106_RDDID 0x04   ///< Read display identification information
@@ -135,7 +139,8 @@
 #define TFT_GREENYELLOW 0xAFE5 ///< 173, 255,  41
 #define TFT_PINK 0xFC18        ///< 255, 130, 198
 
-#define TFT_COLOR(r,g,b)        (((uint16_t)r & 0x0F8) << 5) | (((uint16_t)b & 0x0F8)) | (((uint16_t)g & 0x0E0) >> 5) | (((uint16_t)g & 0x01C) << 11)
+#define TFT_COLOR(r,g,b)        (((uint16_t)b & 0xF8) << 8) | (((uint16_t)r & 0xFC) << 3) | (((uint16_t)g & 0xF8) >> 3)
+//(((uint16_t)r & 0x0F8) << 5) | (((uint16_t)b & 0x0F8)) | (((uint16_t)g & 0x0E0) >> 5) | (((uint16_t)g & 0x01C) << 11)
 
 void display_init(gpio_pin_e pin_BK, gpio_pin_e pin_DC, gpio_pin_e pin_RST, gpio_pin_e pin_CS, gpio_pin_e pin_SCLK, gpio_pin_e pin_MOSI, uint16_t width, uint16_t height, uint8_t _rotation);
 void display_fill_window(uint8_t x0, uint8_t y0, uint8_t x1, uint8_t y1, uint16_t color, uint32_t size);

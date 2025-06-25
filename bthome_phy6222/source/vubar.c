@@ -1,6 +1,7 @@
 
 #include <types.h> /* for UNUSED */
 #include <driver/adc/adc.h>
+#include <driver/clock/clock.h>
 
 #include <string.h>
 #include <log/log.h>
@@ -11,6 +12,7 @@
 
 #include "fonts/FreeMono9pt7b.h"
 #include "display.h"
+
 
 static SemaphoreHandle_t adc_done_sem;
 static volatile float adc_values[2] = {0, 0};
@@ -39,10 +41,16 @@ static void adc_Poilling_evt(const adc_channels_t ch, const uint16_t *data)
 
 #define VU_LEFT_X 5
 #define VU_LEFT_Y VU_LEFT_X
+#ifdef USE_GC9107
+#define VU_LEFT_W 32
+#define VU_LEFT_H 96
+#define VU_RIGHT_X (GC9107_TFTWIDTH - VU_LEFT_X - VU_LEFT_W)
+#else
 #define VU_LEFT_W 32
 #define VU_LEFT_H 128
+#define VU_RIGHT_X (GC9106_TFTWIDTH - VU_LEFT_X - VU_LEFT_W)
+#endif
 
-#define VU_RIGHT_X (GC9106_TFTWIDTH - VU_LEFT_X - 32)
 #define VU_RIGHT_Y VU_LEFT_Y
 #define VU_RIGHT_W VU_LEFT_W
 #define VU_RIGHT_H VU_LEFT_H
@@ -199,7 +207,11 @@ void vumeter(void *argument)
 
     adc_done_sem = xSemaphoreCreateBinary();
 
+#ifdef USE_GC9107
+    gfx_init(BKL_PIN, DC_PIN, RST_PIN, CS_PIN, SCLK_PIN, MOSI_PIN, GC9107_TFTWIDTH, GC9107_TFTHEIGHT, 0);
+#else
     gfx_init(BKL_PIN, DC_PIN, RST_PIN, CS_PIN, SCLK_PIN, MOSI_PIN, GC9106_TFTWIDTH, GC9106_TFTHEIGHT, 0);
+#endif
     gfx_set_font(&FreeMono9pt7b);
     gfx_fill_screen(TFT_COLOR(16, 16, 16));
 
@@ -247,7 +259,7 @@ void vumeter(void *argument)
             continue;
         }
 
-        float refL = transform(adc_values[0]);
+        float refL = transform(osal_sys_tick % 3200);//adc_values[0]);
         float refR = transform(adc_values[1]);
 
         if (refL > peakL)
