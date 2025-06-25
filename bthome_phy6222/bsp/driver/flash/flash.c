@@ -13,6 +13,8 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <phy62xx.h>
+
 #include "flash.h"
 
 #include <driver/pwrmgr/pwrmgr.h> /* for hal_pwrmgr_register */

@@ -10,6 +10,8 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <phy62xx.h>
+
 #include "adc.h"
 
 #include <driver/clock/clock.h> /* for g_system_clk */

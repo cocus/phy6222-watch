@@ -91,8 +91,8 @@ typedef enum
   */
 typedef enum
 {
-    CLK_32K_XTAL = 0,       /*!< External 32.768kHz XT */
-    CLK_32K_RCOSC = 1,      /*!< Internal 32.768kHz RC oscillator */
+  CLK_32K_XTAL = 0,       /*!< External 32.768kHz XT */
+  CLK_32K_RCOSC = 1,      /*!< Internal 32.768kHz RC oscillator */
 } CLK32K_e;
 
 /**
@@ -100,14 +100,14 @@ typedef enum
   */
 typedef enum _SYSCLK_SEL
 {
-    SYS_CLK_RC_32M = 0,     /*!< Internal RC ? oscillator, 32MHz */
-    SYS_CLK_DBL_32M = 1,    /*!< External 16MHz XT, PLLx2, 32MHz */
-    SYS_CLK_XTAL_16M = 2,   /*!< External 16MHz XT, No PLL, 16MHz */
-    SYS_CLK_DLL_48M = 3,    /*!< External 16MHz XT, PLLx3, 48MHz */
-    SYS_CLK_DLL_64M = 4,    /*!< External 16MHz XT, PLLx4, 64MHz */
-    SYS_CLK_DLL_96M = 5,    /*!< External 16MHz XT, PLLx5, 96MHz */
-    SYS_CLK_8M = 6,         /*!< ? 8MHz */
-    SYS_CLK_4M = 7,         /*!< ? 4MHz */
+  SYS_CLK_RC_32M = 0,     /*!< Internal RC ? oscillator, 32MHz */
+  SYS_CLK_DBL_32M = 1,    /*!< External 16MHz XT, PLLx2, 32MHz */
+  SYS_CLK_XTAL_16M = 2,   /*!< External 16MHz XT, No PLL, 16MHz */
+  SYS_CLK_DLL_48M = 3,    /*!< External 16MHz XT, PLLx3, 48MHz */
+  SYS_CLK_DLL_64M = 4,    /*!< External 16MHz XT, PLLx4, 64MHz */
+  SYS_CLK_DLL_96M = 5,    /*!< External 16MHz XT, PLLx5, 96MHz */
+  SYS_CLK_8M = 6,         /*!< ? 8MHz */
+  SYS_CLK_4M = 7,         /*!< ? 4MHz */
 } sysclk_t;
 
 /**

@@ -336,7 +336,7 @@ typedef struct
   */
 typedef struct
 {
-  __IO uint16_t CR0;              /*!< 0x00: Control Register 0, [6:7] SPI Mode (0-3), [8:9] tx/rx mode (0 = tx/rx, 1 = only tx, 2 = only rx, 3 = tx/rx for eeprom) */
+  __IO uint16_t CR0;              /*!< 0x00: Control Register 0, bit10 slave/master (0 = master, 1 = slave), [9:8] tx/rx mode (0 = tx/rx, 1 = only tx, 2 = only rx, 3 = tx/rx for eeprom), [7:6] SPI Mode (0-3), [3:0] bits per transaction minus 1 (i.e. 1 byte = 8 bits, vallue would be 7) */
   uint16_t      RESERVED0;
   __IO uint16_t CR1;              /*!< 0x04: Control Register 1, "Read data length" (minus 1) */
   uint16_t      RESERVED1;
@@ -351,7 +351,7 @@ typedef struct
   __IO uint32_t RXFTLR;           /*!< 0x1c: RX FIFO Threshold (in bytes) to trigger interrupt */
   __O uint32_t  TXFLR;            /*!< 0x20 */
   __O uint32_t  RXFLR;            /*!< 0x24 */
-  __IO uint8_t  SR;               /*!< 0x28 */
+  __IO uint8_t  SR;               /*!< 0x28: Status register, bit3 rx fifo not empty (0 = empty, 1 = not empty?), bit2 tx fifo empty (0 = not empty, 1 = empty?), bit1 tx fifo not full (0 = full, 1 = not full?), bit0 busy (0 = idle, 1 = busy) */
   uint8_t       RESERVED5[3];
   __IO uint32_t IMR;              /*!< 0x2c: interrupt mask, bit4 TX IRQ, bit0 RX IRQ */
   __IO uint32_t ISR;              /*!< 0x30 */
@@ -933,6 +933,79 @@ typedef struct
 
 /******************************************************************************/
 /*                                                                            */
+/*                               SPI registers                                */
+/*                                                                            */
+/******************************************************************************/
+
+/*!< Endpoint-specific registers */
+#define SPI0_CR0                            (AP_SPI0->CR0)
+#define SPI0_CR1                            (AP_SPI0->CR1)
+#define SPI0_SSIEN                          (AP_SPI0->SSIEN)
+#define SPI0_BAUDR                          (AP_SPI0->BAUDR)
+#define SPI0_SER                            (AP_SPI0->SER)
+#define SPI0_ISR                            (AP_SPI0->ISR)
+#define SPI0_SR                             (AP_SPI0->SR)
+
+#define SPI1_CR0                            (AP_SPI1->CR0)
+#define SPI1_CR1                            (AP_SPI1->CR1)
+#define SPI1_SSIEN                          (AP_SPI1->SSIEN)
+#define SPI1_BAUDR                          (AP_SPI1->BAUDR)
+#define SPI1_SER                            (AP_SPI1->SER)
+#define SPI1_ISR                            (AP_SPI1->ISR)
+#define SPI1_SR                             (AP_SPI1->SR)
+
+/*****************  Bit definition for SPIx CR0 register  *********************/
+#define SPIx_CR0_SLAVE_Pos                  (10U)
+#define SPIx_CR0_SLAVE_Msk                  (0x1UL << SPIx_CR0_SLAVE_Pos)       /*!< 0x00000400 */
+#define SPIx_CR0_SLAVE                      SPIx_CR0_SLAVE_Msk                  /*!< Slave mode flag */
+
+/****************  Bit definition for SPIx SSIEN register  ********************/
+#define SPIx_SSIEN_ENABLED_Pos              (0U)
+#define SPIx_SSIEN_ENABLED_Msk              (0x1UL << SPIx_SSIEN_ENABLED_Pos)   /*!< 0x00000001 */
+#define SPIx_SSIEN_ENABLED                  SPIx_SSIEN_ENABLED_Msk              /*!< SPIx enabled */
+#define SPIx_SSIEN_DISABLED                 0U                                  /*!< SPIx disabled */
+
+/*****************  Bit definition for SPIx ISR register  *********************/
+#define SPIx_ISR_TX_EMPTY_Pos               (0U)
+#define SPIx_ISR_TX_EMPTY_Msk               (0x1UL << SPIx_ISR_TX_EMPTY_Pos)    /*!< 0x00000001 */
+#define SPIx_ISR_TX_EMPTY                   SPIx_ISR_TX_EMPTY_Msk               /*!< IRQ flag for Transmit FIFO empty */
+
+#define SPIx_ISR_TX_OVF_Pos                 (1U)
+#define SPIx_ISR_TX_OVF_Msk                 (0x1UL << SPIx_ISR_TX_OVF_Pos)      /*!< 0x00000002 */
+#define SPIx_ISR_TX_OVF                     SPIx_ISR_TX_OVF_Msk                 /*!< IRQ flag for Transmit FIFO overflow */
+
+#define SPIx_ISR_RX_UND_Pos                 (2U)
+#define SPIx_ISR_RX_UND_Msk                 (0x1UL << SPIx_ISR_RX_UND_Pos)      /*!< 0x00000004 */
+#define SPIx_ISR_RX_UND                     SPIx_ISR_RX_UND_Msk                 /*!< IRQ flag for Receive FIFO underflow */
+
+#define SPIx_ISR_RX_OVF_Pos                 (3U)
+#define SPIx_ISR_RX_OVF_Msk                 (0x1UL << SPIx_ISR_RX_OVF_Pos)      /*!< 0x00000008 */
+#define SPIx_ISR_RX_OVF                     SPIx_ISR_RX_OVF_Msk                 /*!< IRQ flag for Receive FIFO overflow */
+
+#define SPIx_ISR_RX_FULL_Pos                (4U)
+#define SPIx_ISR_RX_FULL_Msk                (0x1UL << SPIx_ISR_RX_FULL_Pos)     /*!< 0x00000010 */
+#define SPIx_ISR_RX_FULL                    SPIx_ISR_RX_FULL_Msk                /*!< IRQ flag for Receive FIFO full */
+
+/******************  Bit definition for SPIx SR register  *********************/
+#define SPIx_SR_BUSY_Pos                    (0U)
+#define SPIx_SR_BUSY_Msk                    (0x1UL << SPIx_SR_BUSY_Pos)         /*!< 0x00000001 */
+#define SPIx_SR_BUSY                        SPIx_SR_BUSY_Msk                    /*!< Flag that indicates if the SPIx is busy */
+
+#define SPIx_SR_TX_NOT_FULL_Pos             (1U)
+#define SPIx_SR_TX_NOT_FULL_Msk             (0x1UL << SPIx_SR_TX_NOT_FULL_Pos)  /*!< 0x00000002 */
+#define SPIx_SR_TX_NOT_FULL                 SPIx_SR_TX_NOT_FULL_Msk             /*!< Flag that indicates the Transmit FIFO is not full */
+
+#define SPIx_SR_TX_EMPTY_Pos                (2U)
+#define SPIx_SR_TX_EMPTY_Msk                (0x1UL << SPIx_SR_TX_EMPTY_Pos)     /*!< 0x00000004 */
+#define SPIx_SR_TX_EMPTY                    SPIx_SR_TX_EMPTY_Msk                /*!< Flag that indicates the Transmit FIFO is empty */
+
+#define SPIx_SR_RX_NOT_FULL_Pos             (3U)
+#define SPIx_SR_RX_NOT_FULL_Msk             (0x1UL << SPIx_SR_RX_NOT_FULL_Pos)  /*!< 0x00000008 */
+#define SPIx_SR_RX_NOT_FULL                 SPIx_SR_RX_NOT_FULL_Msk             /*!< Flag that indicates the Receive FIFO is not full */
+
+
+/******************************************************************************/
+/*                                                                            */
 /*                             SPI FLASH registers                            */
 /*                                                                            */
 /******************************************************************************/
@@ -1049,6 +1122,37 @@ typedef struct
 
 /******************************************************************************/
 /*                                                                            */
+/*                        Communications register                             */
+/*                                                                            */
+/******************************************************************************/
+
+/*!< Endpoint-specific registers */
+#define COM_SPI_MS                          (AP_COM->PERI_MASTER_SELECT)
+
+/****************  Bit definition for MASTER_SLAVE register  ******************/
+#define COM_SPI_MS_SPI0A_Pos                (0U)
+#define COM_SPI_MS_SPI0A_Msk                (0x1UL << COM_SPI_MS_SPI0A_Pos)     /*!< 0x0000001 */
+#define COM_SPI_MS_SPI0A_MASTER             COM_SPI_MS_SPI0A_Msk                /*!< SPI0 Master flag A */
+#define COM_SPI_MS_SPI0A_SLAVE              (0UL)                               /*!< SPI0 Slave */
+
+#define COM_SPI_MS_SPI1A_Pos                (1U)
+#define COM_SPI_MS_SPI1A_Msk                (0x1UL << COM_SPI_MS_SPI1A_Pos)     /*!< 0x0000002 */
+#define COM_SPI_MS_SPI1A_MASTER             COM_SPI_MS_SPI1A_Msk                /*!< SPI1 Master flag A */
+#define COM_SPI_MS_SPI1A_SLAVE              (0UL)                               /*!< SPI1 Slave */
+
+#define COM_SPI_MS_SPI0B_Pos                (4U)
+#define COM_SPI_MS_SPI0B_Msk                (0x1UL << COM_SPI_MS_SPI0B_Pos)     /*!< 0x0000010 */
+#define COM_SPI_MS_SPI0B_MASTER             COM_SPI_MS_SPI0B_Msk                /*!< SPI0 Master flag B  */
+#define COM_SPI_MS_SPI0B_SLAVE              (0UL)                               /*!< SPI0 Slave */
+
+#define COM_SPI_MS_SPI1B_Pos                (5U)
+#define COM_SPI_MS_SPI1B_Msk                (0x1UL << COM_SPI_MS_SPI1B_Pos)     /*!< 0x0000020 */
+#define COM_SPI_MS_SPI1B_MASTER             COM_SPI_MS_SPI1B_Msk                /*!< SPI1 Master flag B  */
+#define COM_SPI_MS_SPI1B_SLAVE              (0UL)                               /*!< SPI1 Slave */
+
+
+/******************************************************************************/
+/*                                                                            */
 /*                               Power Control                                */
 /*                                                                            */
 /******************************************************************************/
@@ -1074,7 +1178,7 @@ typedef struct
 
 /******************************************************************************/
 /*                                                                            */
-/*                       Clock gating for PCR                                 */
+/*                          Clock gating for PCR                              */
 /*                                                                            */
 /******************************************************************************/
 

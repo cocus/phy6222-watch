@@ -8,7 +8,7 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 
-#include <phy62xx.h>
+#include <stdint.h>
 
 #include <rom/rom_attr.h> /* for ATTR_ROM_VAR and ATTR_ROM_FN */
 

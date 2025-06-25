@@ -14,6 +14,8 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include <phy62xx.h>
+
 #include "gpio.h"
 
 #include <driver/pwrmgr/pwrmgr.h> /* for hal_pwrmgr_register */
@@ -85,7 +87,6 @@ typedef struct
 /**
   * @}
   */
-
 
 /* Private define ------------------------------------------------------------*/
 /** @addtogroup GPIO_Private_Constants GPIO Private Constants

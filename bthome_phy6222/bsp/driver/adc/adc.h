@@ -8,8 +8,6 @@ extern "C" {
 
 /* Includes ------------------------------------------------------------------*/
 
-#include <phy62xx.h>
-
 #include <rom/rom_attr.h> /* for ATTR_ROM_VAR and ATTR_ROM_FN */
 
 /** @addtogroup PHY62XX_BSP_Driver
@@ -31,15 +29,15 @@ extern "C" {
   */
 typedef enum
 {
-    ADC_CH0DIFF = 1,/*p18(positive),p25(negative),only works in diff*/
-    ADC_CH0 = 2,ADC_CH1N_P11 = 2,MIN_ADC_CH = 2,
-    ADC_CH1 = 3,ADC_CH1P_P23 = 3,ADC_CH1DIFF = 3,/*P23 and P11*/
-    ADC_CH2 = 4,ADC_CH2N_P24 = 4,
-    ADC_CH3 = 5,ADC_CH2P_P14 = 5,ADC_CH2DIFF = 5,/*P14 and P24*/
-    ADC_CH4 = 6,ADC_CH3N_P15 = 6,
-    ADC_CH9 = 7,ADC_CH3P_P20 = 7,MAX_ADC_CH = 7,ADC_CH3DIFF = 7,/*P20 and P15*/
-    ADC_CH_VOICE = 8,
-    ADC_CH_NUM =9,
+  ADC_CH0DIFF = 1,/*p18(positive),p25(negative),only works in diff*/
+  ADC_CH0 = 2,ADC_CH1N_P11 = 2,MIN_ADC_CH = 2,
+  ADC_CH1 = 3,ADC_CH1P_P23 = 3,ADC_CH1DIFF = 3,/*P23 and P11*/
+  ADC_CH2 = 4,ADC_CH2N_P24 = 4,
+  ADC_CH3 = 5,ADC_CH2P_P14 = 5,ADC_CH2DIFF = 5,/*P14 and P24*/
+  ADC_CH4 = 6,ADC_CH3N_P15 = 6,
+  ADC_CH9 = 7,ADC_CH3P_P20 = 7,MAX_ADC_CH = 7,ADC_CH3DIFF = 7,/*P20 and P15*/
+  ADC_CH_VOICE = 8,
+  ADC_CH_NUM =9,
 } adc_CH_t;
 
 /**
@@ -47,16 +45,16 @@ typedef enum
   */
 typedef enum
 {
-    CH0 = 1,    /*!< AIO_0, P11, CH1N (Input B-) */
-    CH1 = 2,    /*!< AIO_1, P23, CH1P (Input B+), Mic Bias reference voltage */
-    CH2 = 4,    /*!< AIO_2, P24, CH2N (Input C-) */
-    CH3 = 8,    /*!< AIO_3, P14, CH2P (Input C+) */
-    CH4 = 16,   /*!< AIO_4, P15, CH3N (Input D-) */
-    CH5 = 32,   /*!< AIO_5, P16, 32k XTAL Input */
-    CH6 = 64,   /*!< AIO_6, P17, 32k XTAL Output */
-    CH7 = 128,  /*!< AIO_7, P18, CH0P (Input A+), PGA Pos */
-    CH8 = 256,  /*!< AIO_8, P25, CH0N (Input A-) */
-    CH9 = 512   /*!< AIO_9, P20, CH3P (Input D+), PGA Neg */
+  CH0 = 1,    /*!< AIO_0, P11, CH1N (Input B-) */
+  CH1 = 2,    /*!< AIO_1, P23, CH1P (Input B+), Mic Bias reference voltage */
+  CH2 = 4,    /*!< AIO_2, P24, CH2N (Input C-) */
+  CH3 = 8,    /*!< AIO_3, P14, CH2P (Input C+) */
+  CH4 = 16,   /*!< AIO_4, P15, CH3N (Input D-) */
+  CH5 = 32,   /*!< AIO_5, P16, 32k XTAL Input */
+  CH6 = 64,   /*!< AIO_6, P17, 32k XTAL Output */
+  CH7 = 128,  /*!< AIO_7, P18, CH0P (Input A+), PGA Pos */
+  CH8 = 256,  /*!< AIO_8, P25, CH0N (Input A-) */
+  CH9 = 512   /*!< AIO_9, P20, CH3P (Input D+), PGA Neg */
 } adc_channels_t;
 
 typedef enum
@@ -82,9 +80,9 @@ typedef enum
   */
 typedef enum
 {
-    HAL_ADC_CLOCK_80K = 0,  /*!< 80kHz */
-    HAL_ADC_CLOCK_160K = 1, /*!< 160kHz */
-    HAL_ADC_CLOCK_320K = 2, /*!< 320kHz */
+  HAL_ADC_CLOCK_80K = 0,  /*!< 80kHz */
+  HAL_ADC_CLOCK_160K = 1, /*!< 160kHz */
+  HAL_ADC_CLOCK_320K = 2, /*!< 320kHz */
 } adc_CLOCK_SEL_t;
 
 /**
@@ -92,11 +90,11 @@ typedef enum
   */
 typedef struct
 {
-    uint8_t  enabled;                   /*!< 1 = enables the channel, 0 = disables the channel */
-    uint8_t  continuously_sampled_mode; /*!< 1 = continuously sample the channel, 0 = sample the channel only once */
-    //uint8_t  differential;          /*!< */
-    uint8_t  attenuated;                /*!< 1 = attenuates the input to 1/4 of the input, 0 = directly sample the input */
-    uint8_t  sample_time;               /*!< How much time takes a single sample, in 1/ADC_clock units */
+  uint8_t  enabled;                   /*!< 1 = enables the channel, 0 = disables the channel */
+  uint8_t  continuously_sampled_mode; /*!< 1 = continuously sample the channel, 0 = sample the channel only once */
+  //uint8_t  differential;          /*!< */
+  uint8_t  attenuated;                /*!< 1 = attenuates the input to 1/4 of the input, 0 = directly sample the input */
+  uint8_t  sample_time;               /*!< How much time takes a single sample, in 1/ADC_clock units */
 } adc_Cfg_t;
 
 /**
@@ -134,7 +132,7 @@ typedef void (*adc_Hdl_t)(const adc_channels_t ch, const uint16_t* data);
   * @{
   */
     /**
-      * @brief  Initializes the ADC module of the MCU
+      * @brief  Initializes the ADC module of the MCU.
       * @note   This effectively enables the ADC module, registers a handler for the ADC IRQ,
       *         enables te 1.28MHz clock for the ADC, and disables the MIC Bias.
       * @retval PPlus_SUCCESS if the ADC was initialized or PPlus_ERR_INVALID_STATE if it was
