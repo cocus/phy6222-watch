@@ -70,6 +70,7 @@ LDFLAGS    += -Wl,--just-symbols=bsp/symbols/bb_rom_sym_m0_gpio.gcc
 endif
 LDFLAGS    += -Wl,--just-symbols=bsp/symbols/bb_rom_sym_m0.gcc
 LDFLAGS    += -Wl,-Map=$(OBJ_DIR)/$(PROJECT_NAME).map
+LDFLAGS    += -Wl,--print-memory-usage
 LIBS       += -Wl,--start-group -lgcc -lnosys -Wl,--end-group
 
 ##############################################################################
@@ -85,6 +86,7 @@ SRCS += bsp/jump_table.c \
 	bsp/driver/clock/clock.c \
 	bsp/driver/flash/flash.c \
 	bsp/driver/gpio/gpio.c \
+	bsp/driver/pwm/pwm.c \
 	bsp/driver/pwrmgr/pwrmgr.c \
 	bsp/driver/spi/spi.c \
 	bsp/driver/uart/uart.c \

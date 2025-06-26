@@ -65,7 +65,7 @@ static void adc_Poilling_evt(const adc_channels_t ch, const uint16_t *data)
 #define DC_PIN GPIO_P25
 #define RST_PIN GPIO_P24
 #define CS_PIN GPIO_P31
-#define BKL_PIN GPIO_P01
+#define BKL_PIN GPIO_P02
 
 #define SCLK_PIN GPIO_P34
 #define MOSI_PIN GPIO_P32

@@ -4,6 +4,7 @@
 #include <driver/clock/clock.h>
 #include <driver/flash/flash.h>
 #include <driver/gpio/gpio.h>
+#include <driver/pwm/pwm.h>
 
 #include <string.h>
 #include <log/log.h>
@@ -15,6 +16,7 @@
 
 // LED
 #define GPIO_LED GPIO_P00
+#define BKL_PIN GPIO_P02
 
 // Button
 #define BUTTON_PIN GPIO_P11
@@ -23,8 +25,35 @@ void genericTask(void *argument)
 {
     UNUSED(argument);
     LOG("Hi from genericTask");
-    hal_gpio_pin_init(GPIO_LED, GPIO_OUTPUT);
-    hal_gpio_write(GPIO_LED, 1);
+    //hal_gpio_pin_init(GPIO_LED, GPIO_OUTPUT);
+    //hal_gpio_write(GPIO_LED, 1);
+
+
+    static pwm_ch_t pwm_ch;
+
+    hal_pwm_module_init();
+
+    pwm_ch.pwmN = (PWMN_e)PWM_CH1;
+    pwm_ch.pwmPin = BKL_PIN;
+    pwm_ch.pwmDiv = PWM_CLK_DIV_128; /* The master clock is 16MHz. Divisor set to 128, so fPWM = 16MHz / 128 = 125kHz */
+    pwm_ch.pwmMode = PWM_CNT_UP;
+    pwm_ch.pwmPolarity = PWM_POLARITY_RISING;
+    pwm_ch.cmpVal = 0;
+    pwm_ch.cntTopVal = 256;
+    hal_gpio_pin_init(pwm_ch.pwmPin, GPIO_INPUT);
+    hal_gpio_pull_set(pwm_ch.pwmPin, WEAK_PULL_UP);
+    hal_pwm_ch_start(pwm_ch);
+
+    while(1)
+    {
+        if (pwm_ch.cmpVal++ == pwm_ch.cntTopVal)
+        {
+            pwm_ch.cmpVal = 0;
+        }
+        hal_pwm_ch_start(pwm_ch);
+        vTaskDelay(pdMS_TO_TICKS(50));
+    }
+
 // void (*p)(void) = (void(*)(void))0;
 // p();
 #if 0
@@ -49,7 +78,7 @@ void genericTask(void *argument)
             SCB->SCR, SCB->CCR);
     LOG("  SHPR2:      %08x SHPR3:  %08x",
             SCB->SHP[0], SCB->SHP[1]);
-#endif
+
     for (;;)
     {
         // LOG("OFF");
@@ -60,6 +89,7 @@ void genericTask(void *argument)
         hal_gpio_write(GPIO_LED, 0);
         vTaskDelay(pdMS_TO_TICKS(500));
     }
+#endif
 }
 
 #if 0
