@@ -140,7 +140,7 @@ typedef struct
   */
 
 /* Private variables ---------------------------------------------------------*/
-/** @addtogroup GPIO_Private_Variables GPIO Private variables
+/** @addtogroup SPI_Private_Variables SPI Private variables
   * @{
   */
 static spi_Ctx_t m_spiCtx[2] =

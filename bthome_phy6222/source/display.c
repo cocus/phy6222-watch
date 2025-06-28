@@ -414,8 +414,8 @@ void display_init(gpio_pin_e pin_BK, gpio_pin_e pin_DC, gpio_pin_e pin_RST, gpio
     display_fill_screen(ST77XX_BLACK);
 
     // Backlight control initialization
-    //hal_gpio_pin_init(gpio_BK, GPIO_OUTPUT);
-    //backlight_turn_on();
+    hal_gpio_pin_init(gpio_BK, GPIO_OUTPUT);
+    backlight_turn_on();
 }
 
 void backlight_turn_off()

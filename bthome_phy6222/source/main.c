@@ -28,29 +28,25 @@ void genericTask(void *argument)
     //hal_gpio_pin_init(GPIO_LED, GPIO_OUTPUT);
     //hal_gpio_write(GPIO_LED, 1);
 
+    gpio_pin_e pin = GPIO_LED;
+    hal_gpio_pin_init(pin, GPIO_INPUT);
+    hal_gpio_pull_set(pin, WEAK_PULL_UP);
 
-    static pwm_ch_t pwm_ch;
+    PWMN_e pwmN = PWM_CH1;
+    hal_pwm_init(pwmN, PWM_CLK_DIV_128, PWM_CNT_UP, PWM_POLARITY_RISING, pin);
+    hal_pwm_set_count_top_val(pwmN, 0, 256);
+    hal_pwm_enable();
 
-    hal_pwm_module_init();
-
-    pwm_ch.pwmN = (PWMN_e)PWM_CH1;
-    pwm_ch.pwmPin = BKL_PIN;
-    pwm_ch.pwmDiv = PWM_CLK_DIV_128; /* The master clock is 16MHz. Divisor set to 128, so fPWM = 16MHz / 128 = 125kHz */
-    pwm_ch.pwmMode = PWM_CNT_UP;
-    pwm_ch.pwmPolarity = PWM_POLARITY_RISING;
-    pwm_ch.cmpVal = 0;
-    pwm_ch.cntTopVal = 256;
-    hal_gpio_pin_init(pwm_ch.pwmPin, GPIO_INPUT);
-    hal_gpio_pull_set(pwm_ch.pwmPin, WEAK_PULL_UP);
-    hal_pwm_ch_start(pwm_ch);
+    uint16_t val = 0;
 
     while(1)
     {
-        if (pwm_ch.cmpVal++ == pwm_ch.cntTopVal)
+        if (val++ == 256)
         {
-            pwm_ch.cmpVal = 0;
+            val = 0;
         }
-        hal_pwm_ch_start(pwm_ch);
+        hal_pwm_set_count_val(pwmN, val);
+
         vTaskDelay(pdMS_TO_TICKS(50));
     }
 

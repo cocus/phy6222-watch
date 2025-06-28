@@ -102,7 +102,7 @@ typedef struct
   __IO uint32_t remap;              /*!< 0x20 */
   __IO uint32_t RXEV_EN;            /*!< 0x24 */
   __IO uint32_t STCALIB;            /*!< 0x28 */
-  __IO uint32_t PERI_MASTER_SELECT; /*!< 0x2c: bit1 SPI1 master mode (0 = slave, 1 = master), bit0 SPI0 master mode (0 = slave, 1 = master) */
+  __IO uint32_t PERI_MASTER_SELECT; /*!< 0x2c: bit3 I2S1 master mode (0 = slave, 1 = master), bit2 I2S0 master mode (0 = slave, 1 = master), bit1 SPI1 master mode (0 = slave, 1 = master), bit0 SPI0 master mode (0 = slave, 1 = master) */
 } AP_COM_TypeDef;
 
 /**
@@ -570,14 +570,16 @@ typedef struct
   */
 typedef struct
 {
-  __IO uint32_t pwmen;            /*!< 0x00? */
-} AP_PWM_TypeDef;
+  __IO uint32_t ctrl0;            /*!< 0x04 + ch*12 + 0x00: bit31 pwmX_load_instant, bit16 pwmX_load, [14:12] pwmX_clk_div, bit8 pwmX_cnt_mode, bit4 pwmX_polarity, bit0 pwmX_en */
+  __IO uint32_t ctrl1;            /*!< 0x04 + ch*12 + 0x04: [31:16] pwmX_cmp_val, [15:0] pwmX_cnt_top */
+  __IO uint32_t RESERVED;         /*!< 0x04 + ch*12 + 0x08: unused */
+} AP_PWMCTRL_TypeDef;
 
 typedef struct
 {
-  __IO uint32_t ctrl0;            /*!< 0x00? */
-  __IO uint32_t ctrl1;            /*!< 0x04? */
-} AP_PWMCTRL_TypeDef;
+  __IO uint32_t pwmen;            /*!< 0x00: bit17 pwm_load_45, bit16 pwm_en_45, bit15 pwm_load_23, bit14 pwm_en_23, bit13 pwm_load_01, bit12 pwm_en_01, bit11 pwm_load_345, bit10 pwm_en_345, bit9 pwm_load_012, bit8 pwm_en_012, bit4 pwm_load_all, bit0 pwm_en_all */
+  AP_PWMCTRL_TypeDef PWM[6];      /*!< 0x04: Entries for each PWM channel */
+} AP_PWM_TypeDef;
 
 /**
   * @brief Direct memory access controller (DMA)
@@ -785,7 +787,6 @@ typedef struct
 #define AP_SPIF             ((AP_SPIF_TypeDef *)AP_SPIF_BASE)
 #define AP_KSCAN            ((AP_KSCAN_TypeDef *)AP_KSCAN_BASE)
 #define AP_PWM              ((AP_PWM_TypeDef *)AP_PWM_BASE)
-#define AP_PWM_CTRL(n)      ((AP_PWMCTRL_TypeDef *)(AP_PWM_BASE + 4 + n * 12))
 #define AP_AON              ((AP_AON_TypeDef *)AP_AON_BASE)
 #define AP_RTC              ((AP_RTC_TypeDef *)AP_RTC_BASE)
 #define AP_PCRM             ((AP_PCRM_TypeDef *)AP_PCRM_BASE)
@@ -929,6 +930,98 @@ typedef struct
 #define PCRM_ADCCTL4_MODE_Msk               (0x1UL << PCRM_ADCCTL4_MODE_Pos)    /*!< 0x00000010 */
 #define PCRM_ADCCTL4_MODE_MANUAL            PCRM_ADCCTL4_MODE_Msk               /*!< ADC Mode: Manual */
 #define PCRM_ADCCTL4_MODE_AUTOMATIC         0                                   /*!< ADC Mode: Automatic */
+
+
+/******************************************************************************/
+/*                                                                            */
+/*                               PWM registers                                */
+/*                                                                            */
+/******************************************************************************/
+
+/*!< Endpoint-specific registers */
+#define PWM_PWMEN                           (AP_PWM->pwmen)
+#define PWM_CTRL0(n)                        (AP_PWM->PWM[n].ctrl0)
+#define PWM_CTRL1(n)                        (AP_PWM->PWM[n].ctrl1)
+
+/****************  Bit definition for PWM PWMEN register  *********************/
+#define PWM_PWMEN_EN_ALL_Pos                (0U)
+#define PWM_PWMEN_EN_ALL_Msk                (0x1UL << PWM_PWMEN_EN_ALL_Pos)     /*!< 0x00000001 */
+#define PWM_PWMEN_EN_ALL                    PWM_PWMEN_EN_ALL_Msk                /*!< PWM Enable All flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_LOAD_ALL_Pos              (4U)
+#define PWM_PWMEN_LOAD_ALL_Msk              (0x1UL << PWM_PWMEN_LOAD_ALL_Pos)   /*!< 0x00000010 */
+#define PWM_PWMEN_LOAD_ALL                  PWM_PWMEN_LOAD_ALL_Msk              /*!< PWM Load All flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_EN_012_Pos                (8U)
+#define PWM_PWMEN_EN_012_Msk                (0x1UL << PWM_PWMEN_EN_012_Pos)     /*!< 0x00000100 */
+#define PWM_PWMEN_EN_012                    PWM_PWMEN_EN_012_Msk                /*!< PWM Enable channel 0, 1 and 2 flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_LOAD_012_Pos              (9U)
+#define PWM_PWMEN_LOAD_012_Msk              (0x1UL << PWM_PWMEN_LOAD_012_Pos)   /*!< 0x00000200 */
+#define PWM_PWMEN_LOAD_012                  PWM_PWMEN_LOAD_012_Msk              /*!< PWM Load channel 0, 1 and 2 flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_EN_345_Pos                (10U)
+#define PWM_PWMEN_EN_345_Msk                (0x1UL << PWM_PWMEN_EN_345_Pos)     /*!< 0x00000400 */
+#define PWM_PWMEN_EN_345                    PWM_PWMEN_EN_345_Msk                /*!< PWM Enable channel 3, 4 and 5 flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_LOAD_345_Pos              (11U)
+#define PWM_PWMEN_LOAD_345_Msk              (0x1UL << PWM_PWMEN_LOAD_345_Pos)   /*!< 0x00000800 */
+#define PWM_PWMEN_LOAD_345                  PWM_PWMEN_LOAD_345_Msk              /*!< PWM Load channel 3, 4 and 5 flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_EN_01_Pos                 (12U)
+#define PWM_PWMEN_EN_01_Msk                 (0x1UL << PWM_PWMEN_EN_01_Pos)      /*!< 0x00001000 */
+#define PWM_PWMEN_EN_01                     PWM_PWMEN_EN_01_Msk                 /*!< PWM Enable channel 0 and 1 flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_LOAD_01_Pos               (13U)
+#define PWM_PWMEN_LOAD_01_Msk               (0x1UL << PWM_PWMEN_LOAD_01_Pos)    /*!< 0x00002000 */
+#define PWM_PWMEN_LOAD_01                   PWM_PWMEN_LOAD_01_Msk               /*!< PWM Load channel 0 and 1 flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_EN_23_Pos                 (14U)
+#define PWM_PWMEN_EN_23_Msk                 (0x1UL << PWM_PWMEN_EN_23_Pos)      /*!< 0x00004000 */
+#define PWM_PWMEN_EN_23                     PWM_PWMEN_EN_23_Msk                 /*!< PWM Enable channel 2 and 3 flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_LOAD_23_Pos               (15U)
+#define PWM_PWMEN_LOAD_23_Msk               (0x1UL << PWM_PWMEN_LOAD_23_Pos)    /*!< 0x00008000 */
+#define PWM_PWMEN_LOAD_23                   PWM_PWMEN_LOAD_23_Msk               /*!< PWM Load channel 2 and 3 flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_EN_45_Pos                 (16U)
+#define PWM_PWMEN_EN_45_Msk                 (0x1UL << PWM_PWMEN_EN_45_Pos)      /*!< 0x00010000 */
+#define PWM_PWMEN_EN_45                     PWM_PWMEN_EN_45_Msk                 /*!< PWM Enable channel 4 and 5 flag (0 = disable, 1 = enable) */
+
+#define PWM_PWMEN_LOAD_45_Pos               (17U)
+#define PWM_PWMEN_LOAD_45_Msk               (0x1UL << PWM_PWMEN_LOAD_45_Pos)    /*!< 0x00028000 */
+#define PWM_PWMEN_LOAD_45                   PWM_PWMEN_LOAD_45_Msk               /*!< PWM Load channel 4 and 5 flag (0 = disable, 1 = enable) */
+
+/****************  Bit definition for PWM CTRL0 register  *********************/
+#define PWM_CTRL0_EN_Pos                    (0U)
+#define PWM_CTRL0_EN_Msk                    (0x1UL << PWM_CTRL0_EN_Pos)         /*!< 0x00000001 */
+#define PWM_CTRL0_EN                        PWM_CTRL0_EN_Msk                    /*!< PWM channel enable flag (0 = disable, 1 = enable) */
+
+#define PWM_CTRL0_POL_Pos                   (4U)
+#define PWM_CTRL0_POL_Msk                   (0x1UL << PWM_CTRL0_POL_Pos)        /*!< 0x00000010 */
+#define PWM_CTRL0_POL                       PWM_CTRL0_POL_Msk                   /*!< PWM channel "polarity" (0 = rising, 1 = falling) */
+
+#define PWM_CTRL0_MODE_Pos                  (8U)
+#define PWM_CTRL0_MODE_Msk                  (0x1UL << PWM_CTRL0_MODE_Pos)       /*!< 0x00000100 */
+#define PWM_CTRL0_MODE                      PWM_CTRL0_MODE_Msk                  /*!< PWM channel mode (0 = up, 1 = up and down) */
+
+#define PWM_CTRL0_DIV_Pos                   (12U)
+#define PWM_CTRL0_DIV_Msk                   (0x7UL << PWM_CTRL0_DIV_Pos)        /*!< 0x00007000 */
+
+#define PWM_CTRL0_LOAD_Pos                  (16U)
+#define PWM_CTRL0_LOAD_Msk                  (0x1UL << PWM_CTRL0_LOAD_Pos)       /*!< 0x00010000 */
+#define PWM_CTRL0_LOAD                      PWM_CTRL0_LOAD_Msk                  /*!< PWM channel Load control (0 = disable, 1 = enable) */
+
+#define PWM_CTRL0_INST_LOAD_Pos             (31U)
+#define PWM_CTRL0_INST_LOAD_Msk             (0x1UL << PWM_CTRL0_INST_LOAD_Pos)  /*!< 0x80000000 */
+#define PWM_CTRL0_INST_LOAD                 PWM_CTRL0_INST_LOAD_Msk             /*!< PWM channel Instant Load control (0 = disable, 1 = enable) */
+
+/****************  Bit definition for PWM CTRL1 register  *********************/
+#define PWM_CTRL1_CMP_Pos                   (16U)
+#define PWM_CTRL1_CMP_Msk                   (0xFFFFUL << PWM_CTRL1_CMP_Pos)     /*!< 0xFFFF000 */
+
+#define PWM_CTRL1_CNT_Pos                   (0U)
+#define PWM_CTRL1_CNT_Msk                   (0xFFFFUL << PWM_CTRL1_CNT_Pos)     /*!< 0x0000FFFF */
 
 
 /******************************************************************************/
