@@ -115,7 +115,7 @@ typedef struct
   uint32_t frequency;             /*!< Frequency for the bus, in Hz */
   SPI_SCMOD_e spi_scmod;          /*!< SPI Mode, one of SPI_SCMOD_e */
   SPI_DFS_e spi_dfsmod;           /*!< Bits per transfer, one of SPI_DFS_e */
-#if DMAC_USE
+#ifdef DMAC_USE
   uint8_t dma_tx_enable;          /*!< Enable DMA for transmit */
   uint8_t dma_rx_enable;          /*!< Enable DMA for receive */
 #endif
@@ -408,8 +408,8 @@ int hal_spis_read_rxn(hal_spi_t *spi_ptr, uint8_t *pbuf, uint16_t len);
 int hal_spis_bus_init(hal_spi_t *spi_ptr, spi_Cfg_t cfg);
 #endif
 
-#if DMAC_USE
-int hal_spi_dma_set(hal_spi_t *spi_ptr, bool ten, bool ren);
+#ifdef DMAC_USE
+int hal_spi_dma_set(SPI_INDEX_e spi, uint8_t ten, uint8_t ren);
 #endif
 
 /**

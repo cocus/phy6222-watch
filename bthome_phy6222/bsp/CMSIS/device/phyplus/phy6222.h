@@ -696,6 +696,35 @@ typedef struct
   __IO uint32_t DMA_ID_H;         /*!< 0x3fc */
 } AP_DMA_MISC_TypeDef;
 
+typedef struct
+{
+  AP_DMA_CH_TypeDef CH[8];
+  AP_DMA_INT_TypeDef INT;
+  AP_DMA_SW_HANDSHAKE_TypeDef HANDSHAKE;
+  AP_DMA_MISC_TypeDef MISC;
+} AP_DMA_TypeDef;
+
+/**
+  * @brief AES128 block
+  */
+typedef struct
+{
+  __IO uint32_t LAYER_ENABLE;     /*!< 0x00: bit0 enable (0 = disabled, 1 = enabled) */
+  __IO uint32_t LAYER_CONTROL;    /*!< 0x04: bit16 FIFO_IO_PDU, [11:08] engine_revert, bit4 single_mode, bit3 code_mode, [2:0] rsvd */
+  __IO uint32_t RESERVED0;        /*!< 0x08 */
+  __IO uint32_t PLEN_AND_AAD;     /*!< 0x0C: [15:8] PLEN, [7:0] AAD */
+  __IO uint32_t INTERRUPT_MASK;   /*!< 0x10: [3:0] int enable bits */
+  __IO uint32_t INTERRUPT_STATUS; /*!< 0x14: [3:0] int status bits */
+  __IO uint32_t RESERVED1;        /*!< 0x18 */
+  __IO uint32_t RESERVED2;        /*!< 0x1C */
+  __IO uint32_t KEY[4];           /*!< 0x20 - 0x2C: [31:0] key */
+  __IO uint32_t NONCE[4];         /*!< 0x30 - 0x3C: [31:0] nonce */
+  __IO uint32_t RESERVED3[4];     /*!< 0x40 - 0x4C */
+  __IO uint32_t DATA_OUT[4];      /*!< 0x50 - 0x5C: Data out */
+  __IO uint32_t RESERVED4[40];    /*!< 0x60 - 0xfc */
+  __IO uint32_t FIFO[256];        /*!< 0x100 - 0x1fc: AES block FIFO */
+} AP_AES_TypeDef;
+
 // TODO!!!: MDM
 
 /**
@@ -791,10 +820,12 @@ typedef struct
 #define AP_RTC              ((AP_RTC_TypeDef *)AP_RTC_BASE)
 #define AP_PCRM             ((AP_PCRM_TypeDef *)AP_PCRM_BASE)
 #define AP_ADCC             ((AP_ADCC_TypeDef *)ADCC_BASE_ADDR)
+#define AP_DMA              ((AP_DMA_TypeDef *)AP_DMAC_BASE)
 #define AP_DMA_CH_CFG(n)    ((AP_DMA_CH_TypeDef *)(AP_DMAC_BASE + 0x58 * n))
 #define AP_DMA_INT          ((AP_DMA_INT_TypeDef *)(AP_DMAC_BASE + 0x2c0))
 #define AP_DMA_SW_HANDSHAKE ((AP_DMA_SW_HANDSHAKE_TypeDef *)(AP_DMAC_BASE + 0x368))
 #define AP_DMA_MISC         ((AP_DMA_MISC_TypeDef *)(AP_DMAC_BASE + 0x398))
+#define AP_AES              ((AP_AES_TypeDef *)(AP_AES_BASE))
 
 /**
   * @}

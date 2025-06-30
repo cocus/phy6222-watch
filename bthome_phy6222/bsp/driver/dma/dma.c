@@ -1,30 +1,42 @@
-/*************
- dma.h
- SDK_LICENSE
-***************/
+/**
+  ******************************************************************************
+  * @file    dma.c
+  * @author  PhyPlus, Santiago Hormazabal
+  * @brief   DMA BSP module driver.
+  *          This file provides firmware functions to manage the DMA features:
+  *           + 
+  *
+  ******************************************************************************
+  */
 
-/* Peripheral group ----------------------------------------------------------- */
-/** @defgroup GPDMA GPDMA (General Purpose Direct Memory Access)
-    @ingroup LPC177x_8xCMSIS_FwLib_Drivers
-    @{
-*/
+/* Includes ------------------------------------------------------------------*/
+#include "dma.h"
 
-#ifndef __DMA_H_
-#define __DMA_H_
+#include <phy62xx.h>
 
-/* Includes ------------------------------------------------------------------- */
-#include "bus_dev.h"
+#include <driver/pwrmgr/pwrmgr.h> /* for hal_pwrmgr_register */
 
+#include <driver/clock/clock.h> /* for hal_clock_gate */
 
-#ifdef __cplusplus
-extern "C"
-{
-#endif
+#include <jump_function.h> /* for JUMP_FUNCTION */
 
-/* Public Macros -------------------------------------------------------------- */
-/** @defgroup GPDMA_Public_Macros GPDMA Public Macros
-    @{
-*/
+#include <phy_error.h>
+
+#include <stddef.h> /* for NULL */
+
+#include <types.h> /* for BIT, subWriteReg */
+
+#include <string.h> /* for memcpy */
+
+/** @addtogroup PHY62XX_BSP_Driver
+  * @{
+  */
+
+/** @defgroup CLOCK
+  * @brief Clock BSP module driver
+  * @{
+  */
+
 
 /** DMAC Connection number definitions */
 typedef enum
@@ -47,31 +59,6 @@ typedef enum
 } DMA_CONN_e;
 
 
-/** Burst size in Source and Destination definitions */
-#define DMA_BSIZE_1     ((0UL)) /**< Burst size = 1 */
-#define DMA_BSIZE_4     ((1UL)) /**< Burst size = 4 */
-#define DMA_BSIZE_8     ((2UL)) /**< Burst size = 8 */
-#define DMA_BSIZE_16    ((3UL)) /**< Burst size = 16 */
-#define DMA_BSIZE_32    ((4UL)) /**< Burst size = 32 */
-#define DMA_BSIZE_64    ((5UL)) /**< Burst size = 64 */
-#define DMA_BSIZE_128   ((6UL)) /**< Burst size = 128 */
-#define DMA_BSIZE_256   ((7UL)) /**< Burst size = 256 */
-
-/** Width in Source transfer width and Destination transfer width definitions */
-#define DMA_WIDTH_BYTE      ((0UL)) /**< Width = 1 byte */
-#define DMA_WIDTH_HALFWORD  ((1UL)) /**< Width = 2 bytes */
-#define DMA_WIDTH_WORD      ((2UL)) /**< Width = 4 bytes */
-#define DMA_WIDTH_2WORD     ((3UL)) /**< Width = 8 bytes */
-#define DMA_WIDTH_4WORD     ((4UL)) /**< Width = 16 bytes */
-#define DMA_WIDTH_8WORD     ((5UL)) /**< Width = 32 bytes */
-
-
-
-
-/** DMAC Address Increment definitions */
-#define DMA_INC_INC         ((0UL)) /**< Increment */
-#define DMA_INC_DEC         ((1UL)) /**< Decrement */
-#define DMA_INC_NCHG        ((2UL)) /**< No change */
 
 
 /**
@@ -272,65 +259,6 @@ typedef enum
 
 
 
-/**
-    @brief DMAC Interrupt clear status enumeration
-*/
-typedef enum
-{
-    DMA_STATCLR_INTTC,  /**< GPDMA Interrupt Terminal Count Request Clear */
-    DMA_STATCLR_INTERR  /**< GPDMA Interrupt Error Clear */
-} DMA_StateClear_Type;
-
-/**
-    @brief DMAC Channel configuration structure type definition
-*/
-typedef struct
-{
-    uint32_t    transf_size;    /**< Length/Size of transfer */
-
-    uint8_t     sinc;
-    uint8_t     src_tr_width;
-    uint8_t     src_msize;
-    uint32_t    src_addr;
-
-    uint8_t     dinc;
-    uint8_t     dst_tr_width;
-    uint8_t     dst_msize;
-    uint32_t    dst_addr;
-
-    bool        enable_int;
-} DMA_CH_CFG_t;
-
-typedef enum
-{
-    DMA_CH_0 = 0,
-    DMA_CH_1,
-    DMA_CH_2,
-    DMA_CH_3,
-    DMA_CH_NUM,
-} DMA_CH_t;
-
-/**
-    @brief DMAC Linker List Item structure type definition
-*/
-typedef struct
-{
-    uint32_t  src_addr; /**< Source Address */
-    uint32_t  dst_addr; /**< Destination address */
-    uint32_t  lli;      /**< Next LLI address, otherwise set to '0' */
-    uint32_t  ctrl;     /**< GPDMA Control of this LLI */
-} DMA_LLI_t;
-
-/**
-    @brief DMAC callback definition
-*/
-typedef void (*DMA_Hdl_t)(DMA_CH_t);
-
-typedef struct
-{
-    DMA_CH_t    dma_channel;
-    DMA_Hdl_t   evt_handler;
-} HAL_DMA_t;
 
 typedef struct
 {
@@ -341,27 +269,357 @@ typedef struct
     DMA_Hdl_t   evt_handler;
 } DMA_CH_Ctx_t;
 
-int hal_dma_init_channel(HAL_DMA_t cfg);
-int hal_dma_config_channel(DMA_CH_t ch, DMA_CH_CFG_t* cfg);
-int hal_dma_start_channel(DMA_CH_t ch);
-int hal_dma_stop_channel(DMA_CH_t ch);
-int hal_dma_wait_channel_complete(DMA_CH_t ch);
-int hal_dma_status_control(DMA_CH_t ch);
-int hal_dma_init(void);
-int hal_dma_deinit(void);
-void __attribute__((used)) hal_DMA_IRQHandler(void);
+
+typedef struct
+{
+    uint8_t init_flg;
+    DMA_CH_Ctx_t dma_ch_ctx[DMA_CH_NUM];
+} dma_ctx_t;
 
 
+dma_ctx_t s_dma_ctx =
+{
+    .init_flg = 0,
+};
 
+static DMA_CONN_e get_src_conn(uint32_t addr)
+{
+    if(addr == (uint32_t)&(AP_SPI0->DataReg))
+        return DMA_CONN_SPI0_Rx;
 
-#ifdef __cplusplus
+    if(addr == (uint32_t)&(AP_SPI1->DataReg))
+        return DMA_CONN_SPI1_Rx;
+
+    if(addr == (uint32_t)&(AP_I2C0->IC_DATA_CMD))
+        return DMA_CONN_I2C0_Rx;
+
+    if(addr == (uint32_t)&(AP_I2C1->IC_DATA_CMD))
+        return DMA_CONN_I2C1_Rx;
+
+    if(addr == (uint32_t)&(AP_UART0->RBR))
+        return DMA_CONN_UART0_Rx;
+
+    if(addr == (uint32_t)&(AP_UART1->RBR))
+        return DMA_CONN_UART1_Rx;
+
+    return DMA_CONN_MEM;
 }
-#endif
 
-#endif /* __LPC177X_8X_GPDMA_H_ */
+static DMA_CONN_e get_dst_conn(uint32_t addr)
+{
+    if(addr == (uint32_t)&(AP_SPI0->DataReg))
+        return DMA_CONN_SPI0_Tx;
 
-/**
-    @}
-*/
+    if(addr == (uint32_t)&(AP_SPI1->DataReg))
+        return DMA_CONN_SPI1_Tx;
 
-/* --------------------------------- End Of File ------------------------------ */
+    if(addr == (uint32_t)&(AP_I2C0->IC_DATA_CMD))
+        return DMA_CONN_I2C0_Tx;
+
+    if(addr == (uint32_t)&(AP_I2C1->IC_DATA_CMD))
+        return DMA_CONN_I2C1_Tx;
+
+    if(addr == (uint32_t)&(AP_UART0->THR))
+        return DMA_CONN_UART0_Tx;
+
+    if(addr == (uint32_t)&(AP_UART1->THR))
+        return DMA_CONN_UART1_Tx;
+
+    return DMA_CONN_MEM;
+}
+
+static void __attribute__((used)) hal_DMA_IRQHandler(void)
+{
+    DMA_CH_t ch;
+
+    for(ch = DMA_CH_0; ch < DMA_CH_NUM; ch++)
+    {
+        if(AP_DMA->INT.StatusTfr & BIT(ch))
+        {
+            hal_dma_stop_channel(ch);
+
+            if(s_dma_ctx.dma_ch_ctx[ch].evt_handler != NULL)
+            {
+                s_dma_ctx.dma_ch_ctx[ch].evt_handler(ch);
+            }
+        }
+    }
+}
+
+static void dma_wakeup_handler(void)
+{
+    hal_clk_gate_enable(MOD_DMA);
+    NVIC_SetPriority((IRQn_Type)DMAC_IRQn, IRQ_PRIO_HAL);
+    NVIC_EnableIRQ((IRQn_Type)DMAC_IRQn);
+    JUMP_FUNCTION(DMAC_IRQ_HANDLER)      =   (uint32_t)&hal_DMA_IRQHandler;
+    AP_DMA->MISC.DmaCfgReg = DMA_DMAC_E;
+}
+
+
+int hal_dma_init_channel(HAL_DMA_t cfg)
+{
+    DMA_CH_Ctx_t* pctx;
+    DMA_CH_t ch;
+
+    if(!s_dma_ctx.init_flg)
+        return PPlus_ERR_NOT_REGISTED;
+
+    ch = cfg.dma_channel;
+
+    if(ch >= DMA_CH_NUM)
+        return PPlus_ERR_INVALID_PARAM;
+
+    pctx = &s_dma_ctx.dma_ch_ctx[ch];
+
+    if(pctx ->init_ch)
+        return PPlus_ERR_INVALID_STATE;
+
+    pctx->evt_handler = cfg.evt_handler;
+    pctx->init_ch = 1;
+    return PPlus_SUCCESS;
+}
+
+
+int hal_dma_config_channel(DMA_CH_t ch, DMA_CH_CFG_t* cfg)
+{
+    DMA_CH_Ctx_t* pctx;
+    DMA_CONN_e src_conn,dst_conn;
+    uint32_t cctrl = 0;
+    uint32_t transf_type = DMA_TRANSFERTYPE_M2M;
+    uint32_t transf_per = 0;
+    uint32_t spif_protect = AP_SPIF->wr_protection;
+    uint32_t cache_bypass = AP_PCR->CACHE_BYPASS;
+
+    if(!s_dma_ctx.init_flg)
+        return PPlus_ERR_NOT_REGISTED;
+
+    if(ch >= DMA_CH_NUM)
+    {
+        return PPlus_ERR_INVALID_PARAM;
+    }
+
+    pctx = &s_dma_ctx.dma_ch_ctx[ch];
+
+    if(!pctx->init_ch)
+        return PPlus_ERR_INVALID_STATE;
+
+    if ((AP_DMA->MISC.ChEnReg & (DMA_DMACEnbldChns_Ch(ch))) || \
+            (pctx->xmit_busy))
+    {
+        // This channel is enabled, return ERROR, need to release this channel first
+        return PPlus_ERR_BUSY;
+    }
+
+    // Reset the Interrupt status
+    AP_DMA->INT.ClearTfr = DMA_DMACIntTfrClr_Ch(ch);
+    // UnMask interrupt
+    AP_DMA->INT.MaskTfr = DMA_DMACCxIntMask_E(ch);
+    src_conn = get_src_conn(cfg->src_addr);
+    dst_conn = get_dst_conn(cfg->dst_addr);
+
+    /* Assign Linker List Item value */
+    if(src_conn && dst_conn)
+    {
+        transf_type = DMA_TRANSFERTYPE_P2P;
+        transf_per = DMA_DMACCxConfig_SrcPeripheral((src_conn-1))| \
+                     DMA_DMACCxConfig_DestPeripheral((dst_conn-1));
+    }
+    else if(src_conn)
+    {
+        transf_type = DMA_TRANSFERTYPE_P2M;
+        transf_per = DMA_DMACCxConfig_SrcPeripheral((src_conn-1));
+    }
+    else if(dst_conn)
+    {
+        transf_type = DMA_TRANSFERTYPE_M2P;
+        transf_per = DMA_DMACCxConfig_DestPeripheral((dst_conn-1));
+    }
+
+    if((cfg->dst_addr > 0x11000000) && (cfg->dst_addr <= 0x11080000)) // 512 k
+    {
+        pctx->xmit_flash = DMA_DST_XIMT_IS_FLASH;
+
+        if(spif_protect)
+        {
+            AP_SPIF->wr_protection = 0;
+        }
+
+        if(cache_bypass == 0)
+        {
+            AP_PCR->CACHE_BYPASS = 1;
+        }
+    }
+    else
+    {
+        pctx->xmit_flash = DMA_DST_XIMT_NOT_FLASH;
+    }
+
+    AP_DMA->CH[ch].SAR = cfg->src_addr;
+    AP_DMA->CH[ch].DAR = cfg->dst_addr;
+    AP_DMA->CH[ch].LLP = 0;
+
+    if(DMA_GET_MAX_TRANSPORT_SIZE(ch) < cfg->transf_size)
+    {
+        return PPlus_ERR_INVALID_PARAM;
+    }
+
+    AP_DMA->CH[ch].CTL_H = DMA_DMACCxControl_TransferSize(cfg->transf_size);
+    subWriteReg(&(AP_DMA->CH[ch].CFG_H),15,7,transf_per);
+    AP_DMA->CH[ch].CFG = 0;
+    cctrl = DMA_DMACCxConfig_TransferType(transf_type)| \
+            DMA_DMACCxControl_SMSize(cfg->src_msize)| \
+            DMA_DMACCxControl_DMSize(cfg->dst_msize)| \
+            DMA_DMACCxControl_SWidth(cfg->src_tr_width)| \
+            DMA_DMACCxControl_DWidth(cfg->dst_tr_width)| \
+            DMA_DMACCxControl_SInc(cfg->sinc)| \
+            DMA_DMACCxControl_DInc(cfg->dinc)| \
+            DMA_DMAC_INT_E;
+    AP_DMA->CH[ch].CTL = cctrl;
+
+    if(cfg->enable_int)
+    {
+        AP_DMA->INT.MaskTfr = DMA_DMACCxConfig_E(ch) | BIT(ch);
+        pctx->interrupt = 1;
+    }
+    else
+    {
+        AP_DMA->INT.ClearTfr = DMA_DMACIntTfrClr_Ch(ch);
+        AP_DMA->INT.MaskTfr = DMA_DMACCxIntMask_E(ch);
+        pctx->interrupt = 0;
+    }
+
+    return PPlus_SUCCESS;
+}
+
+int hal_dma_start_channel(DMA_CH_t ch)
+{
+    DMA_CH_Ctx_t* pctx;
+
+    if(!s_dma_ctx.init_flg)
+        return PPlus_ERR_NOT_REGISTED;
+
+    pctx = &s_dma_ctx.dma_ch_ctx[ch];
+    AP_DMA->MISC.ChEnReg = DMA_DMACCxConfig_E(ch) | BIT(ch);
+    pctx->xmit_busy = 1;
+    hal_pwrmgr_lock(MOD_DMA);
+    return PPlus_SUCCESS;
+}
+
+int hal_dma_stop_channel(DMA_CH_t ch)
+{
+    uint32_t spif_protect = AP_SPIF->wr_protection;
+    uint32_t cache_bypass = AP_PCR->CACHE_BYPASS;
+    DMA_CH_Ctx_t* pctx;
+
+    if(!s_dma_ctx.init_flg)
+        return PPlus_ERR_NOT_REGISTED;
+
+    if(ch >= DMA_CH_NUM)
+    {
+        return PPlus_ERR_INVALID_PARAM;
+    }
+
+    pctx = &s_dma_ctx.dma_ch_ctx[ch];
+
+    if(pctx->xmit_flash == DMA_DST_XIMT_IS_FLASH)
+    {
+        if(spif_protect)
+        {
+            AP_SPIF->wr_protection = 2;
+        }
+
+        if(cache_bypass == 0)
+        {
+            AP_PCR->CACHE_BYPASS = 0;
+            AP_CACHE->CTRL0 = 0x01;
+        }
+    }
+
+    // Reset the Interrupt status
+    AP_DMA->INT.ClearTfr = DMA_DMACIntTfrClr_Ch(ch);
+    // UnMask interrupt
+//    AP_DMA->INT.MaskTfr = DMA_DMACCxIntMask_E(ch);
+    AP_DMA->MISC.ChEnReg = DMA_DMACCxConfig_E(ch);
+    pctx->xmit_busy = 0;
+    hal_pwrmgr_unlock(MOD_DMA);
+    return PPlus_SUCCESS;
+}
+
+int hal_dma_status_control(DMA_CH_t ch)
+{
+    DMA_CH_Ctx_t* pctx;
+
+    if(!s_dma_ctx.init_flg)
+        return PPlus_ERR_NOT_REGISTED;
+
+    if(ch >= DMA_CH_NUM)
+    {
+        return PPlus_ERR_INVALID_PARAM;
+    }
+
+    pctx = &s_dma_ctx.dma_ch_ctx[ch];
+
+    if(pctx->interrupt == 0)
+        hal_dma_wait_channel_complete(ch);
+
+    return PPlus_SUCCESS;
+}
+
+int hal_dma_wait_channel_complete(DMA_CH_t ch)
+{
+    uint32_t Temp = 0;
+
+    if(!s_dma_ctx.init_flg)
+        return PPlus_ERR_NOT_REGISTED;
+
+    while(1)
+    {
+        Temp ++;
+
+        if(AP_DMA->INT.RawTfr)
+        {
+            break;
+        }
+    }
+
+    hal_dma_stop_channel(ch);
+    // LOG("wait count is %d\n",Temp);
+    return PPlus_SUCCESS;
+}
+
+int hal_dma_init(void)
+{
+    uint8_t ret;
+    hal_clk_gate_enable(MOD_DMA);
+    hal_clk_reset(MOD_DMA);
+    NVIC_SetPriority((IRQn_Type)DMAC_IRQn, IRQ_PRIO_HAL);
+    NVIC_EnableIRQ((IRQn_Type)DMAC_IRQn);
+    JUMP_FUNCTION(DMAC_IRQ_HANDLER)      =   (uint32_t)&hal_DMA_IRQHandler;
+    ret = hal_pwrmgr_register(MOD_DMA,NULL, dma_wakeup_handler);
+
+    if(ret == PPlus_SUCCESS)
+    {
+        s_dma_ctx.init_flg = 1;
+        memset(&(s_dma_ctx.dma_ch_ctx[0]), 0, sizeof(DMA_CH_Ctx_t)*DMA_CH_NUM);
+        //dmac controller enable
+        AP_DMA->MISC.DmaCfgReg = DMA_DMAC_E;
+    }
+
+    return ret;
+}
+
+int hal_dma_deinit(void)
+{
+    //dmac controller disable
+    AP_DMA->MISC.DmaCfgReg = DMA_DMAC_D;
+    s_dma_ctx.init_flg = 0;
+    memset(&(s_dma_ctx.dma_ch_ctx[0]), 0, sizeof(DMA_CH_Ctx_t)*DMA_CH_NUM);
+    hal_pwrmgr_unregister(MOD_DMA);
+    hal_clk_gate_disable(MOD_DMA);
+    return PPlus_SUCCESS;
+}
+
+
+
+
+

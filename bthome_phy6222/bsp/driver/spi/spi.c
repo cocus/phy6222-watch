@@ -21,7 +21,7 @@
 
 #include <driver/pwrmgr/pwrmgr.h>
 #include <driver/clock/clock.h> /* for getMcuPrecisionCount */
-#if DMAC_USE
+#ifdef DMAC_USE
 #include <driver/dma/dma.h>
 #endif
 
@@ -601,7 +601,7 @@ static void hal_spi_set_slave(SPI_INDEX_e spi)
 }
 #endif
 
-#if DMAC_USE
+#ifdef DMAC_USE
 static void config_dma_channel4spitx(SPI_INDEX_e spi, uint8_t *tx_buf, uint16_t tx_len)
 {
     DMA_CH_CFG_t cfgc;
@@ -634,7 +634,7 @@ static void config_dma_channel4spitx(SPI_INDEX_e spi, uint8_t *tx_buf, uint16_t 
     cfgc.dinc = DMA_INC_NCHG;
     cfgc.dst_msize = DMA_BSIZE_1;
     cfgc.dst_addr = (uint32_t)&(Ssix->DataReg);
-    cfgc.enable_int = false;
+    cfgc.enable_int = 0;
     hal_dma_config_channel(DMA_CH_0, &cfgc);
     hal_dma_start_channel(DMA_CH_0);
     Ssix->DMACR |= 0x02;
@@ -656,14 +656,14 @@ static void config_dma_channel4spirx(SPI_INDEX_e spi, uint8_t *rx_buf, uint16_t 
     cfgc.dst_tr_width = DMA_WIDTH_BYTE;
     cfgc.dst_msize = DMA_BSIZE_1;
     cfgc.dst_addr = (uint32_t)rx_buf;
-    cfgc.enable_int = false;
+    cfgc.enable_int = 0;
     hal_dma_config_channel(DMA_CH_0, &cfgc);
     hal_dma_start_channel(DMA_CH_0);
     Ssix->DMACR |= 0x01;
     Ssix->DMARDLR = 0;
 }
 
-int hal_spi_dma_set(SPI_INDEX_e spi, bool ten, bool ren)
+int hal_spi_dma_set(SPI_INDEX_e spi, uint8_t ten, uint8_t ren)
 {
     SPI_HDL_VALIDATE(spi);
 
@@ -691,13 +691,14 @@ static int hal_spi_xmit_polling(
     /* grab the timer on entry (for timeout) */
     int to = getMcuPrecisionCount();
 
-    #if DMAC_USE
+#ifdef DMAC_USE
     if (rx_len && m_spiCtx[spi].cfg.dma_rx_enable)
     {
         config_dma_channel4spirx(spi, rx_buf, rx_len);
     }
     else if (tx_len && m_spiCtx[spi].cfg.dma_tx_enable)
     {
+        //LOG("TX DMA! 0x%04x, len %d", tx_buf, tx_len);
         config_dma_channel4spitx(spi, tx_buf, tx_len);
     }
 #endif
@@ -705,11 +706,11 @@ static int hal_spi_xmit_polling(
     while (1)
     {
         if (Ssix->SR & SPIx_SR_TX_NOT_FULL && tx_size
-#if DMAC_USE
+#ifdef DMAC_USE
             && !(m_spiCtx[spi].cfg.dma_tx_enable)
 #endif
         )
-        // #if DMAC_USE
+        // #ifdef DMAC_USE
         //         if(Ssix->SR & SPIx_SR_TX_NOT_FULL && tx_size && !(pctx->cfg.dma_tx_enable))
         // #else
         //         if(Ssix->SR & SPIx_SR_TX_NOT_FULL && tx_size)
@@ -745,7 +746,7 @@ static int hal_spi_xmit_polling(
             tx_size -= tmp_len;
         }
 
-#if DMAC_USE
+#ifdef DMAC_USE
         if (((rx_len == 0) && ((tx_size == 0) || (tx_size && (m_spiCtx[spi].cfg.dma_tx_enable)))) ||
             (rx_len && (tx_size == 0) && (m_spiCtx[spi].cfg.dma_rx_enable)))
             break;
@@ -779,7 +780,7 @@ static int hal_spi_xmit_polling(
         }
     }
 
-#if DMAC_USE
+#ifdef DMAC_USE
     if ((m_spiCtx[spi].cfg.dma_rx_enable) || (m_spiCtx[spi].cfg.dma_tx_enable))
         hal_dma_status_control(DMA_CH_0);
 #endif

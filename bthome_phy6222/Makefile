@@ -84,6 +84,7 @@ SRCS += bsp/jump_table.c \
 	bsp/ble/controller/rf_phy_driver.c \
 	bsp/driver/adc/adc.c \
 	bsp/driver/clock/clock.c \
+	bsp/driver/dma/dma.c \
 	bsp/driver/flash/flash.c \
 	bsp/driver/gpio/gpio.c \
 	bsp/driver/pwm/pwm.c \

@@ -80,7 +80,28 @@ extern void  LL_ENC_DecryptMsg( uint8_t *nonce, uint8_t pktLen, uint8_t *pBuf, u
 extern void  LL_ENC_Encrypt( llConnState_t *connPtr, uint8_t pktHdr, uint8_t pktLen, uint8_t *pBuf );
 extern uint8_t LL_ENC_Decrypt( llConnState_t *connPtr, uint8_t pktHdr, uint8_t pktLen, uint8_t *pBuf );
 extern void LL_ENC_sm_ah( uint8_t *pK, uint8_t *pR, uint8_t *pAh );
-//
+
+/*******************************************************************************
+    @fn          LL_ENC_AES128_Encrypt API
+
+    @brief       This function takes a key, plaintext, and generates ciphertext
+                by AES128 encryption. This function is used to generate the
+                BLE Session Key (SK) from the Long Term Key (LTK) and Session
+                Key Diversifier (SKD).
+
+                Note: The array indexes are MSO..LSO for LTK, SKD, and SK.
+
+    input parameters
+
+    @param       key       - The 128 bit key to be used for encryption.
+    @param       plaintext - The 128 bit plain text before encryption.
+
+    output parameters
+
+    @param       ciphertext - The 128 bit cipher text after encryption.
+
+    @return      None.
+*/
 void LL_ENC_AES128_Encrypt0( uint8_t* key,
                              uint8_t* plaintext,
                              uint8_t* ciphertext );
@@ -102,6 +123,8 @@ uint8_t LL_ENC_Decrypt0( llConnState_t* connPtr,
                        uint8_t*         pBuf );
 
 extern void  LL_ENC_MoveData( uint8_t *pDst, uint8_t *pSrc, uint16_t len );
+
+extern void LL_ENC_LoadKey( uint8_t* key );
 
 #ifdef __cplusplus
 }
