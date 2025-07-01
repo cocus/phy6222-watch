@@ -1,6 +1,7 @@
 
 #include <types.h> /* for UNUSED */
 #include <phy62xx.h>
+#include <driver/aes/aes.h>
 #include <driver/clock/clock.h>
 #include <driver/flash/flash.h>
 #include <driver/gpio/gpio.h>
@@ -21,10 +22,63 @@
 // Button
 #define BUTTON_PIN GPIO_P11
 
+uint8_t aes[16] = { '\0' };
+
 void genericTask(void *argument)
 {
     UNUSED(argument);
     LOG("Hi from genericTask");
+
+#if 0
+    const uint8_t key[16] = {
+        0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0,
+        0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0, 0xc0
+    };
+
+    const uint8_t test_msg[16] = "Test data here!";
+
+    const uint8_t iv[] = {
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
+        0x11, 0x22
+    };
+
+    uint8_t enc_tag[16];
+    uint8_t enc_data[16];
+    uint8_t aad[] = { 0xfe, 0x00 };
+
+    /* encypt something */
+    memset(enc_data, 0, sizeof(enc_data));
+    memset(enc_tag, 0, sizeof(enc_tag));
+    aes_gcm_128(key, iv, sizeof(iv),
+                aad, sizeof(aad),
+                test_msg, sizeof(test_msg),
+                enc_data, enc_tag, 1);
+    //LOG("ENCRYPT Result:");
+    //LOG_DUMP_BYTE(aes, sizeof(aes));
+    //LOG("ENCRYPT TAG:");
+    //LOG_DUMP_BYTE(tag, sizeof(tag));
+
+    /* decrypt something else */
+    //memset(aes, 0, sizeof(aes));
+    //memset(tag, 0, sizeof(tag));
+    aes_gcm_128(key, iv, sizeof(iv),
+                aad, sizeof(aad),
+                enc_data, sizeof(enc_data),
+                aes, enc_tag, 0);
+    //LOG("DECRYPT Result:");
+    //LOG_DUMP_BYTE(aes, sizeof(aes));
+    //LOG("DECRYPT TAG:");
+    //LOG_DUMP_BYTE(tag, sizeof(tag));
+
+    if (memcmp(aes, test_msg, sizeof(test_msg)) == 0)
+    {
+        LOG("AES encrypt/decrypt ok!");
+    } else {
+        LOG("AES encrypt/decrypt fail");
+    }
+#endif
+
     //hal_gpio_pin_init(GPIO_LED, GPIO_OUTPUT);
     //hal_gpio_write(GPIO_LED, 1);
 

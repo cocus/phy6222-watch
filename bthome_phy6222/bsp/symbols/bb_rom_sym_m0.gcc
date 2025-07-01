@@ -843,6 +843,7 @@ wakeupProcess = 0x000176a9;
 wakeupProcess0 = 0x000176c5;
 wakeup_init = 0x000178a5;
 wakeup_init0 = 0x000178bd;
+aes_xor_128 = 0x00017979;
 zigbee_crc16_gen = 0x0001798d;
 supportedCmdsTable = 0x00017c00;
 hciCmdTable = 0x00017c44;

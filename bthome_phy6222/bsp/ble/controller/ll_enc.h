@@ -67,8 +67,6 @@ extern uint8_t cachedTRNGdata[ LL_ENC_TRUE_RAND_BUF_SIZE ];
 extern uint8_t LL_ENC_GeneratePseudoRandNum( void );
 extern uint8_t LL_ENC_GenerateTrueRandNum( uint8_t *buf, uint8_t len );
 
-// CCM Encryption
-extern void  LL_ENC_AES128_Encrypt( uint8_t *key, uint8_t *plaintext,  uint8_t *ciphertext );
 extern void  LL_ENC_AES128_Decrypt( uint8_t *key, uint8_t *ciphertext, uint8_t *plaintext );
 extern void  LL_ENC_LoadEmptyIV( void );
 extern void  LL_ENC_ReverseBytes( uint8_t *buf, uint8_t len );

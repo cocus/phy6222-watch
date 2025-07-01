@@ -20,8 +20,9 @@ MIN_SLEEP_TIME
 #include <ble/hci/hci_tl.h>
 #include <ble/hci/hci_event.h>
 
-#include <driver/timer/timer.h>
+#include <driver/aes/aes.h>
 #include <driver/clock/clock.h>
+#include <driver/timer/timer.h>
 
 #include <osal/OSAL.h>
 #include <osal/osal_critical.h>
