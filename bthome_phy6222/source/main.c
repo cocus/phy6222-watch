@@ -243,6 +243,10 @@ void hal_lowpower_init(void)
 {
     hal_rtc_clock_config((CLK32K_e)g_clk32K_config);
 
+    #define DCDC_REF_CLK_SETTING(x)                     subWriteReg(&(AON_PMCTL0),25,25, (0x01&(x)))
+    #define DCDC_CONFIG_SETTING(x)                      subWriteReg(&(AON_PMCTL0),18,15, (0x0f&(x)))
+    #define DIG_LDO_CURRENT_SETTING(x)                  subWriteReg(&(AON_PMCTL0),22,21, (0x03&(x)))
+
     DCDC_REFL_CLK_SETTING(1);
     DCDC_CONFIG_SETTING(0x0a);
     DIG_LDO_CURRENT_SETTING(0x01);
@@ -265,11 +269,10 @@ void hal_lowpower_init(void)
 int main(void)
 {
     /* init stuff as if OSAL was in charge */
-    osal_nuker_init(SYS_CLK_DLL_96M); // SYS_CLK_XTAL_16M);
+    osal_nuker_init(SYS_CLK_DLL_96M, CLK_32K_RCOSC); // SYS_CLK_XTAL_16M);
 
     // hal_lowpower_init();
 
-    LOG("Build time: %s %s", __DATE__, __TIME__);
 
     // LOG("SDK Version ID %08x ", SDK_VER_RELEASE_ID);
 
@@ -278,11 +281,7 @@ int main(void)
     //*p++ = '-';
     // LOG("serialnum '%s'", devInfoSerialNumber);
 
-    // osal_nuker_freertos_patch();
-
     LOG("g_hclk %d", g_hclk);
-
-    // NVIC_SetPriority((IRQn_Type)PendSV_IRQn, 15);
 
     xTaskCreate(genericTask, "genericTask", 256, NULL, tskIDLE_PRIORITY + 1, NULL);
 
@@ -294,7 +293,7 @@ int main(void)
     xTaskCreate(port_thread, "btstack_thread", 1024, NULL, 2, NULL);
 #endif
 
-    LOG("starting scheduler");
+    LOG("starting FreeRTOS scheduler");
 
     vTaskStartScheduler();
 

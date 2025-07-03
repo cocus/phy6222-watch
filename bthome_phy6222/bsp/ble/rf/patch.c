@@ -6540,11 +6540,13 @@ llStatus_t LL_SetScanControl1( uint8_t scanMode,
             scanInfo.nextScanChan  = LL_SCAN_ADV_CHAN_37;
             // set LL state
             llState = LL_STATE_SCAN;
-            
-            LOG("schedule now! llWaitingIrq = %d, llTaskState = %d, V4 handler %08x, irq disable %08x, irq enable %08x, IRQ %d, critical %d", llWaitingIrq, llTaskState, JUMP_FUNCTION(V4_IRQ_HANDLER), JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE), JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE), NVIC_GetEnableIRQs() & BIT(BB_IRQn), m_in_critical_region);
+
+            LOG("Clock for BB %d", hal_clk_gate_get(MOD_BB));
+            llScanTime = 69;
+            LOG("schedule now! llScanTime = %d, scanInfo.initPending = %d, scanInfo.nextScanChan = %d, llWaitingIrq = %d, llTaskState = %d, V4 handler %08x, irq disable %08x, irq enable %08x, IRQ %d, critical %d", llScanTime, scanInfo.initPending, scanInfo.nextScanChan, llWaitingIrq, llTaskState, JUMP_FUNCTION(V4_IRQ_HANDLER), JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE), JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE), NVIC_GetEnableIRQs() & BIT(BB_IRQn), m_in_critical_region);
             // Note: llState has been changed.
             LL_evt_schedule();
-            LOG("schedule after llWaitingIrq = %d, llTaskState = %d, V4 handler %08x, irq disable %08x, irq enable %08x, IRQ %d, critical %d", llWaitingIrq, llTaskState, JUMP_FUNCTION(V4_IRQ_HANDLER), JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE), JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE), NVIC_GetEnableIRQs() & BIT(BB_IRQn), m_in_critical_region);
+            LOG("schedule after llScanTime = %d, scanInfo.initPending = %d, llWaitingIrq = %d, llTaskState = %d, V4 handler %08x, irq disable %08x, irq enable %08x, IRQ %d, critical %d", llScanTime, scanInfo.initPending, llWaitingIrq, llTaskState, JUMP_FUNCTION(V4_IRQ_HANDLER), JUMP_FUNCTION(HAL_DRV_IRQ_DISABLE), JUMP_FUNCTION(HAL_DRV_IRQ_ENABLE), NVIC_GetEnableIRQs() & BIT(BB_IRQn), m_in_critical_region);
 
         }
         else if ((llState == LL_STATE_CONN_SLAVE

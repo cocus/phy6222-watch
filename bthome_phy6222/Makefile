@@ -177,8 +177,8 @@ SRCS_BTSTACK += src/ad_parser.c \
 INCLUDES += -I$(OBJ_DIR)/btstack/example
 
 #SRCS += $(SRC_PATH)/gatt_battery_query.c
-SRCS += $(SRC_PATH)/gap_le_advertisements.c
-#SRCS += $(SRC_PATH)/gatt_counter.c
+#SRCS += $(SRC_PATH)/gap_le_advertisements.c
+SRCS += $(SRC_PATH)/gatt_counter.c
 SRCS += $(SRC_PATH)/btstack_port.c
 
 INCLUDES += -I$(BTSTACK_PATH)
@@ -193,8 +193,8 @@ INCLUDES += -I$(BTSTACK_PATH)/example
 
 SRCS += $(addprefix $(BTSTACK_PATH)/, $(SRCS_BTSTACK))
 
-GATT_FILES = $(BTSTACK_PATH)/example/gatt_battery_query.gatt
-#GATT_FILES = $(BTSTACK_PATH)/example/gatt_counter.gatt
+#GATT_FILES = $(BTSTACK_PATH)/example/gatt_battery_query.gatt
+GATT_FILES = $(BTSTACK_PATH)/example/gatt_counter.gatt
 
 GATT_OBJ = $(addprefix $(OBJ_DIR)/,$(GATT_FILES:.gatt=.h))
 endif

@@ -615,7 +615,7 @@ void osal_nuker_interrupt_init(void)
 }
 
 __ATTR_SECTION_SRAM__
-void osal_nuker_init(sysclk_t clk)
+void osal_nuker_init(sysclk_t clk, CLK32K_e rtcclk)
 {
     // portDISABLE_INTERRUPTS();
 
@@ -624,13 +624,14 @@ void osal_nuker_init(sysclk_t clk)
     m_in_critical_region = 0;
 
     clk_init(g_system_clk);
+    g_clk32K_config = rtcclk;
     hal_rtc_clock_config((CLK32K_e)g_clk32K_config);
 
     spif_config(SYS_CLK_DLL_64M, 1, 0x801003b, 0, 0);
     hal_spif_cache_init(SYS_CLK_DLL_64M, XFRD_FCMD_READ_DUAL);
 
     LOG_INIT();
-    LOG("HI");
+    LOG("Build time: %s %s", __DATE__, __TIME__);
 
     init_config();
     LOG("Config initialized");

@@ -292,14 +292,13 @@ uint8_t pplus_ble_recv_msg(uint8_t destination_task, uint8_t *msg_ptr)
 
         if (hci_outgoing_event_ready)
         {
-            //LOG(" <<<<< pplus_ble_recv_msg: hci_outgoing_event_ready is true, dropping packet");
-//            send_hardware_error = 0x01; // hardware error
+            LOG(" <<<<< pplus_ble_recv_msg: hci_outgoing_event_ready is true, dropping packet");
+            send_hardware_error = 0x01; // hardware error
             goto cleanup;
         }
         size = evp->evt.plen + 2;
         packet = (uint8_t *)&evp->evt;
         packet[2] = 1;
-
         /* Send buffer to upper stack */
         memcpy(&hci_outgoing_event[0], packet, size);
         hci_outgoing_event_ready = true;
@@ -481,7 +480,8 @@ static void controller_handle_hci_command(uint8_t *packet, uint16_t size)
         break;
 
     case HCI_OPCODE_HCI_LE_SET_SCAN_PARAMETERS:
-        LOG("HCI_LE_SET_SCAN_PARAMETERS command received");
+        LOG("HCI_LE_SET_SCAN_PARAMETERS command received, scanType = %d, scanInterval = %d, scanWindow = %d, ownAddrType = %d, filterPolicy = %d",
+                packet[3], little_endian_read_16(packet, 4), little_endian_read_16(packet, 6), packet[8], packet[9]);
         status = HCI_LE_SetScanParamCmd(
             packet[3],
             little_endian_read_16(packet, 4),
