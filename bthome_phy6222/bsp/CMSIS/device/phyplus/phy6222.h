@@ -220,7 +220,7 @@ typedef struct
   */
 typedef struct
 {
-  __IO uint32_t IC_CON;           /*!< 0x0 */
+  __IO uint32_t IC_CON;           /*!< 0x0: bit6 IC_SLAVE_DISABLE, bit5 IC_RESTART_EN, bit4 IC_10BITADDR_MASTER, bit3 IC_10BITADDR_SLAVE, [2:1] speed, bit0 MASTER_MODE */
   __IO uint32_t IC_TAR;           /*!< 0x4 */
   __IO uint32_t IC_SAR;           /*!< 0x8 */
   __IO uint32_t IC_HS_MADDR;      /*!< 0xc */
@@ -1243,6 +1243,141 @@ typedef struct
 #define RTC_RTCCTL_COMP0EVT_Msk             (0x1UL << RTC_RTCCTL_COMP0EVT_Pos)  /*!< 0x0100000 */
 #define RTC_RTCCTL_COMP0EVT                 RTC_RTCCTL_COMP0EVT_Msk             /*!< Enable Comparator 0 Event Flag */
 
+
+/******************************************************************************/
+/*                                                                            */
+/*                        Inter-IC (I2C) registers                            */
+/*                                                                            */
+/******************************************************************************/
+
+/*!< Endpoint-specific registers */
+#define I2C0_CON                            (AP_I2C0->IC_CON)
+#define I2C0_ENABLE                         (AP_I2C0->IC_ENABLE)
+#define I2C0_RAW_INT_STAT                   (AP_I2C0->IC_RAW_INTR_STAT)
+#define I2C0_DATA_CMD                       (AP_I2C0->IC_DATA_CMD)
+#define I2C0_STATUS                         (AP_I2C0->IC_STATUS)
+
+#define I2C1_CON                            (AP_I2C1->IC_CON)
+#define I2C1_ENABLE                         (AP_I2C1->IC_ENABLE)
+#define I2C1_RAW_INT_STAT                   (AP_I2C1->IC_RAW_INTR_STAT)
+#define I2C1_DATA_CMD                       (AP_I2C1->IC_DATA_CMD)
+#define I2C1_STATUS                         (AP_I2C1->IC_STATUS)
+
+/******************  Bit definition for I2Cx_CON register  ********************/
+#define I2Cx_CON_MASTER_Pos                 (0U)
+#define I2Cx_CON_MASTER_Msk                 (0x1UL << I2Cx_CON_MASTER_Pos)     /*!< 0x0000001 */
+#define I2Cx_CON_MASTER                     I2Cx_CON_MASTER_Msk                /*!< I2Cx master enable flag */
+
+#define I2Cx_CON_SPEED_Pos                  (1U)
+#define I2Cx_CON_SPEED_Msk                  (0x3UL << I2Cx_CON_SPEED_Pos)       /*!< 0x0000006 */
+#define I2Cx_CON_SPEED_100kHz               (0x1UL << I2Cx_CON_SPEED_Pos)       /*!< I2Cx speed 100kHz */
+#define I2Cx_CON_SPEED_400kHz               (0x2UL << I2Cx_CON_SPEED_Pos)       /*!< I2Cx speed 400kHz */
+
+#define I2Cx_CON_10BSLAVE_Pos               (3U)
+#define I2Cx_CON_10BSLAVE_Msk               (0x1UL << I2Cx_CON_10BSLAVE_Pos)    /*!< 0x0000008 */
+#define I2Cx_CON_10BSLAVE                   I2Cx_CON_10BSLAVE_Msk               /*!< I2Cx 10-bit address for slave flag */
+
+#define I2Cx_CON_10BMASTER_Pos              (4U)
+#define I2Cx_CON_10BMASTER_Msk              (0x1UL << I2Cx_CON_RESTART_EN_Pos)  /*!< 0x0000010 */
+#define I2Cx_CON_10BMASTER                  I2Cx_CON_10BMASTER_Msk              /*!< I2Cx 10-bit address for master flag */
+
+#define I2Cx_CON_RESTART_EN_Pos             (5U)
+#define I2Cx_CON_RESTART_EN_Msk             (0x1UL << I2Cx_CON_RESTART_EN_Pos)  /*!< 0x0000020 */
+#define I2Cx_CON_RESTART_EN                 I2Cx_CON_RESTART_EN_Msk             /*!< I2Cx restart enable flag */
+
+#define I2Cx_CON_SLAVE_DISABLE_Pos          (6U)
+#define I2Cx_CON_SLAVE_DISABLE_Msk          (0x1UL << I2Cx_CON_SLAVE_DISABLE_Pos)/*!< 0x0000040 */
+#define I2Cx_CON_SLAVE_DISABLE              I2Cx_CON_SLAVE_DISABLE_Msk          /*!< I2Cx slave disable flag */
+
+/****************  Bit definition for I2Cx_ENABLE register  *******************/
+#define I2Cx_ENABLE_ENABLE_Pos              (0U)
+#define I2Cx_ENABLE_ENABLE_Msk              (0x1UL << I2Cx_ENABLE_ENABLE_Pos)  /*!< 0x0000001 */
+#define I2Cx_ENABLE_ENABLE                  I2Cx_ENABLE_ENABLE_Msk             /*!< I2Cx enable flag */
+#define I2Cx_ENABLE_DISABLE                 0UL                                /*!< I2Cx enable flag */
+
+/***************  Bit definition for I2Cx_RAW_INT_STAT register  **************/
+#define I2Cx_RAW_INT_STAT_RXUNDER_Pos       (0U)
+#define I2Cx_RAW_INT_STAT_RXUNDER_Msk       (0x1UL << I2Cx_RAW_INT_STAT_RXUNDER_Pos)/*!< 0x0000001 */
+#define I2Cx_RAW_INT_STAT_RXUNDER           I2Cx_RAW_INT_STAT_RXUNDER_Msk      /*!< I2Cx receive FIFO underflow? flag */
+
+#define I2Cx_RAW_INT_STAT_RXOVER_Pos        (1U)
+#define I2Cx_RAW_INT_STAT_RXOVER_Msk        (0x1UL << I2Cx_RAW_INT_STAT_RXOVER_Pos)/*!< 0x0000002 */
+#define I2Cx_RAW_INT_STAT_RXOVER            I2Cx_RAW_INT_STAT_RXOVER_Msk       /*!< I2Cx receive FIFO overflow? flag */
+
+#define I2Cx_RAW_INT_STAT_RXFULL_Pos        (2U)
+#define I2Cx_RAW_INT_STAT_RXFULL_Msk        (0x1UL << I2Cx_RAW_INT_STAT_RXFULL_Pos)/*!< 0x0000004 */
+#define I2Cx_RAW_INT_STAT_RXFULL            I2Cx_RAW_INT_STAT_RXFULL_Msk       /*!< I2Cx receive FIFO full? flag */
+
+#define I2Cx_RAW_INT_STAT_TXOVER_Pos        (3U)
+#define I2Cx_RAW_INT_STAT_TXOVER_Msk        (0x1UL << I2Cx_RAW_INT_STAT_TXOVER_Pos)/*!< 0x0000008 */
+#define I2Cx_RAW_INT_STAT_TXOVER            I2Cx_RAW_INT_STAT_TXOVER_Msk       /*!< I2Cx transmit FIFO overflow? flag */
+
+#define I2Cx_RAW_INT_STAT_TXEMPTY_Pos       (4U)
+#define I2Cx_RAW_INT_STAT_TXEMPTY_Msk       (0x1UL << I2Cx_RAW_INT_STAT_TXEMPTY_Pos)/*!< 0x0000010 */
+#define I2Cx_RAW_INT_STAT_TXEMPTY           I2Cx_RAW_INT_STAT_TXEMPTY_Msk      /*!< I2Cx transmit FIFO empty flag */
+
+#define I2Cx_RAW_INT_STAT_RDREQ_Pos         (5U)
+#define I2Cx_RAW_INT_STAT_RDREQ_Msk         (0x1UL << I2Cx_RAW_INT_STAT_RDREQ_Pos)/*!< 0x0000020 */
+#define I2Cx_RAW_INT_STAT_RDREQ             I2Cx_RAW_INT_STAT_RDREQ_Msk        /*!< I2Cx read request? flag */
+
+#define I2Cx_RAW_INT_STAT_TXABRT_Pos        (6U)
+#define I2Cx_RAW_INT_STAT_TXABRT_Msk        (0x1UL << I2Cx_RAW_INT_STAT_TXABRT_Pos)/*!< 0x0000040 */
+#define I2Cx_RAW_INT_STAT_TXABRT            I2Cx_RAW_INT_STAT_TXABRT_Msk       /*!< I2Cx transmit abort? flag */
+
+#define I2Cx_RAW_INT_STAT_RXDONE_Pos        (7U)
+#define I2Cx_RAW_INT_STAT_RXDONE_Msk        (0x1UL << I2Cx_RAW_INT_STAT_RXDONE_Pos)/*!< 0x0000080 */
+#define I2Cx_RAW_INT_STAT_RXDONE            I2Cx_RAW_INT_STAT_RXDONE_Msk       /*!< I2Cx receive done? flag */
+
+#define I2Cx_RAW_INT_STAT_ACTIVITY_Pos      (8U)
+#define I2Cx_RAW_INT_STAT_ACTIVITY_Msk      (0x1UL << I2Cx_RAW_INT_STAT_ACTIVITY_Pos)/*!< 0x0000100 */
+#define I2Cx_RAW_INT_STAT_ACTIVITY          I2Cx_RAW_INT_STAT_ACTIVITY_Msk     /*!< I2Cx activity? flag */
+
+#define I2Cx_RAW_INT_STAT_STOP_DET_Pos      (9U)
+#define I2Cx_RAW_INT_STAT_STOP_DET_Msk      (0x1UL << I2Cx_RAW_INT_STAT_STOP_DET_Pos)/*!< 0x0000200 */
+#define I2Cx_RAW_INT_STAT_STOP_DET          I2Cx_RAW_INT_STAT_STOP_DET_Msk     /*!< I2Cx stop detect? flag */
+
+#define I2Cx_RAW_INT_STAT_START_DET_Pos     (10U)
+#define I2Cx_RAW_INT_STAT_START_DET_Msk     (0x1UL << I2Cx_INTR_STAT_START_DET_Pos)/*!< 0x0000400 */
+#define I2Cx_RAW_INT_STAT_START_DET         I2Cx_RAW_INT_STAT_START_DET_Msk    /*!< I2Cx start detect? flag */
+
+#define I2Cx_RAW_INT_STAT_GEN_CALL_Pos      (11U)
+#define I2Cx_RAW_INT_STAT_GEN_CALL_Msk      (0x1UL << I2Cx_RAW_INT_STAT_GEN_CALL_Pos)/*!< 0x0000800 */
+#define I2Cx_RAW_INT_STAT_GEN_CALL          I2Cx_RAW_INT_STAT_GEN_CALL_Msk     /*!< I2Cx general call? flag */
+
+/*****************  Bit definition for I2Cx_DATA_CMD register  ****************/
+#define I2Cx_DATA_CMD_CMD_Pos               (8U)
+#define I2Cx_DATA_CMD_CMD_Msk               (0x1UL << I2Cx_DATA_CMD_CMD_Pos)   /*!< 0x0000100 */
+#define I2Cx_DATA_CMD_CMD                   I2Cx_DATA_CMD_CMD_Msk              /*!< I2Cx command flag */
+#define I2Cx_DATA_CMD_CMD_READ              (I2Cx_DATA_CMD_CMD)                /*!< 0x0000100 I2Cx read command */
+
+/******************  Bit definition for I2Cx_STATUS register  *****************/
+#define I2Cx_STATUS_ACT_Pos                 (0U)
+#define I2Cx_STATUS_ACT_Msk                 (0x1UL << I2Cx_STATUS_ACT_Pos)     /*!< 0x0000001 */
+#define I2Cx_STATUS_ACT                     I2Cx_STATUS_ACT_Msk                /*!< I2Cx activity flag */
+
+#define I2Cx_STATUS_TFNE_Pos                (1U)
+#define I2Cx_STATUS_TFNE_Msk                (0x1UL << I2Cx_STATUS_TFNE_Pos)    /*!< 0x0000002 */
+#define I2Cx_STATUS_TFNE                    I2Cx_STATUS_TFNE_Msk               /*!< I2Cx TFNE? flag */
+
+#define I2Cx_STATUS_TFE_Pos                 (2U)
+#define I2Cx_STATUS_TFE_Msk                 (0x1UL << I2Cx_STATUS_TFE_Msk)     /*!< 0x0000004 */
+#define I2Cx_STATUS_TFE                     I2Cx_STATUS_TFE_Msk                /*!< I2Cx TFE? flag */
+
+#define I2Cx_STATUS_RFNE_Pos                (3U)
+#define I2Cx_STATUS_RFNE_Msk                (0x1UL << I2Cx_STATUS_RFNE_Pos)    /*!< 0x0000008 */
+#define I2Cx_STATUS_RFNE                    I2Cx_STATUS_RFNE_Msk               /*!< I2Cx RFNE? flag */
+
+#define I2Cx_STATUS_RFF_Pos                 (4U)
+#define I2Cx_STATUS_RFF_Msk                 (0x1UL << I2Cx_STATUS_RFF_Pos)     /*!< 0x0000010 */
+#define I2Cx_STATUS_RFF                     I2Cx_STATUS_RFF_Msk                /*!< I2Cx RFF? flag */
+
+#define I2Cx_STATUS_MST_ACT_Pos             (5U)
+#define I2Cx_STATUS_MST_ACT_Msk             (0x1UL << I2Cx_STATUS_MST_ACT_Pos) /*!< 0x0000020 */
+#define I2Cx_STATUS_MST_ACT                 I2Cx_STATUS_MST_ACT_Msk            /*!< I2Cx master activity flag */
+
+#define I2Cx_STATUS_SLV_ACT_Pos             (6U)
+#define I2Cx_STATUS_SLV_ACT_Msk             (0x1UL << I2Cx_STATUS_SLV_ACT_Pos) /*!< 0x0000040 */
+#define I2Cx_STATUS_SLV_ACT                 I2Cx_STATUS_SLV_ACT_Msk            /*!< I2Cx slave activity flag */
 
 /******************************************************************************/
 /*                                                                            */

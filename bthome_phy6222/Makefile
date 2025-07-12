@@ -88,6 +88,7 @@ SRCS += bsp/jump_table.c \
 	bsp/driver/dma/dma.c \
 	bsp/driver/flash/flash.c \
 	bsp/driver/gpio/gpio.c \
+	bsp/driver/i2c/i2c.c \
 	bsp/driver/pwm/pwm.c \
 	bsp/driver/pwrmgr/pwrmgr.c \
 	bsp/driver/spi/spi.c \

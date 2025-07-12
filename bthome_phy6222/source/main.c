@@ -5,6 +5,7 @@
 #include <driver/clock/clock.h>
 #include <driver/flash/flash.h>
 #include <driver/gpio/gpio.h>
+#include <driver/i2c/i2c.h>
 #include <driver/pwm/pwm.h>
 
 #include <string.h>
@@ -82,6 +83,31 @@ void genericTask(void *argument)
     //hal_gpio_pin_init(GPIO_LED, GPIO_OUTPUT);
     //hal_gpio_write(GPIO_LED, 1);
 
+
+    const uint8_t ds3231_addr = 0b11010000 >> 1;
+    hal_i2c_init(I2C_0, I2C_CLOCK_400K, GPIO_P07, GPIO_P20, 0);
+
+    {
+        /* Set a date/time */
+        const uint8_t seconds = 42;
+        const uint8_t minutes = 9;
+        const uint8_t hours = 6;
+        const uint8_t day_of_week = 7;
+        const uint8_t date = 6;
+        const uint8_t month = 7;
+        const uint8_t year = 25;
+        uint8_t wr_data[7] = {
+            ((seconds/10)<<4) | (seconds%10),
+            ((minutes/10)<<4) | (minutes%10),
+            ((hours/10)<<4) | (hours%10),
+            day_of_week,
+            ((date/10)<<4) | (date%10),
+            ((month/10)<<4) | (month%10),
+            ((year/10)<<4) | (year%10)
+        };
+        hal_i2c_master_write_reg(I2C_0, ds3231_addr, 0x00, wr_data, sizeof(wr_data), 0xffffffff);
+    }
+
     gpio_pin_e pin = GPIO_LED;
     hal_gpio_pin_init(pin, GPIO_INPUT);
     hal_gpio_pull_set(pin, WEAK_PULL_UP);
@@ -93,6 +119,21 @@ void genericTask(void *argument)
 
     uint16_t val = 0;
 
+    uint8_t temperature[2] = { 0, 0 };
+
+    uint8_t rd[7] = { 0 };
+
+    struct
+    {
+        uint8_t Hour;
+        uint8_t Minute;
+        uint8_t Second;
+        uint8_t Year;
+        uint8_t Month;
+        uint8_t Date;
+        uint8_t DayOfWeek;
+    } Time;
+
     while(1)
     {
         if (val++ == 256)
@@ -100,6 +141,24 @@ void genericTask(void *argument)
             val = 0;
         }
         hal_pwm_set_count_val(pwmN, val);
+
+        if (val % 32 == 0)
+        {
+            memset(rd, 0, 7);
+
+            hal_i2c_master_read_reg(I2C_0, ds3231_addr, 0x00, rd, 7, 0xffffffff);
+            Time.Second = ((rd[0]&0x70)>>4)*10 + (rd[0]&0x0F);
+            Time.Minute = ((rd[1]&0x70)>>4)*10 + (rd[1]&0x0F);
+            Time.Hour = ((rd[2]&0x30)>>4)*10 + (rd[2]&0x0F);
+            Time.DayOfWeek = rd[3];
+            Time.Date = ((rd[4]&0x30)>>4)*10 + (rd[4]&0x0F);
+            Time.Month = ((rd[5]&0x10)>>4)*10 + (rd[5]&0x0F);
+            Time.Year = ((rd[6]&0xF0)>>4)*10 + (rd[6]&0x0F);
+            LOG("%02d:%02d:%02d %02d/%02d/%02d", Time.Hour, Time.Minute, Time.Second, Time.Date, Time.Month, Time.Year);
+
+            hal_i2c_master_read_reg(I2C_0, ds3231_addr, 0x11, temperature, 2, 0xffffffff);
+            LOG("Temperature is %d.%d", (int8_t)temperature[0], temperature[1]);
+        }
 
         vTaskDelay(pdMS_TO_TICKS(50));
     }
@@ -285,8 +344,8 @@ int main(void)
 
     xTaskCreate(genericTask, "genericTask", 256, NULL, tskIDLE_PRIORITY + 1, NULL);
 
-    extern void vu_meter_init();
-    vu_meter_init();
+    //extern void vu_meter_init();
+    //vu_meter_init();
 
 #ifdef ENABLE_BTSTACK
     extern void port_thread(void *args);
